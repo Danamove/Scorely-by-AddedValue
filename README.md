@@ -1,7 +1,6 @@
 # Scorely-by-AddedValue
 Professional Analysis Platform
 
-# Scorely by AddedValue
 
 🎯 **Scorely** is a lightweight, AI-powered web application for smart candidate ranking, built for tech recruiters and startup hiring teams.
 It works entirely from a single `index.html` file – no installation or backend required.
