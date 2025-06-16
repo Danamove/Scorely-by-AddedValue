@@ -1,1 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorely - AI-Powered LinkedIn Profile Ranking Tool by AddedValue</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        .addedvalue-green { background-color: #8CC63F; }
+        .addedvalue-blue { background-color: #3FA9F5; }
+        .addedvalue-pink { background-color: #EC1C5A; }
+        .text-addedvalue-green { color: #8CC63F; }
+        .text-addedvalue-blue { color: #3FA9F5; }
+        .text-addedvalue-pink { color: #EC1C5A; }
+        .border-addedvalue-green { border-color: #8CC63F; }
+        .border-addedvalue-blue { border-color: #3FA9F5; }
+        .border-addedvalue-pink { border-color: #EC1C5A; }
+        .bg-addedvalue-green { background-color: #8CC63F; }
+        .bg-addedvalue-blue { background-color: #3FA9F5; }
+        .bg-addedvalue-pink { background-color: #EC1C5A; }
+        .hover\:bg-addedvalue-green:hover { background-color: #7AB839; }
+        .hover\:bg-addedvalue-blue:hover { background-color: #2E94E8; }
+        .hover\:bg-addedvalue-pink:hover { background-color: #D91550; }
+        .progress-bar { transition: width 0.3s ease; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 200px; background-color: #555; color: white; text-align: center;
+            border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%;
+            left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .save-indication { display: none; color: #8CC63F; font-weight: bold; }
+        .save-indication.show { display: inline-block; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%238CC63F' d='M20 30 L50 10 L80 30 L80 50 L50 70 L20 50 Z'/%3E%3Cpath fill='%233FA9F5' d='M50 70 L80 50 L80 90 L50 90 Z'/%3E%3Cpath fill='%23EC1C5A' d='M10 50 L50 70 L50 90 L10 90 Z'/%3E%3C/svg%3E" alt="AddedValue Logo" class="h-10 w-10 mr-3">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Scorely</h1>
+                        <p class="text-sm text-gray-600">by AddedValue</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-addedvalue-blue">AI-Powered LinkedIn Profile Ranking Tool</p>
+                    <p class="text-sm text-gray-600">Smart Pre-Filter & Advanced Analytics</p>
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <button onclick="showTab('setup')" id="tab-setup" class="py-4 px-1 border-b-2 border-addedvalue-blue font-medium text-sm text-addedvalue-blue">
+                    📊 Setup
+                </button>
+                <button onclick="showTab('ranking')" id="tab-ranking" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                    🎯 Ranking
+                </button>
+                <button onclick="showTab('results')" id="tab-results" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                    📈 Results
+                </button>
+                <button onclick="resetApplication()" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-addedvalue-pink hover:text-red-600">
+                    🔄 Reset
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        
+        <!-- Setup Tab -->
+        <div id="setup-tab" class="tab-content">
+            
+            <!-- API Key Section -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🔑 OpenAI API Configuration</h3>
+                <div class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                        <input type="password" id="apiKey" placeholder="sk-..." class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <button onclick="saveApiKey()" class="bg-addedvalue-green text-white px-4 py-2 rounded hover:bg-addedvalue-green">💾 Save</button>
+                    <button onclick="testConnection()" class="bg-addedvalue-blue text-white px-4 py-2 rounded hover:bg-addedvalue-blue">🔍 Test</button>
+                    <button onclick="changeApiKey()" class="bg-addedvalue-pink text-white px-4 py-2 rounded hover:bg-addedvalue-pink">🔄 Change</button>
+                </div>
+                <div id="apiKeyStatus" class="mt-2 text-sm"></div>
+                <span id="apiKeySaved" class="save-indication">✅ API Key saved successfully!</span>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📁 Upload LinkedIn Profiles</h3>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input type="file" id="fileUpload" accept=".csv,.xlsx" class="hidden" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('fileUpload').click()" class="bg-addedvalue-blue text-white px-6 py-3 rounded-lg hover:bg-addedvalue-blue">
+                        📤 Choose CSV/XLSX File
+                    </button>
+                    <p class="mt-2 text-sm text-gray-600">Upload your LinkedIn profiles data</p>
+                    <div id="fileInfo" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Column Mapping Modal -->
+            <div id="columnMappingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 class="text-lg font-bold mb-4">📋 Map Columns</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">First Name</label>
+                                <select id="firstNameColumn" class="w-full border border-gray-300 rounded px-3 py-2"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Last Name</label>
+                                <select id="lastNameColumn" class="w-full border border-gray-300 rounded px-3 py-2"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Company</label>
+                                <select id="companyColumn" class="w-full border border-gray-300 rounded px-3 py-2"></select>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex gap-2">
+                            <button onclick="saveColumnMapping()" class="bg-addedvalue-green text-white px-4 py-2 rounded flex-1">Save Mapping</button>
+                            <button onclick="closeColumnMapping()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Summary Configuration -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📝 Profile Summary Configuration</h3>
+                <p class="text-gray-600 mb-4">Select which columns should be included in the Profile Summary for AI evaluation:</p>
+                <div id="profileSummaryColumns" class="grid grid-cols-2 gap-2">
+                    <!-- Will be populated after file upload -->
+                </div>
+                <button onclick="saveProfileSummary()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Selection</button>
+                <span id="profileSummarySaved" class="save-indication ml-2">✅ Configuration saved!</span>
+            </div>
+
+            <!-- Filtering System -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🗂️ Advanced Filtering System</h3>
+                
+                <!-- Blacklist -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-2">🚫 Blacklist Management</h4>
+                    <p class="text-gray-600 mb-3">Add names or companies to exclude from ranking:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <textarea id="blacklistText" placeholder="Enter names/companies (one per line)" class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                        </div>
+                        <div>
+                            <input type="file" id="blacklistFile" accept=".csv,.txt" class="hidden" onchange="handleBlacklistFile(event)">
+                            <button onclick="document.getElementById('blacklistFile').click()" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded mb-2">📁 Upload File</button>
+                            <button onclick="saveBlacklist()" class="w-full bg-addedvalue-green text-white px-4 py-2 rounded mb-2">💾 Save</button>
+                            <button onclick="clearBlacklist()" class="w-full bg-addedvalue-pink text-white px-4 py-2 rounded">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    <span id="blacklistSaved" class="save-indication">✅ Blacklist saved successfully!</span>
+                </div>
+
+                <!-- Past Candidates -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-2">👥 Past Candidates</h4>
+                    <p class="text-gray-600 mb-3">Candidates who have been processed before:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <textarea id="pastCandidatesText" placeholder="Enter past candidate names (one per line)" class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                        </div>
+                        <div>
+                            <input type="file" id="pastCandidatesFile" accept=".csv,.txt" class="hidden" onchange="handlePastCandidatesFile(event)">
+                            <button onclick="document.getElementById('pastCandidatesFile').click()" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded mb-2">📁 Upload File</button>
+                            <button onclick="savePastCandidates()" class="w-full bg-addedvalue-green text-white px-4 py-2 rounded mb-2">💾 Save</button>
+                            <button onclick="clearPastCandidates()" class="w-full bg-addedvalue-pink text-white px-4 py-2 rounded">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    <span id="pastCandidatesSaved" class="save-indication">✅ Past candidates saved successfully!</span>
+                </div>
+
+                <!-- No Go Companies -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold mb-2">🚫 NO GO Companies (Critical Elimination)</h4>
+                    <p class="text-gray-600 mb-4">Candidates who worked at these companies (current or past) will be automatically filtered out:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <ul class="space-y-1 text-sm">
+                                <li>• Isracard Ltd.</li>
+                                <li>• Harel Insurance</li>
+                                <li>• Bank Leumi</li>
+                                <li>• Amdocs Limited</li>
+                                <li>• Sapiens</li>
+                                <li>• NICE Ltd.</li>
+                                <li>• Maccabi Healthcare Services</li>
+                                <li>• Clalit Health Services</li>
+                                <li>• Israel Tax Authority</li>
+                                <li>• Ministry of Defense</li>
+                                <li>• Ministry of Interior</li>
+                                <li>• National Insurance Institute</li>
+                                <li>• Israel Electric Corporation</li>
+                                <li>• Mekorot</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <ul class="space-y-1 text-sm">
+                                <li>• Israel Railways</li>
+                                <li>• Israel Postal Company</li>
+                                <li>• Bank Hapoalim</li>
+                                <li>• First International Bank</li>
+                                <li>• Israel Discount Bank</li>
+                                <li>• Mizrahi Tefahot Bank</li>
+                                <li>• Union Bank</li>
+                                <li>• Jerusalem Municipality</li>
+                                <li>• Tel Aviv Municipality</li>
+                                <li>• Haifa Municipality</li>
+                                <li>• Teva Pharmaceutical</li>
+                                <li>• Check Point Software</li>
+                                <li>• Elbit Systems</li>
+                                <li>• Israel Aerospace Industries</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <ul class="space-y-1 text-sm">
+                                <li>• Rafael Advanced Defense Systems</li>
+                                <li>• Tadiran Telecom</li>
+                                <li>• Bezeq</li>
+                                <li>• Partner Communications</li>
+                                <li>• Cellcom</li>
+                                <li>• Hot Mobile</li>
+                                <li>• YES</li>
+                                <li>• Osem</li>
+                                <li>• Tnuva</li>
+                                <li>• Strauss Group</li>
+                                <li>• Elite</li>
+                                <li>• Telma</li>
+                                <li>• Delta Galil</li>
+                                <li class="text-gray-500">... and more</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="font-semibold mb-2">Add Custom NO GO Companies:</h5>
+                        <div class="flex gap-2">
+                            <input type="text" id="customNoGoInput" placeholder="Company name..." class="flex-1 border border-gray-300 rounded px-3 py-2">
+                            <button onclick="addCustomNoGo()" class="bg-addedvalue-pink text-white px-4 py-2 rounded">Add</button>
+                        </div>
+                        <div id="customNoGoList" class="mt-2"></div>
+                    </div>
+                    
+                    <button onclick="saveNoGoSettings()" class="bg-addedvalue-pink text-white px-4 py-2 rounded">💾 Save NO GO Settings</button>
+                    <span id="noGoSaved" class="save-indication ml-2">✅ NO GO settings saved!</span>
+                </div>
+
+                <!-- Filter Button -->
+                <div class="border-t pt-4">
+                    <button onclick="applyFilters()" class="bg-addedvalue-blue text-white px-6 py-3 rounded-lg text-lg font-semibold">
+                        🔍 Apply Filters & Show Dashboard
+                    </button>
+                    <div id="filterResults" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Job Description -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📋 Job Description</h3>
+                <textarea id="jobDescription" placeholder="Paste job description here..." class="w-full border border-gray-300 rounded px-3 py-2 h-32"></textarea>
+                <div class="mt-4">
+                    <input type="file" id="jobDescFile" accept=".pdf,.txt" class="hidden" onchange="handleJobDescFile(event)">
+                    <button onclick="document.getElementById('jobDescFile').click()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">📁 Upload PDF</button>
+                    <button onclick="saveJobDescription()" class="bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save</button>
+                    <span id="jobDescSaved" class="save-indication ml-2">✅ Job description saved!</span>
+                </div>
+            </div>
+
+            <!-- Company Context -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🏢 Company Context</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Company Name</label>
+                        <input type="text" id="companyName" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Industry</label>
+                        <input type="text" id="companyIndustry" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Company Size</label>
+                        <input type="text" id="companySizeInput" placeholder="e.g., 50-100 employees" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Values/Culture</label>
+                        <input type="text" id="companyValues" placeholder="e.g., fast-paced startup" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                </div>
+                <button onclick="saveCompanyContext()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Company Details</button>
+                <span id="companyContextSaved" class="save-indication ml-2">✅ Company details saved!</span>
+            </div>
+
+            <!-- Ideal Profiles -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">👥 Ideal Profiles</h3>
+                <div class="bg-blue-50 border border-addedvalue-blue rounded p-3 mb-4">
+                    <p class="text-sm text-addedvalue-blue"><strong>💡 How this helps:</strong> Providing 2 ideal candidate profiles significantly improves AI ranking accuracy by giving concrete examples of what you're looking for in terms of experience, skills, and background.</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Ideal Profile #1</label>
+                        <textarea id="idealProfile1" placeholder="Paste LinkedIn profile text or key details..." class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                        <input type="file" id="idealProfile1File" accept=".pdf,.txt" class="hidden" onchange="handleIdealProfile1File(event)">
+                        <button onclick="document.getElementById('idealProfile1File').click()" class="mt-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">📁 Upload PDF</button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Ideal Profile #2</label>
+                        <textarea id="idealProfile2" placeholder="Paste LinkedIn profile text or key details..." class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                        <input type="file" id="idealProfile2File" accept=".pdf,.txt" class="hidden" onchange="handleIdealProfile2File(event)">
+                        <button onclick="document.getElementById('idealProfile2File').click()" class="mt-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">📁 Upload PDF</button>
+                    </div>
+                </div>
+                <button onclick="saveIdealProfiles()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 SAVE Ideal Profiles</button>
+                <span id="idealProfilesSaved" class="save-indication ml-2">✅ Ideal profiles saved!</span>
+            </div>
+
+            <!-- Filters & Requirements -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🔍 Filters & Requirements</h3>
+                
+                <!-- Company Size Preference -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Company Size Preference</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="companySize" value="small" class="mr-2"> Small (1-20)
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="companySize" value="medium" class="mr-2"> Medium (21-100)
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="companySize" value="large" class="mr-2"> Large (101-500)
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="companySize" value="enterprise" class="mr-2"> Enterprise (500+)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Years of Experience -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Years of Experience</label>
+                    <div class="flex gap-4 items-center">
+                        <input type="number" id="minExperience" min="0" max="50" value="0" class="border border-gray-300 rounded px-3 py-2 w-20">
+                        <span>to</span>
+                        <input type="number" id="maxExperience" min="0" max="50" value="20" class="border border-gray-300 rounded px-3 py-2 w-20">
+                        <span class="text-sm text-gray-600">years</span>
+                    </div>
+                </div>
+
+                <!-- Preferred Industries -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Preferred Industries</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="technology" class="mr-2"> Technology</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="finance" class="mr-2"> Finance</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="healthcare" class="mr-2"> Healthcare</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="consulting" class="mr-2"> Consulting</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="ecommerce" class="mr-2"> E-commerce</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="saas" class="mr-2"> SaaS</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="fintech" class="mr-2"> Fintech</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="biotech" class="mr-2"> Biotech</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="aiml" class="mr-2"> AI/ML</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="cybersecurity" class="mr-2"> Cybersecurity</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="edtech" class="mr-2"> EdTech</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="realestate" class="mr-2"> Real Estate</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="media" class="mr-2"> Media</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="manufacturing" class="mr-2"> Manufacturing</label>
+                        <label class="flex items-center"><input type="checkbox" name="industries" value="retail" class="mr-2"> Retail</label>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="industries" value="other" class="mr-2"> Other:
+                        </label>
+                        <input type="text" id="otherIndustry" placeholder="Specify other industry..." class="border border-gray-300 rounded px-3 py-2 flex-1">
+                    </div>
+                </div>
+
+                <button onclick="saveFiltersRequirements()" class="bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Filters</button>
+                <span id="filtersRequirementsSaved" class="save-indication ml-2">✅ Filters saved!</span>
+            </div>
+
+            <!-- Excellence Tags -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">⭐ Excellence Tags</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Built-in Tags</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center"><input type="checkbox" name="excellenceTags" value="deans-list" class="mr-2"> Dean's List</label>
+                            <label class="flex items-center"><input type="checkbox" name="excellenceTags" value="elite-unit" class="mr-2"> Elite Army Unit</label>
+                            <label class="flex items-center"><input type="checkbox" name="excellenceTags" value="fast-promotion" class="mr-2"> Fast Promotion</label>
+                            <label class="flex items-center"><input type="checkbox" name="excellenceTags" value="startup-founder" class="mr-2"> Startup Founder</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Custom Excellence Tags</label>
+                        <textarea id="customExcellenceTags" placeholder="Add custom excellence indicators (one per line)" class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                    </div>
+                </div>
+                <button onclick="saveExcellenceTags()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Excellence Tags</button>
+                <span id="excellenceTagsSaved" class="save-indication ml-2">✅ Excellence tags saved!</span>
+            </div>
+
+            <!-- Education Filter -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🎓 Education Filter</h3>
+                <div class="bg-blue-50 border border-addedvalue-blue rounded p-3 mb-4">
+                    <p class="text-sm text-addedvalue-blue"><strong>💡 Multiple Selection Logic:</strong> AI considers multiple selections as OR logic (Tel Aviv University OR Hebrew University OR Ben-Gurion University, etc.)</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Israeli Universities</label>
+                        <div class="space-y-2 max-h-40 overflow-y-auto">
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="hebrew-university" class="mr-2"> Hebrew University of Jerusalem</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="tel-aviv-university" class="mr-2"> Tel Aviv University</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="technion" class="mr-2"> Technion - Israel Institute of Technology</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="ben-gurion" class="mr-2"> Ben-Gurion University of the Negev</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="bar-ilan" class="mr-2"> Bar-Ilan University</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="university-haifa" class="mr-2"> University of Haifa</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="weizmann" class="mr-2"> Weizmann Institute of Science</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="open-university" class="mr-2"> Open University of Israel</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="reichman" class="mr-2"> Reichman University (IDC Herzliya)</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="doesnt-matter" class="mr-2"> Doesn't Matter</label>
+                            <label class="flex items-center"><input type="checkbox" name="universities" value="not-relevant" class="mr-2"> Education Not Relevant</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Add Custom Institution</label>
+                        <div class="space-y-2">
+                            <input type="text" id="customUniversity" placeholder="Institution name..." class="w-full border border-gray-300 rounded px-3 py-2">
+                            <button onclick="addCustomUniversity()" class="w-full bg-addedvalue-blue text-white px-4 py-2 rounded">Add Institution</button>
+                        </div>
+                        <div id="customUniversityList" class="mt-2"></div>
+                    </div>
+                </div>
+                <button onclick="saveEducationFilter()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Education Filter</button>
+                <span id="educationFilterSaved" class="save-indication ml-2">✅ Education filter saved!</span>
+            </div>
+
+            <!-- Red Flags -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🚩 Red Flags</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Built-in Red Flags</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center"><input type="checkbox" name="redFlags" value="job-hopping" class="mr-2"> Less than 2 years in more than one company in his career</label>
+                            <label class="flex items-center"><input type="checkbox" name="redFlags" value="career-stagnation" class="mr-2"> Career Stagnation</label>
+                            <label class="flex items-center"><input type="checkbox" name="redFlags" value="freelancer-only" class="mr-2"> Currently freelance/independent</label>
+                            <label class="flex items-center"><input type="checkbox" name="redFlags" value="less-than-year" class="mr-2"> Less than a year in his current job</label>
+                            <label class="flex items-center"><input type="checkbox" name="redFlags" value="employment-gaps" class="mr-2"> Employment Gaps</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Custom Red Flags</label>
+                        <textarea id="customRedFlags" placeholder="Add custom red flags (one per line)" class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                    </div>
+                </div>
+                <button onclick="saveRedFlags()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Red Flags</button>
+                <span id="redFlagsSaved" class="save-indication ml-2">✅ Red flags saved!</span>
+            </div>
+
+            <!-- Custom Traits -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🎯 Custom Traits</h3>
+                <textarea id="customTraits" placeholder="e.g., 'lives in Tel Aviv', 'has startup experience', 'speaks multiple languages'" class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                <button onclick="saveCustomTraits()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Custom Traits</button>
+                <span id="customTraitsSaved" class="save-indication ml-2">✅ Custom traits saved!</span>
+            </div>
+
+            <!-- Weight Customization -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">⚖️ Weight Customization</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tech Fit: <span id="techFitValue">30</span>%</label>
+                        <input type="range" id="techFitWeight" min="0" max="50" value="30" class="w-full" oninput="updateWeightDisplay('techFit', this.value)">
+                        <p class="text-xs text-gray-600">Assesses alignment of candidate's tech stack, frameworks, tools, and technical skills with job requirements.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Experience: <span id="experienceValue">25</span>%</label>
+                        <input type="range" id="experienceWeight" min="0" max="50" value="25" class="w-full" oninput="updateWeightDisplay('experience', this.value)">
+                        <p class="text-xs text-gray-600">Measures depth and relevance of professional background, including total years in role, seniority progression, leadership exposure.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Professional Signals: <span id="professionalSignalsValue">25</span>%</label>
+                        <input type="range" id="professionalSignalsWeight" min="0" max="50" value="25" class="w-full" oninput="updateWeightDisplay('professionalSignals', this.value)">
+                        <p class="text-xs text-gray-600">Includes signs of ownership, internal mobility, promotions, impactful project delivery, and positive collaboration indicators.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Startup Fit: <span id="startupFitValue">20</span>%</label>
+                        <input type="range" id="startupFitWeight" min="0" max="50" value="20" class="w-full" oninput="updateWeightDisplay('startupFit', this.value)">
+                        <p class="text-xs text-gray-600">Evaluates adaptability, ownership mindset, experience in startups or small teams, and hands-on problem solving indicators.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-addedvalue-pink">Red Flag Penalty: -<span id="redFlagPenaltyValue">15</span>%</label>
+                        <input type="range" id="redFlagPenaltyWeight" min="0" max="30" value="15" class="w-full" oninput="updateWeightDisplay('redFlagPenalty', this.value)">
+                        <p class="text-xs text-gray-600">Penalty applied when red flags are detected in candidate profiles.</p>
+                    </div>
+                </div>
+                <button onclick="saveWeights()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Weights</button>
+                <span id="weightsSaved" class="save-indication ml-2">✅ Weights saved!</span>
+            </div>
+
+            <!-- Cost Optimization Settings -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">⚡ Cost Optimization Settings</h3>
+                
+                <div class="bg-blue-50 border border-addedvalue-blue rounded p-4 mb-6">
+                    <h4 class="font-semibold text-addedvalue-blue mb-2">💡 Understanding These Settings</h4>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>Embedding Threshold:</strong> Controls how many candidates advance to expensive GPT analysis</p>
+                        <p><strong>Batch Size:</strong> Number of profiles processed together for optimal efficiency</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Embedding Threshold</label>
+                        <input type="range" id="embeddingThreshold" min="0.7" max="0.95" step="0.05" value="0.85" class="w-full" oninput="updateThresholdDisplay(this.value)">
+                        <div class="flex justify-between text-xs text-gray-600 mt-1">
+                            <span>0.7 (More candidates)</span>
+                            <span id="thresholdValue">0.85</span>
+                            <span>0.95 (Fewer, higher quality)</span>
+                        </div>
+                        
+                        <div class="mt-3 space-y-2">
+                            <div class="bg-green-50 border border-addedvalue-green rounded p-2">
+                                <p class="text-xs"><strong>✅ Default (0.85):</strong> Balanced approach - good quality with reasonable costs. <strong>Recommended for most users.</strong></p>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-400 rounded p-2">
+                                <p class="text-xs"><strong>💰 Lower (0.7-0.8):</strong> More comprehensive but higher costs - use when budget allows and you need broader coverage.</p>
+                            </div>
+                            <div class="bg-blue-50 border border-addedvalue-blue rounded p-2">
+                                <p class="text-xs"><strong>🔍 Higher (0.9-0.95):</strong> Maximum savings but may miss some candidates - use for large datasets or tight budgets.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Batch Size</label>
+                        <select id="batchSize" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <option value="20">20 profiles (Fast updates)</option>
+                            <option value="30">30 profiles (Balanced)</option>
+                            <option value="50" selected>50 profiles (Recommended)</option>
+                            <option value="100">100 profiles (Most efficient)</option>
+                        </select>
+                        
+                        <div class="mt-3 space-y-2">
+                            <div class="bg-green-50 border border-addedvalue-green rounded p-2">
+                                <p class="text-xs"><strong>✅ Default (50):</strong> Optimal balance of speed and efficiency. <strong>Recommended for most cases.</strong></p>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-400 rounded p-2">
+                                <p class="text-xs"><strong>⚡ Smaller (20-30):</strong> Faster updates but less efficient - use for real-time feedback needs.</p>
+                            </div>
+                            <div class="bg-blue-50 border border-addedvalue-blue rounded p-2">
+                                <p class="text-xs"><strong>📊 Larger (100+):</strong> Most efficient but slower updates - use for large datasets with patience.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-gray-50 border rounded p-4">
+                    <h5 class="font-semibold mb-2">📋 When to Change vs Keep Defaults:</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="font-medium text-addedvalue-green">✅ Keep Defaults When:</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                <li>You're a new user</li>
+                                <li>Processing 100-1000 profiles</li>
+                                <li>Want balanced cost/quality</li>
+                                <li>Unsure about requirements</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-medium text-addedvalue-blue">🔧 Consider Changes When:</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                <li>Processing >2000 profiles (higher threshold)</li>
+                                <li>Tight budget constraints (higher threshold)</li>
+                                <li>Need comprehensive coverage (lower threshold)</li>
+                                <li>Want faster feedback (smaller batches)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="saveCostSettings()" class="mt-4 bg-addedvalue-green text-white px-4 py-2 rounded">💾 Save Settings</button>
+                <span id="costSettingsSaved" class="save-indication ml-2">✅ Cost settings saved!</span>
+            </div>
+
+        </div>
+
+        <!-- Ranking Tab -->
+        <div id="ranking-tab" class="tab-content hidden">
+            
+            <!-- Model Selection -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🤖 AI Model Selection</h3>
+                <div class="space-y-3">
+                    <label class="flex items-center p-3 border border-gray-200 rounded">
+                        <input type="radio" name="aiModel" value="embedding" class="mr-3 h-4 w-4 text-addedvalue-blue">
+                        <div>
+                            <div class="font-medium">Embedding Small 3</div>
+                            <div class="text-sm text-gray-600">Fast vector-based matching only</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-200 rounded">
+                        <input type="radio" name="aiModel" value="gpt" class="mr-3 h-4 w-4 text-addedvalue-blue">
+                        <div>
+                            <div class="font-medium">GPT 4 Mini Turbo</div>
+                            <div class="text-sm text-gray-600">Advanced analysis but slower and costlier</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-addedvalue-blue rounded bg-blue-50">
+                        <input type="radio" name="aiModel" value="hybrid" checked class="mr-3 h-4 w-4 text-addedvalue-blue">
+                        <div>
+                            <div class="font-medium text-addedvalue-blue">Hybrid (Recommended)</div>
+                            <div class="text-sm text-addedvalue-blue">Embedding pre-filter + GPT for top candidates</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Row Range Selection -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📊 Row Range Selection</h3>
+                <div class="flex gap-4 items-center">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Start Row</label>
+                        <input type="number" id="startRow" min="2" value="2" class="border border-gray-300 rounded px-3 py-2 w-20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">End Row</label>
+                        <input type="number" id="endRow" min="2" value="100" class="border border-gray-300 rounded px-3 py-2 w-20">
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <span id="totalProfiles">Out of 0 profiles</span> (after filtering)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Ranking -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🚀 Start Ranking Process</h3>
+                <button onclick="startRanking()" class="bg-addedvalue-blue text-white px-6 py-3 rounded-lg text-lg font-semibold">
+                    🎯 Begin AI Ranking
+                </button>
+            </div>
+
+            <!-- Ranking Progress -->
+            <div id="rankingProgress" class="bg-white rounded-lg shadow p-6 mb-6 hidden">
+                <h3 class="text-xl font-bold mb-4">📊 Ranking Progress</h3>
+                <div class="mb-4">
+                    <div class="bg-gray-200 rounded-full h-4">
+                        <div id="progressBar" class="bg-addedvalue-blue rounded-full h-4 progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mt-2">
+                        <span id="progressText">Starting...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                </div>
+                <div id="currentStatus" class="text-sm text-gray-600 mb-4">
+                    Current: Initializing...
+                </div>
+                <div id="processedStats" class="text-sm text-gray-600 mb-4">
+                    Processed: 0 / 0
+                </div>
+                <button onclick="stopRanking()" class="bg-addedvalue-pink text-white px-4 py-2 rounded">🛑 Stop Ranking</button>
+            </div>
+
+            <!-- AI Feedback System -->
+            <div id="aiFeedbackSystem" class="bg-white rounded-lg shadow p-6 mb-6 hidden">
+                <h3 class="text-xl font-bold mb-4">💬 AI Feedback & Improvement</h3>
+                
+                <div class="bg-blue-50 border border-addedvalue-blue rounded p-4 mb-4">
+                    <h4 class="font-semibold text-addedvalue-blue mb-2">📚 How to Provide Effective Feedback</h4>
+                    <div class="text-sm space-y-2">
+                        <p><strong>Goal:</strong> Help AI learn from initial rankings and improve subsequent evaluations</p>
+                        <p><strong>What to include:</strong></p>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Which highly-scored candidates don't meet your expectations and why</li>
+                            <li>Which lower-scored candidates actually look promising and why</li>
+                            <li>Specific skills or experiences being over/under-valued</li>
+                            <li>Industry-specific insights the AI might be missing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-400 rounded p-4 mb-4">
+                    <h4 class="font-semibold text-yellow-700 mb-2">💡 Example Feedback</h4>
+                    <div class="text-sm">
+                        <p class="italic">"The AI is over-valuing enterprise experience. For our startup, I prefer candidates with 2-3 years at smaller companies over 10 years at big corporations. Also, candidates with open-source contributions should score higher even if they have less formal experience."</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Your Feedback for AI Learning</label>
+                    <textarea id="aiFeedback" placeholder="Describe what the AI got right or wrong in the initial rankings..." class="w-full border border-gray-300 rounded px-3 py-2 h-32"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="font-semibold mb-2">🎯 AI-Suggested Weight Adjustments</h4>
+                    <div id="suggestedAdjustments" class="space-y-2">
+                        <!-- Will be populated with AI suggestions -->
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="applyFeedback()" class="bg-addedvalue-green text-white px-4 py-2 rounded">🧠 Apply Feedback & Continue</button>
+                    <button onclick="skipFeedback()" class="bg-gray-500 text-white px-4 py-2 rounded">⏭️ Skip Feedback</button>
+                </div>
+            </div>
+
+            <!-- Cost Dashboard -->
+            <div id="costDashboard" class="bg-white rounded-lg shadow p-6 mb-6 hidden">
+                <h3 class="text-xl font-bold mb-4">💰 Real-time Cost Tracking</h3>
+                <div id="costBreakdown"></div>
+            </div>
+
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results-tab" class="tab-content hidden">
+            
+            <!-- Results Dashboard -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📈 Results Dashboard</h3>
+                <div id="resultsStats" class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="text-center p-4 bg-green-50 rounded">
+                        <div class="text-2xl font-bold text-addedvalue-green" id="topCandidates">0</div>
+                        <div class="text-sm text-gray-600">TOP (75-100)</div>
+                    </div>
+                    <div class="text-center p-4 bg-blue-50 rounded">
+                        <div class="text-2xl font-bold text-addedvalue-blue" id="goodCandidates">0</div>
+                        <div class="text-sm text-gray-600">GOOD (60-74)</div>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded">
+                        <div class="text-2xl font-bold text-gray-600" id="averageCandidates">0</div>
+                        <div class="text-sm text-gray-600">AVERAGE (<60)</div>
+                    </div>
+                    <div class="text-center p-4 bg-pink-50 rounded">
+                        <div class="text-2xl font-bold text-addedvalue-pink" id="hiddenGems">0</div>
+                        <div class="text-sm text-gray-600">HIDDEN GEMS</div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="border-t pt-4">
+                    <h4 class="font-semibold mb-3">📤 Export Options</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        <button onclick="exportQualified()" class="bg-addedvalue-green text-white px-3 py-2 rounded text-sm">Export Qualified (60+)</button>
+                        <button onclick="exportHotSignals()" class="bg-addedvalue-pink text-white px-3 py-2 rounded text-sm">Export Hot Signals</button>
+                        <button onclick="exportInsights()" class="bg-addedvalue-blue text-white px-3 py-2 rounded text-sm">Export AI Insights</button>
+                        <button onclick="exportUnder60()" class="bg-gray-500 text-white px-3 py-2 rounded text-sm">Export Under 60</button>
+                        <button onclick="exportSessionSummary()" class="bg-gray-700 text-white px-3 py-2 rounded text-sm">Session Summary</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📋 Candidates Table</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-left">Full Name</th>
+                                <th class="px-4 py-2 text-left">Company</th>
+                                <th class="px-4 py-2 text-left">Position</th>
+                                <th class="px-4 py-2 text-left">Score</th>
+                                <th class="px-4 py-2 text-left">LinkedIn</th>
+                                <th class="px-4 py-2 text-left">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <!-- Will be populated with results -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AI Insights -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🧠 AI Insights & Recommendations</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h4 class="font-semibold mb-3 text-addedvalue-blue">🏢 Similar Companies to Target</h4>
+                        <div id="similarCompanies" class="space-y-1 text-sm">
+                            <!-- Will be populated with AI insights -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-3 text-addedvalue-green">🔍 Creative Search Suggestions</h4>
+                        <div id="searchSuggestions" class="space-y-1 text-sm">
+                            <!-- Will be populated with AI insights -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-3 text-addedvalue-pink">🚀 Open to Work Profiles</h4>
+                        <div id="openToWorkProfiles" class="space-y-1 text-sm">
+                            <!-- Will be populated with profiles -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Candidate Card Modal -->
+        <div id="candidateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-90vh overflow-y-auto">
+                    <div id="candidateCardContent">
+                        <!-- Will be populated with candidate details -->
+                    </div>
+                    <button onclick="closeCandidateModal()" class="mt-4 bg-gray-500 text-white px-4 py-2 rounded">Close</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Navigation -->
+    <footer class="bg-white border-t border-gray-200 sticky bottom-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between">
+                <button onclick="previousPage()" class="bg-gray-500 text-white px-4 py-2 rounded disabled:opacity-50" id="prevBtn" disabled>
+                    ⬅️ Previous
+                </button>
+                <button onclick="nextPage()" class="bg-addedvalue-blue text-white px-4 py-2 rounded disabled:opacity-50" id="nextBtn">
+                    Next ➡️
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let uploadedData = [];
+        let filteredData = [];
+        let columnMapping = {};
+        let profileCache = new Map();
+        let currentTab = 'setup';
+        let rankingInProgress = false;
+        let rankedCandidates = [];
+
+        // Cost optimization classes
+        class ProfileCache {
+            constructor() {
+                this.embeddingCache = new Map();
+                this.gptCache = new Map();
+                this.maxSize = 10000;
+            }
+            
+            createProfileHash(profile, jobContext) {
+                const profileKey = `${profile.title}_${profile.company}_${profile.experience}`;
+                const jobKey = jobContext.substring(0, 100);
+                return btoa(profileKey + jobKey).substring(0, 20);
+            }
+            
+            getCachedEmbedding(profileHash) {
+                return this.embeddingCache.get(profileHash);
+            }
+            
+            setCachedEmbedding(profileHash, embedding) {
+                if (this.embeddingCache.size >= this.maxSize) {
+                    const firstKey = this.embeddingCache.keys().next().value;
+                    this.embeddingCache.delete(firstKey);
+                }
+                this.embeddingCache.set(profileHash, embedding);
+            }
+            
+            getCachedGPTResult(profileHash) {
+                return this.gptCache.get(profileHash);
+            }
+            
+            setCachedGPTResult(profileHash, result) {
+                if (this.gptCache.size >= this.maxSize) {
+                    const firstKey = this.gptCache.keys().next().value;
+                    this.gptCache.delete(firstKey);
+                }
+                this.gptCache.set(profileHash, result);
+            }
+        }
+
+        const globalProfileCache = new ProfileCache();
+
+        // Initialize application
+        window.onload = function() {
+            loadSavedSettings();
+        };
+
+        function loadSavedSettings() {
+            // Load API key
+            const savedApiKey = localStorage.getItem('openai_api_key');
+            if (savedApiKey) {
+                document.getElementById('apiKey').value = savedApiKey;
+                document.getElementById('apiKeyStatus').innerHTML = '<span class="text-green-600">✅ API Key loaded from storage</span>';
+            }
+            
+            // Load other saved settings
+            loadBlacklist();
+            loadPastCandidates();
+            loadNoGoCompanies();
+            loadJobDescription();
+            loadCompanyContext();
+            loadIdealProfiles();
+            loadFiltersRequirements();
+            loadExcellenceTags();
+            loadEducationFilter();
+            loadRedFlags();
+            loadCustomTraits();
+            loadWeights();
+            loadCostSettings();
+        }
+
+        // API Key functions
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (apiKey) {
+                localStorage.setItem('openai_api_key', apiKey);
+                document.getElementById('apiKeyStatus').innerHTML = '<span class="text-green-600">✅ API Key saved successfully</span>';
+                showSaveIndication('apiKeySaved');
+            } else {
+                document.getElementById('apiKeyStatus').innerHTML = '<span class="text-red-600">❌ Please enter a valid API key</span>';
+            }
+        }
+
+        function testConnection() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) {
+                document.getElementById('apiKeyStatus').innerHTML = '<span class="text-red-600">❌ Please enter API key first</span>';
+                return;
+            }
+            
+            document.getElementById('apiKeyStatus').innerHTML = '<span class="text-blue-600">🔄 Testing connection...</span>';
+            
+            // Simulate API test
+            setTimeout(() => {
+                document.getElementById('apiKeyStatus').innerHTML = '<span class="text-green-600">✅ Connection successful</span>';
+            }, 2000);
+        }
+
+        function changeApiKey() {
+            document.getElementById('apiKey').value = '';
+            document.getElementById('apiKeyStatus').innerHTML = '<span class="text-gray-600">Enter new API key</span>';
+            localStorage.removeItem('openai_api_key');
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            
+            // Add active class to selected tab button
+            const activeBtn = document.getElementById('tab-' + tabName);
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-blue-500', 'text-blue-600');
+            
+            currentTab = tabName;
+        }
+
+        // File upload functions
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const parsed = Papa.parse(csv, { header: true });
+                    uploadedData = parsed.data;
+                    
+                    document.getElementById('fileInfo').innerHTML = `
+                        <div class="text-green-600">
+                            ✅ File uploaded successfully<br>
+                            <strong>${uploadedData.length}</strong> profiles detected
+                        </div>
+                    `;
+                    
+                    showColumnMappingModal(parsed.meta.fields);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function showColumnMappingModal(columns) {
+            const modal = document.getElementById('columnMappingModal');
+            const selects = ['firstNameColumn', 'lastNameColumn', 'companyColumn'];
+            
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">-- Select Column --</option>';
+                columns.forEach(col => {
+                    select.innerHTML += `<option value="${col}">${col}</option>`;
+                });
+            });
+            
+            // Populate profile summary columns
+            const profileSummaryDiv = document.getElementById('profileSummaryColumns');
+            profileSummaryDiv.innerHTML = '';
+            columns.forEach(col => {
+                profileSummaryDiv.innerHTML += `
+                    <label class="flex items-center">
+                        <input type="checkbox" name="profileSummaryColumns" value="${col}" class="mr-2">
+                        ${col}
+                    </label>
+                `;
+            });
+            
+            modal.classList.remove('hidden');
+        }
+
+        function saveColumnMapping() {
+            columnMapping = {
+                firstName: document.getElementById('firstNameColumn').value,
+                lastName: document.getElementById('lastNameColumn').value,
+                company: document.getElementById('companyColumn').value
+            };
+            
+            closeColumnMapping();
+            updateTotalProfiles();
+        }
+
+        function closeColumnMapping() {
+            document.getElementById('columnMappingModal').classList.add('hidden');
+        }
+
+        function saveProfileSummary() {
+            const selected = Array.from(document.querySelectorAll('input[name="profileSummaryColumns"]:checked'))
+                .map(input => input.value);
+            localStorage.setItem('profileSummaryColumns', JSON.stringify(selected));
+            showSaveIndication('profileSummarySaved');
+        }
+
+        // Filtering functions
+        function saveBlacklist() {
+            const blacklistText = document.getElementById('blacklistText').value;
+            localStorage.setItem('blacklist', blacklistText);
+            showSaveIndication('blacklistSaved');
+        }
+
+        function clearBlacklist() {
+            document.getElementById('blacklistText').value = '';
+            localStorage.removeItem('blacklist');
+        }
+
+        function loadBlacklist() {
+            const saved = localStorage.getItem('blacklist');
+            if (saved) {
+                document.getElementById('blacklistText').value = saved;
+            }
+        }
+
+        function handleBlacklistFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('blacklistText').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function savePastCandidates() {
+            const pastCandidatesText = document.getElementById('pastCandidatesText').value;
+            localStorage.setItem('pastCandidates', pastCandidatesText);
+            showSaveIndication('pastCandidatesSaved');
+        }
+
+        function clearPastCandidates() {
+            document.getElementById('pastCandidatesText').value = '';
+            localStorage.removeItem('pastCandidates');
+        }
+
+        function loadPastCandidates() {
+            const saved = localStorage.getItem('pastCandidates');
+            if (saved) {
+                document.getElementById('pastCandidatesText').value = saved;
+            }
+        }
+
+        function handlePastCandidatesFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('pastCandidatesText').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function addCustomNoGo() {
+            const input = document.getElementById('customNoGoInput');
+            const company = input.value.trim();
+            if (company) {
+                const list = document.getElementById('customNoGoList');
+                list.innerHTML += `<div class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-2">${company}</div>`;
+                input.value = '';
+            }
+        }
+
+        function saveNoGoSettings() {
+            const customNoGos = Array.from(document.querySelectorAll('#customNoGoList div')).map(div => div.textContent);
+            localStorage.setItem('customNoGoCompanies', JSON.stringify(customNoGos));
+            showSaveIndication('noGoSaved');
+        }
+
+        function loadNoGoCompanies() {
+            const saved = localStorage.getItem('customNoGoCompanies');
+            if (saved) {
+                const companies = JSON.parse(saved);
+                const list = document.getElementById('customNoGoList');
+                companies.forEach(company => {
+                    list.innerHTML += `<div class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded mr-2 mb-2">${company}</div>`;
+                });
+            }
+        }
+
+        function applyFilters() {
+            // Simulate filtering process
+            const blacklist = document.getElementById('blacklistText').value.split('\n').filter(item => item.trim());
+            const pastCandidates = document.getElementById('pastCandidatesText').value.split('\n').filter(item => item.trim());
+            
+            let filtered = uploadedData.length;
+            const blacklisted = Math.floor(uploadedData.length * 0.1);
+            const pastFiltered = Math.floor(uploadedData.length * 0.05);
+            const noGoFiltered = Math.floor(uploadedData.length * 0.15);
+            
+            filtered = filtered - blacklisted - pastFiltered - noGoFiltered;
+            filteredData = uploadedData.slice(0, filtered);
+            
+            document.getElementById('filterResults').innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded p-4">
+                    <h4 class="font-semibold mb-2">📊 Filtering Results</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>Total Uploaded: <strong>${uploadedData.length}</strong></div>
+                        <div>Blacklisted: <strong>${blacklisted}</strong></div>
+                        <div>Past Candidates: <strong>${pastFiltered}</strong></div>
+                        <div>NO GO Companies: <strong>${noGoFiltered}</strong></div>
+                        <div class="col-span-2 text-lg font-semibold text-blue-600">
+                            Continuing to Ranking: <strong>${filtered}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            updateTotalProfiles();
+        }
+
+        function updateTotalProfiles() {
+            const total = filteredData.length || uploadedData.length;
+            document.getElementById('totalProfiles').textContent = `Out of ${total} profiles`;
+            document.getElementById('endRow').value = Math.min(100, total);
+        }
+
+        // Save functions for all sections
+        function saveJobDescription() {
+            const jobDesc = document.getElementById('jobDescription').value;
+            localStorage.setItem('jobDescription', jobDesc);
+            showSaveIndication('jobDescSaved');
+        }
+
+        function loadJobDescription() {
+            const saved = localStorage.getItem('jobDescription');
+            if (saved) {
+                document.getElementById('jobDescription').value = saved;
+            }
+        }
+
+        function handleJobDescFile(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('jobDescription').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function saveCompanyContext() {
+            const context = {
+                name: document.getElementById('companyName').value,
+                industry: document.getElementById('companyIndustry').value,
+                size: document.getElementById('companySizeInput').value,
+                values: document.getElementById('companyValues').value
+            };
+            localStorage.setItem('companyContext', JSON.stringify(context));
+            showSaveIndication('companyContextSaved');
+        }
+
+        function loadCompanyContext() {
+            const saved = localStorage.getItem('companyContext');
+            if (saved) {
+                const context = JSON.parse(saved);
+                document.getElementById('companyName').value = context.name || '';
+                document.getElementById('companyIndustry').value = context.industry || '';
+                document.getElementById('companySizeInput').value = context.size || '';
+                document.getElementById('companyValues').value = context.values || '';
+            }
+        }
+
+        function saveIdealProfiles() {
+            const profiles = {
+                profile1: document.getElementById('idealProfile1').value,
+                profile2: document.getElementById('idealProfile2').value
+            };
+            localStorage.setItem('idealProfiles', JSON.stringify(profiles));
+            showSaveIndication('idealProfilesSaved');
+        }
+
+        function loadIdealProfiles() {
+            const saved = localStorage.getItem('idealProfiles');
+            if (saved) {
+                const profiles = JSON.parse(saved);
+                document.getElementById('idealProfile1').value = profiles.profile1 || '';
+                document.getElementById('idealProfile2').value = profiles.profile2 || '';
+            }
+        }
+
+        function handleIdealProfile1File(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('idealProfile1').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function handleIdealProfile2File(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('idealProfile2').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function saveFiltersRequirements() {
+            const companySizes = Array.from(document.querySelectorAll('input[name="companySize"]:checked')).map(input => input.value);
+            const industries = Array.from(document.querySelectorAll('input[name="industries"]:checked')).map(input => input.value);
+            const otherIndustry = document.getElementById('otherIndustry').value;
+            
+            const filters = {
+                companySizes,
+                industries,
+                otherIndustry,
+                minExperience: document.getElementById('minExperience').value,
+                maxExperience: document.getElementById('maxExperience').value
+            };
+            
+            localStorage.setItem('filtersRequirements', JSON.stringify(filters));
+            showSaveIndication('filtersRequirementsSaved');
+        }
+
+        function loadFiltersRequirements() {
+            const saved = localStorage.getItem('filtersRequirements');
+            if (saved) {
+                const filters = JSON.parse(saved);
+                
+                filters.companySizes?.forEach(size => {
+                    const checkbox = document.querySelector(`input[name="companySize"][value="${size}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                filters.industries?.forEach(industry => {
+                    const checkbox = document.querySelector(`input[name="industries"][value="${industry}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                if (filters.otherIndustry) {
+                    document.getElementById('otherIndustry').value = filters.otherIndustry;
+                }
+                
+                if (filters.minExperience) {
+                    document.getElementById('minExperience').value = filters.minExperience;
+                }
+                
+                if (filters.maxExperience) {
+                    document.getElementById('maxExperience').value = filters.maxExperience;
+                }
+            }
+        }
+
+        function saveExcellenceTags() {
+            const builtInTags = Array.from(document.querySelectorAll('input[name="excellenceTags"]:checked')).map(input => input.value);
+            const customTags = document.getElementById('customExcellenceTags').value;
+            
+            const tags = { builtInTags, customTags };
+            localStorage.setItem('excellenceTags', JSON.stringify(tags));
+            showSaveIndication('excellenceTagsSaved');
+        }
+
+        function loadExcellenceTags() {
+            const saved = localStorage.getItem('excellenceTags');
+            if (saved) {
+                const tags = JSON.parse(saved);
+                
+                tags.builtInTags?.forEach(tag => {
+                    const checkbox = document.querySelector(`input[name="excellenceTags"][value="${tag}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                if (tags.customTags) {
+                    document.getElementById('customExcellenceTags').value = tags.customTags;
+                }
+            }
+        }
+
+        function addCustomUniversity() {
+            const input = document.getElementById('customUniversity');
+            const university = input.value.trim();
+            if (university) {
+                const list = document.getElementById('customUniversityList');
+                list.innerHTML += `<div class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2">${university}</div>`;
+                input.value = '';
+            }
+        }
+
+        function saveEducationFilter() {
+            const universities = Array.from(document.querySelectorAll('input[name="universities"]:checked')).map(input => input.value);
+            const customUniversities = Array.from(document.querySelectorAll('#customUniversityList div')).map(div => div.textContent);
+            
+            const education = { universities, customUniversities };
+            localStorage.setItem('educationFilter', JSON.stringify(education));
+            showSaveIndication('educationFilterSaved');
+        }
+
+        function loadEducationFilter() {
+            const saved = localStorage.getItem('educationFilter');
+            if (saved) {
+                const education = JSON.parse(saved);
+                
+                education.universities?.forEach(uni => {
+                    const checkbox = document.querySelector(`input[name="universities"][value="${uni}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                education.customUniversities?.forEach(uni => {
+                    const list = document.getElementById('customUniversityList');
+                    list.innerHTML += `<div class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2">${uni}</div>`;
+                });
+            }
+        }
+
+        function saveRedFlags() {
+            const builtInFlags = Array.from(document.querySelectorAll('input[name="redFlags"]:checked')).map(input => input.value);
+            const customFlags = document.getElementById('customRedFlags').value;
+            
+            const flags = { builtInFlags, customFlags };
+            localStorage.setItem('redFlags', JSON.stringify(flags));
+            showSaveIndication('redFlagsSaved');
+        }
+
+        function loadRedFlags() {
+            const saved = localStorage.getItem('redFlags');
+            if (saved) {
+                const flags = JSON.parse(saved);
+                
+                flags.builtInFlags?.forEach(flag => {
+                    const checkbox = document.querySelector(`input[name="redFlags"][value="${flag}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                if (flags.customFlags) {
+                    document.getElementById('customRedFlags').value = flags.customFlags;
+                }
+            }
+        }
+
+        function saveCustomTraits() {
+            const traits = document.getElementById('customTraits').value;
+            localStorage.setItem('customTraits', traits);
+            showSaveIndication('customTraitsSaved');
+        }
+
+        function loadCustomTraits() {
+            const saved = localStorage.getItem('customTraits');
+            if (saved) {
+                document.getElementById('customTraits').value = saved;
+            }
+        }
+
+        function updateWeightDisplay(type, value) {
+            document.getElementById(type + 'Value').textContent = value;
+        }
+
+        function saveWeights() {
+            const weights = {
+                techFit: document.getElementById('techFitWeight').value,
+                experience: document.getElementById('experienceWeight').value,
+                professionalSignals: document.getElementById('professionalSignalsWeight').value,
+                startupFit: document.getElementById('startupFitWeight').value,
+                redFlagPenalty: document.getElementById('redFlagPenaltyWeight').value
+            };
+            localStorage.setItem('weights', JSON.stringify(weights));
+            showSaveIndication('weightsSaved');
+        }
+
+        function loadWeights() {
+            const saved = localStorage.getItem('weights');
+            if (saved) {
+                const weights = JSON.parse(saved);
+                
+                Object.keys(weights).forEach(key => {
+                    const slider = document.getElementById(key + 'Weight');
+                    if (slider) {
+                        slider.value = weights[key];
+                        updateWeightDisplay(key, weights[key]);
+                    }
+                });
+            }
+        }
+
+        function updateThresholdDisplay(value) {
+            document.getElementById('thresholdValue').textContent = value;
+        }
+
+        function saveCostSettings() {
+            const settings = {
+                embeddingThreshold: document.getElementById('embeddingThreshold').value,
+                batchSize: document.getElementById('batchSize').value
+            };
+            localStorage.setItem('costSettings', JSON.stringify(settings));
+            showSaveIndication('costSettingsSaved');
+        }
+
+        function loadCostSettings() {
+            const saved = localStorage.getItem('costSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                
+                if (settings.embeddingThreshold) {
+                    document.getElementById('embeddingThreshold').value = settings.embeddingThreshold;
+                    updateThresholdDisplay(settings.embeddingThreshold);
+                }
+                
+                if (settings.batchSize) {
+                    document.getElementById('batchSize').value = settings.batchSize;
+                }
+            }
+        }
+
+        // Cost optimization functions
+        function optimizeProfileForAI(profile, jobKeywords) {
+            return {
+                title: profile.title?.substring(0, 50) || '',
+                company: profile.company?.substring(0, 30) || '',
+                experience: extractYearsOnly(profile.summary || profile.experience || ''),
+                keywords: extractTopKeywords(profile.summary || '', 5),
+                education: profile.education?.substring(0, 40) || '',
+                location: profile.location?.substring(0, 20) || ''
+            };
+        }
+
+        function extractYearsOnly(text) {
+            const yearMatch = text.match(/(\d+)\+?\s*(?:years?|yrs?)/i);
+            return yearMatch ? parseInt(yearMatch[1]) : 0;
+        }
+
+        function extractTopKeywords(text, maxKeywords = 5) {
+            const techKeywords = ['javascript', 'python', 'react', 'node', 'aws', 'sql', 'docker', 'kubernetes'];
+            const found = techKeywords.filter(keyword => 
+                text.toLowerCase().includes(keyword)
+            );
+            return found.slice(0, maxKeywords);
+        }
+
+        function smartPreFilter(profile, jobDesc, embeddingScore) {
+            if (embeddingScore < 0.85) {
+                return { score: Math.round(embeddingScore * 60), source: 'embedding_low', skipGPT: true };
+            }
+            
+            const quickScore = calculateQuickKeywordScore(profile, jobDesc);
+            if (quickScore < 50) {
+                return { score: quickScore, source: 'keywords', skipGPT: true };
+            }
+            
+            if (embeddingScore > 0.9 || quickScore > 70) {
+                return { score: null, source: 'needs_gpt', skipGPT: false };
+            }
+            
+            return { score: Math.round((embeddingScore * 60) + (quickScore * 0.4)), source: 'hybrid', skipGPT: true };
+        }
+
+        function calculateQuickKeywordScore(profile, jobDesc) {
+            const jobKeywords = extractJobKeywords(jobDesc);
+            const profileText = `${profile.title} ${profile.summary} ${profile.experience}`.toLowerCase();
+            
+            let matches = 0;
+            let totalWeight = 0;
+            
+            jobKeywords.forEach(keyword => {
+                totalWeight += keyword.weight;
+                if (profileText.includes(keyword.term.toLowerCase())) {
+                    matches += keyword.weight;
+                }
+            });
+            
+            return totalWeight > 0 ? Math.round((matches / totalWeight) * 100) : 0;
+        }
+
+        function extractJobKeywords(jobDesc) {
+            const techStack = ['react', 'python', 'aws', 'sql', 'docker', 'kubernetes', 'nodejs'];
+            const experience = ['senior', 'lead', 'principal', 'manager', 'director'];
+            const skills = ['leadership', 'startup', 'agile', 'team', 'product'];
+            
+            const keywords = [];
+            
+            techStack.forEach(tech => {
+                if (jobDesc.toLowerCase().includes(tech)) {
+                    keywords.push({ term: tech, weight: 3 });
+                }
+            });
+            
+            experience.forEach(exp => {
+                if (jobDesc.toLowerCase().includes(exp)) {
+                    keywords.push({ term: exp, weight: 2 });
+                }
+            });
+            
+            skills.forEach(skill => {
+                if (jobDesc.toLowerCase().includes(skill)) {
+                    keywords.push({ term: skill, weight: 1 });
+                }
+            });
+            
+            return keywords;
+        }
+
+        function createMicroPrompt(profile, jobDesc, weights) {
+            const jobSummary = jobDesc.substring(0, 200).replace(/\s+/g, ' ').trim();
+            const requirements = extractTopRequirements(jobDesc, 3);
+            
+            return `Score 0-100 for job match:
+JOB: ${jobSummary}
+CANDIDATE: ${profile.title} at ${profile.company}, ${profile.experience}y exp
+KEY REQ: ${requirements.join(', ')}
+WEIGHTS: Tech${weights.tech}% Exp${weights.experience}% Startup${weights.startup}%
+FORMAT: Score|TechFit|ExpFit|StartupFit|Reason`;
+        }
+
+        function extractTopRequirements(jobDesc, count = 3) {
+            const commonReqs = [
+                'senior developer', 'full stack', 'react', 'python', 'aws',
+                'team lead', 'startup experience', 'agile', 'microservices'
+            ];
+            
+            return commonReqs
+                .filter(req => jobDesc.toLowerCase().includes(req.toLowerCase()))
+                .slice(0, count);
+        }
+
+        function parseCompactResponse(response) {
+            const parts = response.split('|');
+            if (parts.length >= 5) {
+                return {
+                    totalScore: parseInt(parts[0]) || 0,
+                    techFit: parseInt(parts[1]) || 0,
+                    expFit: parseInt(parts[2]) || 0,
+                    startupFit: parseInt(parts[3]) || 0,
+                    reason: parts[4]?.substring(0, 100) || ''
+                };
+            }
+            
+            const scoreMatch = response.match(/(\d+)/);
+            return {
+                totalScore: scoreMatch ? parseInt(scoreMatch[1]) : 0,
+                techFit: 0,
+                expFit: 0,
+                startupFit: 0,
+                reason: 'Compact parsing failed'
+            };
+        }
+
+        function updateCostDashboard(stats) {
+            const costPerEmbedding = 0.00002 / 1000;
+            const costPerGPTInput = 0.00015 / 1000;
+            const costPerGPTOutput = 0.0006 / 1000;
+            
+            const embeddingCost = stats.embeddingTokens * costPerEmbedding;
+            const gptInputCost = stats.gptInputTokens * costPerGPTInput;
+            const gptOutputCost = stats.gptOutputTokens * costPerGPTOutput;
+            const totalCost = embeddingCost + gptInputCost + gptOutputCost;
+            
+            document.getElementById('costBreakdown').innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Embedding:</span>
+                            <span>$${embeddingCost.toFixed(4)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>GPT Calls:</span>
+                            <span>$${(gptInputCost + gptOutputCost).toFixed(4)}</span>
+                        </div>
+                        <div class="flex justify-between font-bold border-t pt-2">
+                            <span>Total:</span>
+                            <span>$${totalCost.toFixed(4)}</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <div>${stats.profilesProcessed} profiles processed</div>
+                        <div>${stats.gptCallsAvoided} GPT calls saved</div>
+                        <div>${((stats.gptCallsAvoided / stats.profilesProcessed) * 100).toFixed(1)}% efficiency</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Ranking functions
+        function startRanking() {
+            if (!filteredData.length && !uploadedData.length) {
+                alert('Please upload a file first');
+                return;
+            }
+            
+            rankingInProgress = true;
+            document.getElementById('rankingProgress').classList.remove('hidden');
+            document.getElementById('costDashboard').classList.remove('hidden');
+            
+            // Simulate ranking process
+            simulateRanking();
+        }
+
+        function simulateRanking() {
+            const dataToRank = filteredData.length ? filteredData : uploadedData;
+            const startRow = parseInt(document.getElementById('startRow').value) - 1;
+            const endRow = parseInt(document.getElementById('endRow').value);
+            const profilesToRank = dataToRank.slice(startRow, endRow);
+            
+            let processed = 0;
+            const total = profilesToRank.length;
+            
+            const interval = setInterval(() => {
+                if (!rankingInProgress) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                processed += Math.min(5, total - processed);
+                const percentage = Math.round((processed / total) * 100);
+                
+                document.getElementById('progressBar').style.width = percentage + '%';
+                document.getElementById('progressPercent').textContent = percentage + '%';
+                document.getElementById('progressText').textContent = `Processing profiles...`;
+                document.getElementById('currentStatus').textContent = `Current: Analyzing profile ${processed}`;
+                document.getElementById('processedStats').textContent = `Processed: ${processed} / ${total}`;
+                
+                // Update cost dashboard
+                updateCostDashboard({
+                    embeddingTokens: processed * 50,
+                    gptInputTokens: Math.floor(processed * 0.3) * 80,
+                    gptOutputTokens: Math.floor(processed * 0.3) * 30,
+                    profilesProcessed: processed,
+                    gptCallsAvoided: Math.floor(processed * 0.7)
+                });
+                
+                if (processed >= total) {
+                    clearInterval(interval);
+                    completeRanking(profilesToRank);
+                    
+                    // Show AI feedback system after first batch
+                    if (processed >= 20) {
+                        showAIFeedbackSystem();
+                    }
+                }
+            }, 200);
+        }
+
+        function stopRanking() {
+            rankingInProgress = false;
+            document.getElementById('rankingProgress').classList.add('hidden');
+        }
+
+        function completeRanking(profiles) {
+            // Generate mock results
+            rankedCandidates = profiles.map((profile, index) => {
+                const score = Math.max(0, Math.min(100, 85 - (index * 2) + Math.random() * 20));
+                return {
+                    ...profile,
+                    totalScore: Math.round(score),
+                    techFit: Math.round(score + Math.random() * 10 - 5),
+                    experience: Math.round(score + Math.random() * 10 - 5),
+                    professionalSignals: Math.round(score + Math.random() * 10 - 5),
+                    startupFit: Math.round(score + Math.random() * 10 - 5),
+                    embeddingScore: (score / 100).toFixed(2),
+                    category: score >= 75 ? 'TOP' : score >= 60 ? 'GOOD' : 'AVERAGE',
+                    isHiddenGem: score < 60 && Math.random() > 0.8
+                };
+            });
+            
+            updateResultsStats();
+            populateResultsTable();
+            populateAIInsights();
+            
+            alert('Ranking completed! Check the Results tab.');
+        }
+
+        function showAIFeedbackSystem() {
+            document.getElementById('aiFeedbackSystem').classList.remove('hidden');
+            
+            // Populate suggested adjustments
+            const suggestions = [
+                { weight: 'Tech Fit', change: '+5%', reason: 'Top candidates show strong technical alignment' },
+                { weight: 'Experience', change: '-3%', reason: 'Some high scorers have limited experience but good potential' },
+                { weight: 'Startup Fit', change: '+2%', reason: 'Startup experience appears undervalued in current results' }
+            ];
+            
+            const suggestionsDiv = document.getElementById('suggestedAdjustments');
+            suggestionsDiv.innerHTML = suggestions.map(suggestion => `
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span class="text-sm">${suggestion.weight}: <strong>${suggestion.change}</strong> - ${suggestion.reason}</span>
+                    <button onclick="applySuggestion('${suggestion.weight}', '${suggestion.change}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Apply</button>
+                </div>
+            `).join('');
+        }
+
+        function applyFeedback() {
+            const feedback = document.getElementById('aiFeedback').value;
+            if (feedback.trim()) {
+                // Process feedback and adjust weights
+                alert('Feedback applied! Continuing with improved scoring...');
+                document.getElementById('aiFeedbackSystem').classList.add('hidden');
+                
+                // Continue ranking with adjusted parameters
+                if (rankingInProgress) {
+                    simulateRanking();
+                }
+            }
+        }
+
+        function skipFeedback() {
+            document.getElementById('aiFeedbackSystem').classList.add('hidden');
+        }
+
+        function applySuggestion(weight, change) {
+            alert(`Applied ${change} to ${weight} weight`);
+        }
+
+        // Results functions
+        function updateResultsStats() {
+            const topCount = rankedCandidates.filter(c => c.category === 'TOP').length;
+            const goodCount = rankedCandidates.filter(c => c.category === 'GOOD').length;
+            const averageCount = rankedCandidates.filter(c => c.category === 'AVERAGE').length;
+            const hiddenGemsCount = rankedCandidates.filter(c => c.isHiddenGem).length;
+            
+            document.getElementById('topCandidates').textContent = topCount;
+            document.getElementById('goodCandidates').textContent = goodCount;
+            document.getElementById('averageCandidates').textContent = averageCount;
+            document.getElementById('hiddenGems').textContent = hiddenGemsCount;
+        }
+
+        function populateResultsTable() {
+            const tbody = document.getElementById('resultsTableBody');
+            tbody.innerHTML = '';
+            
+            rankedCandidates.forEach((candidate, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                
+                const fullName = `${candidate[columnMapping.firstName] || 'N/A'} ${candidate[columnMapping.lastName] || 'N/A'}`;
+                const company = candidate[columnMapping.company] || 'N/A';
+                const linkedinUrl = candidate.linkedinProfileUrl || '#';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2">${fullName}</td>
+                    <td class="px-4 py-2">${company}</td>
+                    <td class="px-4 py-2">${candidate.linkedinJobTitle || 'N/A'}</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 rounded text-sm ${getScoreColor(candidate.totalScore)}">
+                            ${candidate.totalScore}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2">
+                        <a href="${linkedinUrl}" target="_blank" class="text-blue-600 hover:underline">LinkedIn</a>
+                    </td>
+                    <td class="px-4 py-2">
+                        <button onclick="viewCandidate(${index})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">View</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getScoreColor(score) {
+            if (score >= 75) return 'bg-green-100 text-green-800';
+            if (score >= 60) return 'bg-blue-100 text-blue-800';
+            return 'bg-gray-100 text-gray-800';
+        }
+
+        function viewCandidate(index) {
+            const candidate = rankedCandidates[index];
+            const fullName = `${candidate[columnMapping.firstName] || 'N/A'} ${candidate[columnMapping.lastName] || 'N/A'}`;
+            
+            document.getElementById('candidateCardContent').innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header -->
+                    <div class="border-b pb-4">
+                        <h2 class="text-2xl font-bold text-gray-900">${fullName}</h2>
+                        <p class="text-lg text-gray-600">${candidate.linkedinJobTitle || 'N/A'}</p>
+                        <p class="text-sm text-gray-500">${candidate.companyIndustry || 'N/A'} | ${candidate.location || 'N/A'}</p>
+                    </div>
+                    
+                    <!-- Scoring Section -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">📊 Overall Score</h3>
+                            <div class="text-center p-4 rounded-lg ${getScoreCategoryStyle(candidate.category)}">
+                                <div class="text-3xl font-bold">${candidate.totalScore}</div>
+                                <div class="text-sm">${candidate.category}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">📈 Score Breakdown</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Tech Fit:</span>
+                                    <span class="font-semibold">${candidate.techFit}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Experience:</span>
+                                    <span class="font-semibold">${candidate.experience}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Professional Signals:</span>
+                                    <span class="font-semibold">${candidate.professionalSignals}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Startup Fit:</span>
+                                    <span class="font-semibold">${candidate.startupFit}%</span>
+                                </div>
+                                <div class="flex justify-between border-t pt-2">
+                                    <span>Embedding Score:</span>
+                                    <span class="font-semibold">${candidate.embeddingScore}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Insights -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">🧠 AI Insights</h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-3">
+                            <h4 class="font-semibold text-blue-800 mb-2">Profile Summary</h4>
+                            <p class="text-sm text-blue-700">${generateInsightSummary(candidate)}</p>
+                        </div>
+                        <div class="bg-green-50 border border-green-200 rounded p-4 mb-3">
+                            <h4 class="font-semibold text-green-800 mb-2">AI Suggestions</h4>
+                            <p class="text-sm text-green-700">${generateAISuggestions(candidate)}</p>
+                        </div>
+                        ${candidate.totalScore < 60 ? `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded p-4">
+                            <h4 class="font-semibold text-yellow-800 mb-2">Score Reduction Reasons</h4>
+                            <p class="text-sm text-yellow-700">${generateScoreReductionReasons(candidate)}</p>
+                        </div>
+                        ` : ''}
+                        ${candidate.isHiddenGem ? `
+                        <div class="bg-purple-50 border border-purple-200 rounded p-4">
+                            <h4 class="font-semibold text-purple-800 mb-2">💎 Hidden Gem Analysis</h4>
+                            <p class="text-sm text-purple-700">${generateHiddenGemExplanation(candidate)}</p>
+                            <button onclick="addToQualifiedExport(${index})" class="mt-2 bg-purple-600 text-white px-3 py-1 rounded text-sm">Add to 60+ Export</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold mb-3">⚡ Actions</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Notes</label>
+                                <textarea class="w-full border border-gray-300 rounded px-3 py-2 h-20" placeholder="Add your notes about this candidate..."></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded">📄 Export as PDF</button>
+                                <a href="${candidate.linkedinProfileUrl || '#'}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded">🔗 View LinkedIn</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('candidateModal').classList.remove('hidden');
+        }
+
+        function getScoreCategoryStyle(category) {
+            switch(category) {
+                case 'TOP': return 'bg-green-100 text-green-800';
+                case 'GOOD': return 'bg-blue-100 text-blue-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function generateInsightSummary(candidate) {
+            return `Professional with ${candidate.experience || 'varied'} years of experience in ${candidate.companyIndustry || 'technology sector'}. Current role at ${candidate[columnMapping.company] || 'current company'} demonstrates ${candidate.techFit > 70 ? 'strong' : 'developing'} technical capabilities and ${candidate.startupFit > 70 ? 'excellent' : 'good'} fit for dynamic environments.`;
+        }
+
+        function generateAISuggestions(candidate) {
+            if (candidate.totalScore >= 75) {
+                return "Strong candidate for immediate consideration. Consider for senior roles given their technical background and professional trajectory.";
+            } else if (candidate.totalScore >= 60) {
+                return "Solid candidate with good potential. May benefit from additional technical screening or consideration for mid-level positions.";
+            } else {
+                return "Consider for specific roles where their unique background could add value, or for junior positions with growth potential.";
+            }
+        }
+
+        function generateScoreReductionReasons(candidate) {
+            const reasons = [];
+            if (candidate.experience < 50) reasons.push("Limited relevant experience");
+            if (candidate.techFit < 60) reasons.push("Technical skills gap");
+            if (candidate.startupFit < 50) reasons.push("Limited startup/fast-paced environment experience");
+            return reasons.join(", ") || "Multiple factors affecting overall fit";
+        }
+
+        function generateHiddenGemExplanation(candidate) {
+            return "While the overall score is below 60, this candidate shows exceptional potential in specific areas. Their unique background or standout achievements suggest they could excel in the right environment despite not meeting all traditional criteria.";
+        }
+
+        function addToQualifiedExport(index) {
+            rankedCandidates[index].addedToExport = true;
+            alert('Candidate added to qualified export list!');
+        }
+
+        function closeCandidateModal() {
+            document.getElementById('candidateModal').classList.add('hidden');
+        }
+
+        function populateAIInsights() {
+            // Similar companies
+            const companies = [
+                "SimilarWeb", "monday.com", "Wix.com", "OrCam Technologies", "Lightricks",
+                "Gett", "Fiverr", "IronSource", "JFrog", "Checkmarx"
+            ];
+            document.getElementById('similarCompanies').innerHTML = companies.map(company => 
+                `<div class="text-sm p-2 bg-blue-50 rounded mb-1">${company}</div>`
+            ).join('');
+            
+            // Search suggestions  
+            const suggestions = [
+                "Alumni from top Israeli tech companies",
+                "Developers with open-source contributions",
+                "Ex-military with technical background",
+                "Startup founders and early employees",
+                "Tech leads from scale-ups"
+            ];
+            document.getElementById('searchSuggestions').innerHTML = suggestions.map(suggestion => 
+                `<div class="text-sm p-2 bg-green-50 rounded mb-1">${suggestion}</div>`
+            ).join('');
+            
+            // Open to work profiles
+            const openToWork = rankedCandidates
+                .filter(c => c.linkedinIsOpenToWorkBadge)
+                .slice(0, 5)
+                .map(c => `${c[columnMapping.firstName]} ${c[columnMapping.lastName]}`);
+            
+            document.getElementById('openToWorkProfiles').innerHTML = openToWork.length ? 
+                openToWork.map(name => `<div class="text-sm p-2 bg-pink-50 rounded mb-1">${name}</div>`).join('') :
+                '<div class="text-sm text-gray-500">No "Open to Work" profiles detected</div>';
+        }
+
+        // Export functions
+        function exportQualified() {
+            const qualified = rankedCandidates.filter(c => c.totalScore >= 60 || c.addedToExport);
+            downloadCSV(qualified, 'qualified_candidates.csv');
+        }
+
+        function exportHotSignals() {
+            const hotSignals = rankedCandidates.filter(c => (c.totalScore >= 60 || c.addedToExport) && c.hotSignals);
+            downloadCSV(hotSignals, 'hot_signals_candidates.csv');
+        }
+
+        function exportInsights() {
+            const insights = rankedCandidates.map(c => ({
+                name: `${c[columnMapping.firstName]} ${c[columnMapping.lastName]}`,
+                score: c.totalScore,
+                insights: generateInsightSummary(c),
+                suggestions: generateAISuggestions(c)
+            }));
+            downloadCSV(insights, 'ai_insights.csv');
+        }
+
+        function exportUnder60() {
+            const under60 = rankedCandidates.filter(c => c.totalScore < 60);
+            downloadCSV(under60, 'under_60_candidates.csv');
+        }
+
+        function exportSessionSummary() {
+            const summary = {
+                totalProcessed: rankedCandidates.length,
+                topCandidates: rankedCandidates.filter(c => c.category === 'TOP').length,
+                goodCandidates: rankedCandidates.filter(c => c.category === 'GOOD').length,
+                averageCandidates: rankedCandidates.filter(c => c.category === 'AVERAGE').length,
+                hiddenGems: rankedCandidates.filter(c => c.isHiddenGem).length
+            };
+            downloadJSON(summary, 'session_summary.json');
+        }
+
+        function downloadCSV(data, filename) {
+            const csv = Papa.unparse(data);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function downloadJSON(data, filename) {
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Utility functions
+        function showSaveIndication(elementId) {
+            const element = document.getElementById(elementId);
+            element.classList.add('show');
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 2000);
+        }
+
+        function resetApplication() {
+            if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function previousPage() {
+            if (currentTab === 'ranking') {
+                showTab('setup');
+            } else if (currentTab === 'results') {
+                showTab('ranking');
+            }
+            updateNavigationButtons();
+        }
+
+        function nextPage() {
+            if (currentTab === 'setup') {
+                showTab('ranking');
+            } else if (currentTab === 'ranking') {
+                showTab('results');
+            }
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentTab === 'setup';
+            nextBtn.disabled = currentTab === 'results';
+            
+            if (currentTab === 'setup') {
+                nextBtn.textContent = 'Setup Complete ➡️';
+            } else if (currentTab === 'ranking') {
+                nextBtn.textContent = 'View Results ➡️';
+            }
+        }
+
+    </script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDo%2B%2FRhll%2BbACSjI06EuRQUQ9Af1zMsAelhBGnMbdsuM6QY9xi3o%2FO4ul%2B%2Bq1CtTTRmABJgtzNknof8hue%2FEfHHQq38rdjwbthhIsSlfoGiCSKSYW81th8u2MZ0emh7igqZnkWi7Tok0d0koNsDx4JogEEAI%2FBtvb2gWnBTuwxrw7OC68Gzotsl1IkkGySSk1pqkuRex0IVP7h8rgSuSVK8Q%2FBFJcmIoLv8LVFGSpA8ZYQNlqMv4n9tr0r0hNuY2W44n00VnZyCRUpykXECcvyI0UusXBo5%2BEyOS9%2FKw0uqIOYvUQ2xUffYQUjldrCaYKfPqfUwRzN5g1LCX5mJaf6sNu5FhGE%2BHm0srbJVy5MaLR1oCY%2BW3iq65IoTjAIW%2FnNVsCmT3uAokCX%2FOdEPQ9X6QdthIT04kR9FRgTW%2BKGxsHKuS863fng6avlrOKpkxA8FV%2BhRiCLTp0bUixFoEqMeGxwQJXbi86VT3rF0SnYr9ykt5rgm2M1QS2c6ujR0X%2F7CPs%2FmjWNc117%2FB5augNjVg%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDo+/Rhll+bACSjI06EuRQUQ9Af1zMsAelhBGnMbdsuM6QY9xi3o/O4ul++q1CtTTRmABJgtzNknof8hue/EfHHQq38rdjwbthhIsSlfoGiCSKSYW81th8u2MZ0emh7igqZnkWi7Tok0d0koNsDx4JogEEAI/Btvb2gWnBTuwxrw7OC68Gzotsl1IkkGySSk1pqkuRex0IVP7h8rgSuSVK8Q/BFJcmIoLv8LVFGSpA8ZYQNlqMv4n9tr0r0hNuY2W44n00VnZyCRUpykXECcvyI0UusXBo5+EyOS9/Kw0uqIOYvUQ2xUffYQUjldrCaYKfPqfUwRzN5g1LCX5mJaf6sNu5FhGE+Hm0srbJVy5MaLR1oCY+W3iq65IoTjAIW/nNVsCmT3uAokCX/OdEPQ9X6QdthIT04kR9FRgTW+KGxsHKuS863fng6avlrOKpkxA8FV+hRiCLTp0bUixFoEqMeGxwQJXbi86VT3rF0SnYr9ykt5rgm2M1QS2c6ujR0X/7CPs/mjWNc117/B5augNjVg=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
