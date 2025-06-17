@@ -944,9 +944,52 @@
     let gptCalls = 0;
     let embeddingCalls = 0;
     let skippedEmbedding = 0;
+    let sessionStartTime = Date.now();
+    let usageData = {
+      sessionId: generateSessionId(),
+      startTime: new Date().toISOString(),
+      embeddingCalls: 0,
+      gptCalls: 0,
+      candidatesProcessed: 0,
+      mode: '',
+      totalTime: 0
+    };
+
+    // Usage Tracking Functions
+    function generateSessionId() {
+      return 'scorely_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    async function trackUsage(data) {
+      try {
+        const payload = {
+          ...usageData,
+          ...data,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        };
+
+        await fetch('https://script.google.com/a/macros/added-value.co.il/s/AKfycbzf3seMAhiM7N90ep_wvFSl04el-W6aVznRFwhcKbyHzYp4Y5-k8Qa1uU4pmlMO7mzx/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.log('Usage tracking failed:', error);
+      }
+    }
+
+    function updateUsageData(updates) {
+      Object.assign(usageData, updates);
+      usageData.totalTime = Math.round((Date.now() - sessionStartTime) / 1000);
+    }
 
     // System Prompts
-    const SYSTEM_PROMPT = `Rate LinkedIn candidate 0-100. Return ONLY JSON:
+    const SYSTEM_PROMPT = `Rate candidate 0-100. Return JSON:
 {
   "tech_fit_score": 0-100,
   "experience_score": 0-100,
@@ -1749,6 +1792,15 @@
         await fetchMarketlyCompanies();
       }
       
+      // Track session start
+      updateUsageData({
+        mode: document.getElementById('aiModel').value,
+        candidatesProcessed: candidates.length,
+        embeddingCalls: 0,
+        gptCalls: 0
+      });
+      await trackUsage({ event: 'ranking_started' });
+      
       const startRow = parseInt(document.getElementById('startRow').value);
       const endRow = parseInt(document.getElementById('endRow').value);
       
@@ -1947,7 +1999,7 @@
 
     // Real Batch API implementation for 50% cost savings
     async function processWithRealBatchAPI(candidates, modelOverride = null) {
-      const model = modelOverride || "gpt-3.5-turbo";
+      const model = modelOverride || "gpt-3.5-turbo"; // ברירת מחדל חסכונית
       const useBatchAPI = candidates.length >= 10; // השתמש ב-Batch API רק אם יש מספיק מועמדים
       
       if (useBatchAPI) {
@@ -2582,12 +2634,12 @@ Weights: Tech ${weights.techFit}%, Exp ${weights.experience}%, Signals ${weights
           <h3><i class="fas fa-chart-line mr-2"></i>Real-time Performance Monitoring</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div class="stat-item">
-              <div class="stat-value text-green-600" id="totalSavings">$0.00</div>
-              <div class="stat-label">Total Savings</div>
+              <div class="stat-value text-green-600" id="efficiency">0%</div>
+              <div class="stat-label">Efficiency</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value text-blue-600" id="costPerCandidate">$0.00</div>
-              <div class="stat-label">Cost per Candidate</div>
+              <div class="stat-value text-blue-600" id="processingTime">0s</div>
+              <div class="stat-label">Processing Time</div>
             </div>
             <div class="stat-item">
               <div class="stat-value text-purple-600" id="processingSpeed">0</div>
@@ -2622,23 +2674,23 @@ Weights: Tech ${weights.techFit}%, Exp ${weights.experience}%, Signals ${weights
           </div>
           
           <div class="mb-4">
-            <h4 class="font-semibold mb-2">Cost Savings Breakdown</h4>
+            <h4 class="font-semibold mb-2">Performance Breakdown</h4>
             <div class="space-y-2">
               <div class="flex justify-between">
                 <span>Token Optimization:</span>
-                <span class="font-bold text-green-600" id="tokenSavings">$0.00</span>
+                <span class="font-bold text-green-600" id="tokenOptimization">0%</span>
               </div>
               <div class="flex justify-between">
-                <span>Smart Model Selection:</span>
-                <span class="font-bold text-green-600" id="modelSavings">$0.00</span>
+                <span>Model Selection:</span>
+                <span class="font-bold text-green-600" id="modelOptimization">0%</span>
               </div>
               <div class="flex justify-between">
-                <span>Batch API Discount:</span>
-                <span class="font-bold text-green-600" id="batchSavings">$0.00</span>
+                <span>Batch Processing:</span>
+                <span class="font-bold text-green-600" id="batchOptimization">0%</span>
               </div>
               <div class="flex justify-between">
-                <span>Smart Threshold:</span>
-                <span class="font-bold text-green-600" id="thresholdSavings">$0.00</span>
+                <span>Smart Filtering:</span>
+                <span class="font-bold text-green-600" id="filterOptimization">0%</span>
               </div>
             </div>
           </div>
@@ -3426,5 +3478,3 @@ Weights: Tech ${weights.techFit}%, Exp ${weights.experience}%, Signals ${weights
         window.__genspark_locale = "en-US";
         window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDrNyZkMo/QVq/DtHcRjYaPZo1JWG0/XaKM0TCf2kOgptvRFH3SaHm8UxSVyRKR+y6HbI7bv9sAlYLDhRSwmf25xnw3DxkTeSNuZaRjMzvayseps9277ckc5jlZ4fCLvPBmCAyAqLdHYZ5Sb0Xh+MrzIuFkAncOKQT8EqZGfbLVXwUeZiy6ltZPxiPXboQKL8KeDRm5gC5JMOsealPnZ7Fc54QTfIv9Op4wrmtLH0Yl0I916bGB0AlMimtDeE4tTNspcvZvjh/wL/7keI8LNyCcgJomWWN3OHgp9i/jtpJo/9ksjPVc9ntCAMYTXtNhHAmV4CytA/DoEQckWMPXbgYWcUzNtWQn+JhZ6ICSBL+5RImotsErfdTgnd6JmE1w0mVVpIQ86b/zgdYvesM5QA9oqMBpnlNXpXGCY/LCcF8Mh0giaxiMMwd6le3X4oAJAauZANj5rwO4OujzyHKNWDF7ghRboEm70JrcfFzhbcxBpSATrIUVyvXm9sXoBV84IlVbYXRE196J24n+rPpIR6440=";
     </script>
-    
-    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
