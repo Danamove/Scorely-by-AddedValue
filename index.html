@@ -298,7 +298,7 @@
                     </div>
 
                     <div id="preFilterSection" class="hidden bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">3. Pre-Filter Configuration</h2>
+                        <h2 class="text-xl font-semibold mb-4">3. Pre-Filter Configuration (Round 1)</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <h3 class="text-lg font-medium mb-2">Blacklist Companies</h3>
@@ -320,8 +320,38 @@
                             <button id="saveFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
                                 Save Filters
                             </button>
-                            <button id="runFilteringBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Run Filtering
+                            <button id="runFilteringRound1Btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Run Round 1 Filtering
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="round1Results" class="hidden bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-semibold mb-4">Round 1 Filter Results</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="round1Uploaded">0</div>
+                                <div class="text-sm text-gray-600">Uploaded</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-red-600" id="round1FilteredOut">0</div>
+                                <div class="text-sm text-gray-600">Filtered Out</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" id="round1Remaining">0</div>
+                                <div class="text-sm text-gray-600">Remaining</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-yellow-600" id="round1Duplicates">0</div>
+                                <div class="text-sm text-gray-600">Duplicates Removed</div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button id="proceedToRound2Btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                Proceed to Round 2
+                            </button>
+                            <button id="clearDashboardBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                Clear Dashboard
                             </button>
                         </div>
                     </div>
@@ -346,14 +376,14 @@
                     </div>
 
                     <div id="advancedFilterSection" class="hidden bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">5. Advanced Pre-Filter Criteria</h2>
+                        <h2 class="text-xl font-semibold mb-4">5. Advanced Pre-Filter Criteria (Round 2)</h2>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h3 class="text-lg font-medium mb-3">Basic Thresholds</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Years of Experience</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
                                         <input type="number" id="minYears" min="0" max="50" class="w-full border border-gray-300 rounded-md p-2" 
                                                placeholder="0">
                                     </div>
@@ -368,7 +398,7 @@
                                                placeholder="JavaScript, React, Python (comma-separated)">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Roles</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Role</label>
                                         <input type="text" id="suitableRoles" class="w-full border border-gray-300 rounded-md p-2" 
                                                placeholder="Software Engineer, Developer, Programmer">
                                     </div>
@@ -406,27 +436,40 @@
                                 <li>• <strong>Accuracy:</strong> Focus on relevant candidates only</li>
                             </ul>
                         </div>
+
+                        <div class="mt-6 flex space-x-4">
+                            <button id="runFilteringRound2Btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Run Round 2 Filtering
+                            </button>
+                            <button id="saveAdvancedFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                Save Advanced Filters
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="filterResults" class="hidden bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">Filter Results</h2>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div id="round2Results" class="hidden bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-semibold mb-4">Round 2 Filter Results</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-blue-600">${state.stats.uploaded}</div>
-                                <div class="text-sm text-gray-600">Uploaded</div>
+                                <div class="text-2xl font-bold text-blue-600" id="round2Screening">0</div>
+                                <div class="text-sm text-gray-600">Screening</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-red-600">${state.stats.filteredOut}</div>
-                                <div class="text-sm text-gray-600">Filtered Out</div>
+                                <div class="text-2xl font-bold text-yellow-600" id="round2SkippedEmbedding">0</div>
+                                <div class="text-sm text-gray-600">Skipped by Embedding</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-yellow-600">${state.stats.skippedEmbedding}</div>
-                                <div class="text-sm text-gray-600">Skipped</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-green-600">${state.stats.toBeSentToGPT}</div>
+                                <div class="text-2xl font-bold text-green-600" id="round2ToRank">0</div>
                                 <div class="text-sm text-gray-600">To Rank</div>
                             </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-red-600" id="round2FilteredOut">0</div>
+                                <div class="text-sm text-gray-600">Filtered Out</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-medium text-green-900 mb-2">Ready for Ranking!</h4>
+                            <p class="text-sm text-green-800">Your profiles have been filtered and are ready for AI-powered ranking.</p>
                         </div>
                     </div>
                 </div>
@@ -518,16 +561,181 @@
 
             // Set up save and run buttons
             document.getElementById('saveFiltersBtn').addEventListener('click', saveFilters);
-            document.getElementById('runFilteringBtn').addEventListener('click', runFiltering);
+            document.getElementById('runFilteringRound1Btn').addEventListener('click', runFilteringRound1);
             document.getElementById('mapColumnsBtn').addEventListener('click', showColumnMappingModal);
+            
+            // Set up Round 1 results handlers
+            document.getElementById('proceedToRound2Btn').addEventListener('click', proceedToRound2);
+            document.getElementById('clearDashboardBtn').addEventListener('click', clearDashboard);
             
             // Set up column selection handlers
             document.getElementById('selectAllColumns').addEventListener('click', selectAllColumns);
             document.getElementById('clearAllColumns').addEventListener('click', clearAllColumns);
             document.getElementById('saveColumnSelection').addEventListener('click', saveColumnSelection);
             
+            // Set up Round 2 handlers
+            document.getElementById('runFilteringRound2Btn').addEventListener('click', runFilteringRound2);
+            document.getElementById('saveAdvancedFiltersBtn').addEventListener('click', saveAdvancedFilters);
+            
             // Set up advanced filter handlers
             setupAdvancedFilterHandlers();
+        }
+
+        function saveFilters() {
+            state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(line => line.trim());
+            state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(line => line.trim());
+            state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(line => line.trim());
+            
+            localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
+            localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
+            localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+            
+            alert('Filters saved successfully!');
+        }
+
+        function runFilteringRound1() {
+            if (state.profiles.length === 0) {
+                alert('Please upload a file first');
+                return;
+            }
+
+            // Reset Round 1 stats
+            const round1Stats = {
+                uploaded: state.profiles.length,
+                filteredOut: 0,
+                remaining: 0,
+                duplicates: 0
+            };
+
+            // Deduplicate profiles
+            const uniqueProfiles = new Map();
+            state.profiles.forEach(profile => {
+                const key = `${profile.firstName || ''} ${profile.lastName || ''} ${profile.company || ''}`.toLowerCase();
+                if (!uniqueProfiles.has(key)) {
+                    uniqueProfiles.set(key, profile);
+                } else {
+                    round1Stats.duplicates++;
+                }
+            });
+
+            const filteredProfiles = Array.from(uniqueProfiles.values()).filter(profile => {
+                const company = (profile.company || '').toLowerCase();
+                const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.toLowerCase();
+                
+                // Check blacklist
+                if (state.filters.blacklist.some(blacklisted => company.includes(blacklisted.toLowerCase()))) {
+                    round1Stats.filteredOut++;
+                    return false;
+                }
+                
+                // Check past candidates
+                if (state.filters.pastCandidates.some(candidate => 
+                    fullName.includes(candidate.toLowerCase()) || 
+                    (profile.raw && profile.raw.includes(candidate))
+                )) {
+                    round1Stats.filteredOut++;
+                    return false;
+                }
+                
+                // Check no-go companies
+                if (state.filters.noGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
+                    round1Stats.filteredOut++;
+                    return false;
+                }
+                
+                return true;
+            });
+
+            round1Stats.remaining = filteredProfiles.length;
+            state.profiles = filteredProfiles;
+
+            // Update Round 1 results display
+            document.getElementById('round1Uploaded').textContent = round1Stats.uploaded;
+            document.getElementById('round1FilteredOut').textContent = round1Stats.filteredOut;
+            document.getElementById('round1Remaining').textContent = round1Stats.remaining;
+            document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
+            
+            document.getElementById('round1Results').classList.remove('hidden');
+            
+            // Save Round 1 stats
+            localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
+        }
+
+        function proceedToRound2() {
+            document.getElementById('profileSummarySection').classList.remove('hidden');
+            document.getElementById('advancedFilterSection').classList.remove('hidden');
+            
+            // Populate column selection if not already done
+            if (state.profiles.length > 0) {
+                populateColumnSelection();
+            }
+        }
+
+        function clearDashboard() {
+            if (confirm('Are you sure you want to clear the dashboard and reset all filters?')) {
+                // Reset all stats
+                state.stats = {
+                    uploaded: 0,
+                    filteredOut: 0,
+                    skippedEmbedding: 0,
+                    toBeSentToGPT: 0
+                };
+                
+                // Hide all result sections
+                document.getElementById('round1Results').classList.add('hidden');
+                document.getElementById('round2Results').classList.add('hidden');
+                document.getElementById('profileSummarySection').classList.add('hidden');
+                document.getElementById('advancedFilterSection').classList.add('hidden');
+                
+                // Clear localStorage stats
+                localStorage.removeItem('scorely_round1_stats');
+                localStorage.removeItem('scorely_round2_stats');
+                
+                alert('Dashboard cleared successfully!');
+            }
+        }
+
+        function runFilteringRound2() {
+            if (state.profiles.length === 0) {
+                alert('No profiles to filter. Please complete Round 1 first.');
+                return;
+            }
+
+            // Save advanced filter settings
+            saveAdvancedFilters();
+
+            // Reset Round 2 stats
+            const round2Stats = {
+                screening: state.profiles.length,
+                filteredOut: 0,
+                skippedEmbedding: 0,
+                toRank: 0
+            };
+
+            const filteredProfiles = state.profiles.filter(profile => {
+                // Apply advanced filters
+                if (!applyAdvancedFilters(profile)) {
+                    round2Stats.filteredOut++;
+                    return false;
+                }
+                
+                return true;
+            });
+
+            round2Stats.toRank = filteredProfiles.length;
+            state.profiles = filteredProfiles;
+            state.stats.toBeSentToGPT = filteredProfiles.length;
+
+            // Update Round 2 results display
+            document.getElementById('round2Screening').textContent = round2Stats.screening;
+            document.getElementById('round2FilteredOut').textContent = round2Stats.filteredOut;
+            document.getElementById('round2ToRank').textContent = round2Stats.toRank;
+            document.getElementById('round2SkippedEmbedding').textContent = round2Stats.skippedEmbedding;
+            
+            document.getElementById('round2Results').classList.remove('hidden');
+            
+            // Save Round 2 stats
+            localStorage.setItem('scorely_round2_stats', JSON.stringify(round2Stats));
         }
 
         function setupAdvancedFilterHandlers() {
@@ -661,19 +869,19 @@
             document.getElementById('advancedFilterSection').classList.remove('hidden');
         }
 
-        function runFiltering() {
+        function runFilteringRound1() {
             if (state.profiles.length === 0) {
                 alert('Please upload a file first');
                 return;
             }
 
-            // Reset stats
-            state.stats.filteredOut = 0;
-            state.stats.skippedEmbedding = 0;
-            state.stats.toBeSentToGPT = 0;
-
-            // Save advanced filter settings
-            saveAdvancedFilters();
+            // Reset Round 1 stats
+            const round1Stats = {
+                uploaded: state.profiles.length,
+                filteredOut: 0,
+                remaining: 0,
+                duplicates: 0
+            };
 
             // Deduplicate profiles
             const uniqueProfiles = new Map();
@@ -681,6 +889,8 @@
                 const key = `${profile.firstName || ''} ${profile.lastName || ''} ${profile.company || ''}`.toLowerCase();
                 if (!uniqueProfiles.has(key)) {
                     uniqueProfiles.set(key, profile);
+                } else {
+                    round1Stats.duplicates++;
                 }
             });
 
@@ -690,7 +900,7 @@
                 
                 // Check blacklist
                 if (state.filters.blacklist.some(blacklisted => company.includes(blacklisted.toLowerCase()))) {
-                    state.stats.filteredOut++;
+                    round1Stats.filteredOut++;
                     return false;
                 }
                 
@@ -699,30 +909,109 @@
                     fullName.includes(candidate.toLowerCase()) || 
                     (profile.raw && profile.raw.includes(candidate))
                 )) {
-                    state.stats.filteredOut++;
+                    round1Stats.filteredOut++;
                     return false;
                 }
                 
                 // Check no-go companies
                 if (state.filters.noGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
-                    state.stats.filteredOut++;
-                    return false;
-                }
-
-                // Apply advanced filters
-                if (!applyAdvancedFilters(profile)) {
-                    state.stats.filteredOut++;
+                    round1Stats.filteredOut++;
                     return false;
                 }
                 
                 return true;
             });
 
+            round1Stats.remaining = filteredProfiles.length;
+            state.profiles = filteredProfiles;
+
+            // Update Round 1 results display
+            document.getElementById('round1Uploaded').textContent = round1Stats.uploaded;
+            document.getElementById('round1FilteredOut').textContent = round1Stats.filteredOut;
+            document.getElementById('round1Remaining').textContent = round1Stats.remaining;
+            document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
+            
+            document.getElementById('round1Results').classList.remove('hidden');
+            
+            // Save Round 1 stats
+            localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
+        }
+
+        function proceedToRound2() {
+            document.getElementById('profileSummarySection').classList.remove('hidden');
+            document.getElementById('advancedFilterSection').classList.remove('hidden');
+            
+            // Populate column selection if not already done
+            if (state.profiles.length > 0) {
+                populateColumnSelection();
+            }
+        }
+
+        function clearDashboard() {
+            if (confirm('Are you sure you want to clear the dashboard and reset all filters?')) {
+                // Reset all stats
+                state.stats = {
+                    uploaded: 0,
+                    filteredOut: 0,
+                    skippedEmbedding: 0,
+                    toBeSentToGPT: 0
+                };
+                
+                // Hide all result sections
+                document.getElementById('round1Results').classList.add('hidden');
+                document.getElementById('round2Results').classList.add('hidden');
+                document.getElementById('profileSummarySection').classList.add('hidden');
+                document.getElementById('advancedFilterSection').classList.add('hidden');
+                
+                // Clear localStorage stats
+                localStorage.removeItem('scorely_round1_stats');
+                localStorage.removeItem('scorely_round2_stats');
+                
+                alert('Dashboard cleared successfully!');
+            }
+        }
+
+        function runFilteringRound2() {
+            if (state.profiles.length === 0) {
+                alert('No profiles to filter. Please complete Round 1 first.');
+                return;
+            }
+
+            // Save advanced filter settings
+            saveAdvancedFilters();
+
+            // Reset Round 2 stats
+            const round2Stats = {
+                screening: state.profiles.length,
+                filteredOut: 0,
+                skippedEmbedding: 0,
+                toRank: 0
+            };
+
+            const filteredProfiles = state.profiles.filter(profile => {
+                // Apply advanced filters
+                if (!applyAdvancedFilters(profile)) {
+                    round2Stats.filteredOut++;
+                    return false;
+                }
+                
+                return true;
+            });
+
+            round2Stats.toRank = filteredProfiles.length;
             state.profiles = filteredProfiles;
             state.stats.toBeSentToGPT = filteredProfiles.length;
+
+            // Update Round 2 results display
+            document.getElementById('round2Screening').textContent = round2Stats.screening;
+            document.getElementById('round2FilteredOut').textContent = round2Stats.filteredOut;
+            document.getElementById('round2ToRank').textContent = round2Stats.toRank;
+            document.getElementById('round2SkippedEmbedding').textContent = round2Stats.skippedEmbedding;
             
-            document.getElementById('filterResults').classList.remove('hidden');
-            renderSetupView(); // Refresh to show updated stats
+            document.getElementById('round2Results').classList.remove('hidden');
+            
+            // Save Round 2 stats
+            localStorage.setItem('scorely_round2_stats', JSON.stringify(round2Stats));
         }
 
         function saveAdvancedFilters() {
@@ -1553,18 +1842,6 @@
             document.getElementById('avgRating').textContent = avgRating;
             
             document.getElementById('feedbackStatsModal').style.display = 'block';
-        }
-
-        function saveFilters() {
-            state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(line => line.trim());
-            state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(line => line.trim());
-            state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(line => line.trim());
-            
-            localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
-            localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
-            localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
-            
-            alert('Filters saved successfully!');
         }
 
         function showResultsTab(tab) {
