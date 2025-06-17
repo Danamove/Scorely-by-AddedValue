@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scorely by AddedValue - AI-Powered LinkedIn Profile Ranking Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/openai@4.28.4/dist/index.browser.js" defer></script>
+  
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <style>
+    :root {
+      --primary-green: #8BC34A;
+      --primary-blue: #2196F3;
+      --primary-pink: #EC407A;
+    }
+    
+    body {
+      background-color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .card-border {
+      border: 2px solid transparent;
+      background: linear-gradient(white, white) padding-box,
+                  linear-gradient(135deg, var(--primary-green), var(--primary-blue), var(--primary-pink)) border-box;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-blue), var(--primary-pink));
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--primary-green), var(--primary-blue));
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-save {
+      background: var(--primary-green);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .navigation-footer {
+      background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-blue) 50%, var(--primary-pink) 100%);
+      padding: 1rem 2rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .nav-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      border: 1px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+    }
+    
+    .step-indicator {
+      text-align: center;
+      color: white;
+    }
+    
+    .step-dots {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .dot.active {
+      background: white;
+      transform: scale(1.2);
+    }
+    
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    
+    .modal.hidden {
+      display: none;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .close-btn:hover {
+      color: #000;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .tab-active {
+      background: linear-gradient(135deg, var(--primary-blue), var(--primary-green));
+      color: white;
+    }
+    
+    .saved-indicator {
+      color: var(--primary-green);
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    
+    .hot-signal {
+      background: var(--primary-pink);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      color: white;
+      z-index: 3000;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .notification.success {
+      background: var(--primary-green);
+    }
+    
+    .notification.error {
+      background: var(--primary-pink);
+    }
+    
+    .notification.warning {
+      background: #ff9800;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 0.5rem;
+      background: #e5e7eb;
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-green), var(--primary-blue));
+      transition: width 0.3s ease;
+    }
+    
+    .config-section {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .config-section h3 {
+      color: var(--primary-blue);
+      margin-bottom: 1rem;
+    }
+    
+    .processing-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      background: white;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-blue);
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    
+    #mainContent {
+      padding-bottom: 100px;
+    }
+  </style>
+  
+  <!-- 2. ספריות נוספות -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b p-4">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center">
+        <div class="w-12 h-12 rounded-lg mr-3" style="background: linear-gradient(135deg, var(--primary-blue), var(--primary-pink));">
+          <i class="fas fa-chart-line text-white text-xl flex items-center justify-center h-full"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Scorely</h1>
+          <p class="text-sm text-gray-600">by AddedValue</p>
+        </div>
+      </div>
+      <button id="settingsBtn" class="btn-primary">
+        <i class="fas fa-cog mr-2"></i>Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="bg-white border-b">
+    <div class="flex">
+      <button class="tab-btn tab-active px-6 py-3 border-b-2 border-transparent" data-tab="upload">
+        <i class="fas fa-upload mr-2"></i>Upload & Map
+      </button>
+      <button class="tab-btn px-6 py-3 border-b-2 border-transparent" data-tab="prefilter">
+        <i class="fas fa-filter mr-2"></i>Pre-Filter
+      </button>
+      <button class="tab-btn px-6 py-3 border-b-2 border-transparent" data-tab="configuration">
+        <i class="fas fa-cog mr-2"></i>Configuration
+      </button>
+      <button class="tab-btn px-6 py-3 border-b-2 border-transparent" data-tab="ranking">
+        <i class="fas fa-robot mr-2"></i>AI Ranking
+      </button>
+      <button class="tab-btn px-6 py-3 border-b-2 border-transparent" data-tab="results">
+        <i class="fas fa-trophy mr-2"></i>Results
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="mainContent" class="p-6">
+    <!-- Upload & Map Tab -->
+    <div id="uploadTab" class="tab-content">
+      <div class="card-border rounded-lg p-8">
+        <h2 class="text-3xl font-bold mb-6">File Upload & Column Mapping</h2>
+        
+        <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors cursor-pointer">
+          <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 mb-4"></i>
+          <h3 class="text-xl font-semibold mb-2">Drop your CSV or XLSX file here</h3>
+          <p class="text-gray-600 mb-4">or click to browse</p>
+          <button id="chooseFileBtn" class="btn-secondary">
+            <i class="fas fa-folder-open mr-2"></i>Choose File
+          </button>
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden">
+        </div>
+        
+        <div id="fileInfo" class="hidden mt-6 p-4 bg-blue-50 rounded-lg">
+          <h4 class="font-semibold text-blue-800 mb-2">File Information:</h4>
+          <p id="fileName" class="text-blue-700"></p>
+          <p id="fileSize" class="text-blue-700"></p>
+          <p id="recordCount" class="text-blue-700"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pre-Filter Tab -->
+    <div id="prefilterTab" class="tab-content hidden">
+      <div class="space-y-6">
+        <div class="config-section">
+          <h3><i class="fas fa-ban mr-2"></i>Company Blacklist</h3>
+          <p class="text-gray-600 mb-4">Companies to exclude from ranking</p>
+          <textarea id="blacklistInput" class="w-full h-32 p-3 border rounded-lg" placeholder="Enter company names, one per line..."></textarea>
+          <div class="mt-3">
+            <button onclick="saveBlacklist()" class="btn-save">Save Blacklist</button>
+            <span id="blacklistSaved" class="saved-indicator hidden">Saved ✓</span>
+            <button onclick="clearBlacklist()" class="btn-secondary ml-2">Clear</button>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-history mr-2"></i>Past Candidates</h3>
+          <p class="text-gray-600 mb-4">Names or LinkedIn URLs of previous candidates</p>
+          <textarea id="pastCandidatesInput" class="w-full h-32 p-3 border rounded-lg" placeholder="Enter names or LinkedIn URLs, one per line..."></textarea>
+          <div class="mt-3">
+            <button onclick="savePastCandidates()" class="btn-save">Save Past Candidates</button>
+            <span id="pastCandidatesSaved" class="saved-indicator hidden">Saved ✓</span>
+            <button onclick="clearPastCandidates()" class="btn-secondary ml-2">Clear</button>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-building mr-2"></i>No-Go Companies</h3>
+          <p class="text-gray-600 mb-4">Pre-defined list of companies to exclude</p>
+          <div class="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+            <p class="text-sm text-gray-700 mb-2"><strong>Fixed List:</strong></p>
+            <p class="text-sm text-gray-600">Isracard, Matrix, Harel Insurance & Finance, Ness Technologies, Bank Leumi, GAV Systems, Amdocs, Log-On Software, Sapiens, Aman Group, NICE, Maccabi Healthcare Services, Zap Group, Clalit Health Services, Bank Hapoalim, Israel Tax Authority, Discount Bank, Infanity Labs, Experis Israel, Sapiens International, Magic Software Enterprises, Ethernity Networks, Elad Software Systems, Mizrahi-Tefahot Bank, Migdal Insurance, Menora Mivtachim, Clal Insurance, Taldor, Bynet Data Communications, Hachshara Insurance, Psagot Investment House, Max (It Finance)</p>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-chart-bar mr-2"></i>Filtering Statistics</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="stat-item">
+              <div class="stat-value" id="uploadedCount">0</div>
+              <div class="stat-label">Uploaded</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="filteredCount">0</div>
+              <div class="stat-label">After Filtering</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="skippedCount">0</div>
+              <div class="stat-label">Skipped</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="readyCount">0</div>
+              <div class="stat-label">Ready for AI</div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <p id="filterBreakdown" class="text-sm text-gray-600"></p>
+          </div>
+          <div class="mt-4">
+            <button onclick="runFiltering()" class="btn-primary">Run Filtering</button>
+            <button onclick="clearDashboard()" class="btn-secondary ml-2">Clear Dashboard</button>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-filter mr-2"></i>Pre-Filter: Experience, Keywords, Education, Location & Job Title</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Minimum Years of Experience:</label>
+              <input type="number" id="minYearsExperience" min="0" max="50" value="0" class="w-full p-2 border rounded">
+              <p class="text-xs text-gray-500 mt-1">Only candidates with at least this number of years of experience will be considered.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Keywords (comma-separated):</label>
+              <input type="text" id="requiredKeywords" class="w-full p-2 border rounded" placeholder="data, ai, manager">
+              <p class="text-xs text-gray-500 mt-1">At least one of these keywords must appear in the candidate's profile.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Education (comma-separated):</label>
+              <input type="text" id="requiredEducation" class="w-full p-2 border rounded" placeholder="Technion, Tel Aviv University, Bar Ilan">
+              <p class="text-xs text-gray-500 mt-1">At least one of these education terms must appear in the profile (or leave blank to skip this filter).</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Location (comma-separated):</label>
+              <input type="text" id="requiredLocation" class="w-full p-2 border rounded" placeholder="Tel Aviv, Haifa, Jerusalem">
+              <p class="text-xs text-gray-500 mt-1">At least one of these locations must appear in the profile (or leave blank to skip this filter).</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Job Title (comma-separated):</label>
+              <input type="text" id="requiredJobTitle" class="w-full p-2 border rounded" placeholder="Fullstack Developer, Data Scientist, Product Manager">
+              <p class="text-xs text-gray-500 mt-1">
+                The system also recognizes common synonyms and variations (e.g., "Fullstack Developer" will also match "Full Stack Developer", "FS Developer", "Fullstack Engineer", and more).<br>
+                <b>Examples:</b> <span class="block">Fullstack Developer, Data Scientist, Product Manager, QA Engineer, DevOps, Backend Developer, Frontend Developer</span>
+                <br>At least one of these job titles (or their synonyms) must appear in the profile (or leave blank to skip this filter).
+              </p>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button onclick="savePreFilterSettings()" class="btn-save">Save Pre-Filter</button>
+            <span id="preFilterSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Tab -->
+    <div id="configurationTab" class="tab-content hidden">
+      <div class="space-y-6">
+        <div class="config-section">
+          <h3><i class="fas fa-briefcase mr-2"></i>Job Description</h3>
+          <textarea id="jobDescription" class="w-full h-32 p-3 border rounded-lg" placeholder="Enter the job description..."></textarea>
+          <div class="mt-3">
+            <button onclick="saveJobDescription()" class="btn-save">Save Job Description</button>
+            <span id="jobDescSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-star mr-2"></i>Ideal Profiles</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Ideal Profile 1:</label>
+              <textarea id="idealProfile1" class="w-full h-24 p-3 border rounded-lg" placeholder="LinkedIn URL or profile description..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Ideal Profile 2:</label>
+              <textarea id="idealProfile2" class="w-full h-24 p-3 border rounded-lg" placeholder="LinkedIn URL or profile description..."></textarea>
+            </div>
+            <div class="mt-3">
+              <button onclick="saveIdealProfiles()" class="btn-save">Save Ideal Profiles</button>
+              <span id="idealProfilesSaved" class="saved-indicator hidden">Saved ✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-users mr-2"></i>Company Size Filter</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center"><input type="checkbox" name="companySize" value="1-20" class="mr-2"> 1-20 employees</label>
+            <label class="flex items-center"><input type="checkbox" name="companySize" value="21-100" class="mr-2"> 21-100 employees</label>
+            <label class="flex items-center"><input type="checkbox" name="companySize" value="101-500" class="mr-2"> 101-500 employees</label>
+            <label class="flex items-center"><input type="checkbox" name="companySize" value="500+" class="mr-2"> 500+ employees</label>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveCompanySize()" class="btn-save">Save Company Size</button>
+            <span id="companySizeSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-industry mr-2"></i>Industry Experience</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center"><input type="checkbox" name="industry" value="saas" class="mr-2"> SaaS</label>
+            <label class="flex items-center"><input type="checkbox" name="industry" value="data" class="mr-2"> Data</label>
+            <label class="flex items-center"><input type="checkbox" name="industry" value="security" class="mr-2"> Security</label>
+            <label class="flex items-center"><input type="checkbox" name="industry" value="fintech" class="mr-2"> Fintech</label>
+            <label class="flex items-center"><input type="checkbox" name="industry" value="ai" class="mr-2"> AI</label>
+            <label class="flex items-center"><input type="checkbox" name="industry" value="other" class="mr-2"> Other</label>
+          </div>
+          <div class="mt-3">
+            <input type="text" id="customIndustry" placeholder="Custom industry..." class="border p-2 rounded mr-2">
+            <button onclick="addCustomIndustry()" class="btn-secondary">Add</button>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveIndustryExperience()" class="btn-save">Save Industry Experience</button>
+            <span id="industryExpSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-calendar mr-2"></i>Years of Experience</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Minimum Years:</label>
+              <input type="number" id="minExperience" min="0" max="30" class="w-full p-2 border rounded">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Maximum Years:</label>
+              <input type="number" id="maxExperience" min="0" max="30" class="w-full p-2 border rounded">
+            </div>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveExperienceRange()" class="btn-save">Save Experience Range</button>
+            <span id="experienceRangeSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-medal mr-2"></i>Excellence Badges</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center"><input type="checkbox" name="badges" value="dikan" class="mr-2"> Di-kan Honours</label>
+            <label class="flex items-center"><input type="checkbox" name="badges" value="avg85" class="mr-2"> >85 Average</label>
+            <label class="flex items-center"><input type="checkbox" name="badges" value="elite" class="mr-2"> Elite Unit</label>
+            <label class="flex items-center"><input type="checkbox" name="badges" value="patents" class="mr-2"> Patents</label>
+            <label class="flex items-center"><input type="checkbox" name="badges" value="projects" class="mr-2"> Notable Projects</label>
+          </div>
+          <div class="mt-3">
+            <input type="text" id="customBadge" placeholder="Custom badge..." class="border p-2 rounded mr-2">
+            <button onclick="addCustomBadge()" class="btn-secondary">Add</button>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveExcellenceBadges()" class="btn-save">Save Excellence Badges</button>
+            <span id="badgesSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-exclamation-triangle mr-2"></i>Red-Flag Patterns</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center"><input type="checkbox" name="redflags" value="instability" class="mr-2"> Job instability</label>
+            <label class="flex items-center"><input type="checkbox" name="redflags" value="stagnation" class="mr-2"> Career stagnation</label>
+            <label class="flex items-center"><input type="checkbox" name="redflags" value="enterprise" class="mr-2"> Enterprise-only experience</label>
+            <label class="flex items-center"><input type="checkbox" name="redflags" value="freelancer" class="mr-2"> Heavy freelancing</label>
+          </div>
+          <div class="mt-3">
+            <input type="text" id="customRedFlag" placeholder="Custom red flag..." class="border p-2 rounded mr-2">
+            <button onclick="addCustomRedFlag()" class="btn-secondary">Add</button>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveRedFlags()" class="btn-save">Save Red Flags</button>
+            <span id="redFlagsSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-tags mr-2"></i>Custom Traits</h3>
+          <p class="text-gray-600 mb-4">Examples you can add:</p>
+          <div class="bg-gray-50 p-3 rounded mb-4">
+            <p class="text-sm text-gray-700">• Leadership experience in startups</p>
+            <p class="text-sm text-gray-700">• International market exposure</p>
+            <p class="text-sm text-gray-700">• Product management background</p>
+            <p class="text-sm text-gray-700">• Entrepreneurial mindset</p>
+            <p class="text-sm text-gray-700">• Strong communication skills</p>
+          </div>
+          <textarea id="customTraits" class="w-full h-24 p-3 border rounded-lg" placeholder="Enter custom traits, one per line..."></textarea>
+          <div class="mt-3">
+            <button onclick="saveCustomTraits()" class="btn-save">Save Custom Traits</button>
+            <span id="customTraitsSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-balance-scale mr-2"></i>Scoring Weights</h3>
+          <p class="text-gray-600 mb-4">Adjust the importance of each factor (must sum to 100%)</p>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-2">
+                <label>Tech Fit (skills & tools):</label>
+                <span id="techFitPercent">25%</span>
+              </div>
+              <input type="range" id="techFitWeight" min="0" max="100" value="25" class="w-full" oninput="updateWeights()">
+            </div>
+            <div>
+              <div class="flex justify-between mb-2">
+                <label>Experience (years & seniority):</label>
+                <span id="experiencePercent">25%</span>
+              </div>
+              <input type="range" id="experienceWeight" min="0" max="100" value="25" class="w-full" oninput="updateWeights()">
+            </div>
+            <div>
+              <div class="flex justify-between mb-2">
+                <label>Professional Signals (ownership & impact):</label>
+                <span id="signalsPercent">25%</span>
+              </div>
+              <input type="range" id="signalsWeight" min="0" max="100" value="25" class="w-full" oninput="updateWeights()">
+            </div>
+            <div>
+              <div class="flex justify-between mb-2">
+                <label>Startup Fit (adaptability & growth):</label>
+                <span id="startupPercent">25%</span>
+              </div>
+              <input type="range" id="startupWeight" min="0" max="100" value="25" class="w-full" oninput="updateWeights()">
+            </div>
+            <div>
+              <div class="flex justify-between mb-2">
+                <label>Red-Flag Penalty (risk patterns):</label>
+                <span id="redFlagPercent">-10%</span>
+              </div>
+              <input type="range" id="redFlagWeight" min="0" max="50" value="10" class="w-full" oninput="updateWeights()">
+            </div>
+          </div>
+          <div class="mt-4">
+            <p id="weightSum" class="text-sm font-medium">Total: 100%</p>
+          </div>
+          <div class="mt-3">
+            <button onclick="saveScoringWeights()" class="btn-save">Save Weights</button>
+            <span id="weightsSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-list mr-2"></i>Profile Summary Configuration</h3>
+          <p class="text-gray-600 mb-4">Select which columns to combine into one "Profile Summary" for AI analysis</p>
+          <div id="availableColumns" class="grid grid-cols-2 gap-2 mb-4">
+            <!-- Columns will be populated after file upload -->
+          </div>
+          <div class="column-actions mb-4">
+            <button onclick="selectAllColumns()" class="btn-secondary mr-2">Select All</button>
+            <button onclick="clearAllColumns()" class="btn-secondary mr-2">Clear All</button>
+            <button onclick="saveProfileSummaryConfig()" class="btn-save">Save Profile Summary</button>
+            <span id="profileSummarySaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+          <div class="summary-preview">
+            <label class="block text-sm font-medium mb-2">Preview Combined Summary:</label>
+            <textarea id="summaryPreview" readonly class="w-full h-24 p-2 border rounded text-sm bg-gray-50" placeholder="Upload a file and select columns to see preview..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Ranking Tab -->
+    <div id="rankingTab" class="tab-content hidden">
+      <div class="space-y-6">
+        <div class="config-section">
+          <h3><i class="fas fa-robot mr-2"></i>AI Model Selection</h3>
+          <select id="aiModel" class="w-full p-3 border rounded-lg">
+            <option value="hybrid">Hybrid (Embedding + GPT-4o-mini-turbo) - Recommended</option>
+            <option value="embedding-only">Embedding Only - Fast & Cheap</option>
+            <option value="gpt-only">GPT-4o-mini-turbo Only - Most Accurate</option>
+          </select>
+          <div class="mt-3">
+            <button onclick="saveModelChoice()" class="btn-save">Save Model Choice</button>
+            <span id="modelSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-sliders-h mr-2"></i>Ranking Configuration</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Start from row:</label>
+              <input type="number" id="startRow" min="2" value="2" class="w-full p-2 border rounded">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">End at row:</label>
+              <input type="number" id="endRow" min="2" value="10" class="w-full p-2 border rounded">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Batch size:</label>
+              <input type="number" id="batchSize" min="1" max="50" value="25" class="w-full p-2 border rounded">
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-play mr-2"></i>Start Ranking</h3>
+          <p class="text-gray-600 mb-4">Begin AI-powered candidate ranking with your configured settings</p>
+          <button id="startRankingBtn" onclick="startRanking()" class="btn-primary text-lg px-8 py-4">
+            <i class="fas fa-play mr-2"></i>Start AI Ranking
+          </button>
+          <button id="stopRankingBtn" onclick="stopRanking()" class="btn-secondary text-lg px-8 py-4 ml-4 hidden">
+            <i class="fas fa-stop mr-2"></i>Stop Ranking
+          </button>
+        </div>
+
+        <div id="rankingProgress" class="config-section hidden">
+          <h3><i class="fas fa-chart-line mr-2"></i>Ranking Progress</h3>
+          <div class="progress-bar mb-4">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+          </div>
+          <p id="progressText" class="text-center mb-4">0/0 (0%)</p>
+          
+          <div class="processing-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="embeddingCalls">0</div>
+              <div class="stat-label">Profile Analysis</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="gptCalls">0</div>
+              <div class="stat-label">AI Rankings</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="processedCount">0</div>
+              <div class="stat-label">Processed</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="feedbackPanel" class="config-section hidden">
+          <h3><i class="fas fa-comment mr-2"></i>AI Ranking Feedback</h3>
+          <p class="text-gray-600 mb-4">Help improve the AI ranking for the next batch:</p>
+          <textarea id="feedbackText" class="w-full h-32 p-3 border rounded-lg" placeholder="Examples:
+• Please increase the Tech Fit weight for these candidates
+• I think their startup experience is under-valued  
+• These profiles need more emphasis on leadership signals
+• The penalty for red-flag patterns feels too heavy
+• Balance Experience and Professional Signals more evenly"></textarea>
+          <div class="mt-3">
+            <button onclick="submitFeedback()" class="btn-primary">Submit Feedback & Adjust</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Tab -->
+    <div id="resultsTab" class="tab-content hidden">
+      <div class="space-y-6">
+        <div class="config-section">
+          <h3><i class="fas fa-trophy mr-2"></i>Ranking Results</h3>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button onclick="filterResults('all')" class="btn-secondary filter-btn active">All</button>
+            <button onclick="filterResults('top')" class="btn-secondary filter-btn">TOP (75-100)</button>
+            <button onclick="filterResults('good')" class="btn-secondary filter-btn">GOOD (60-74)</button>
+            <button onclick="filterResults('average')" class="btn-secondary filter-btn">AVERAGE (<60)</button>
+            <button onclick="filterResults('hidden')" class="btn-secondary filter-btn">HIDDEN GEM</button>
+            <button onclick="filterResults('hot')" class="btn-secondary filter-btn">HOT SIGNALS</button>
+          </div>
+          
+          <div class="flex gap-4 mb-4">
+            <button onclick="exportRankedCandidates()" class="btn-primary">
+              <i class="fas fa-download mr-2"></i>Export Ranked Candidates
+            </button>
+            <button onclick="exportAverageReport()" class="btn-secondary">
+              <i class="fas fa-file-alt mr-2"></i>Export Average Score Report
+            </button>
+          </div>
+        </div>
+
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Results will be populated here -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Navigation Footer -->
+  <div class="navigation-footer">
+    <button id="prevBtn" class="nav-btn">
+      <i class="fas fa-chevron-left mr-2"></i>Previous
+    </button>
+    
+    <div class="step-indicator">
+      <span class="step-text">Step 1 of 5</span>
+      <div class="step-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+    
+    <button id="nextBtn" class="nav-btn">
+      Next <i class="fas fa-chevron-right ml-2"></i>
+    </button>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeSettings()">&times;</button>
+      <h2 class="text-2xl font-bold mb-6">Settings</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium mb-2">OpenAI API Key:</label>
+          <input type="password" id="openaiApiKey" class="w-full p-3 border rounded-lg" placeholder="Enter your OpenAI API key">
+          <p class="text-sm text-gray-600 mt-1">Your API key is stored locally and never sent to our servers</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Embedding Threshold 1 (for GPT-3.5-turbo):</label>
+          <input type="range" id="embeddingThreshold1" min="0.1" max="1.0" step="0.01" value="0.7" class="w-full">
+          <div class="flex justify-between text-sm text-gray-600">
+            <span>0.1 (More candidates)</span>
+            <span id="thresholdValue1">0.7</span>
+            <span>1.0 (Fewer candidates)</span>
+          </div>
+          <label class="block text-sm font-medium mb-2 mt-4">Embedding Threshold 2 (for GPT-4o-mini-turbo):</label>
+          <input type="range" id="embeddingThreshold2" min="0.1" max="1.0" step="0.01" value="0.9" class="w-full">
+          <div class="flex justify-between text-sm text-gray-600">
+            <span>0.1</span>
+            <span id="thresholdValue2">0.9</span>
+            <span>1.0</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Candidates with similarity below Threshold 1 are scored by embedding only.<br>Between Threshold 1 and 2: GPT-3.5-turbo.<br>Above Threshold 2: GPT-4o-mini-turbo.</p>
+        </div>
+      </div>
+      
+      <div class="flex gap-4 mt-8">
+        <button onclick="saveSettings()" class="btn-primary">Save Settings</button>
+        <button onclick="closeSettings()" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Column Mapping Modal -->
+  <div id="columnMappingModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeColumnMapping()">&times;</button>
+      <h2 class="text-2xl font-bold mb-6">Map File Columns</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">First Name Column:</label>
+          <select id="firstNameColumn" class="w-full p-2 border rounded">
+            <option value="">Select column...</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Last Name Column:</label>
+          <select id="lastNameColumn" class="w-full p-2 border rounded">
+            <option value="">Select column...</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Company Column:</label>
+          <select id="companyColumn" class="w-full p-2 border rounded">
+            <option value="">Select column...</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex gap-4 mt-8">
+        <button onclick="processMapping()" class="btn-primary">Process Data</button>
+        <button onclick="closeColumnMapping()" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidate Details Modal -->
+  <div id="candidateModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeCandidateModal()">&times;</button>
+      <div id="candidateDetails">
+        <!-- Candidate details will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Main Script - אחרי כל ה-SDKs -->
+  <script defer>
+    // Global Variables
+    let openai = null;
+    let currentStep = 1;
+    let rawData = [];
+    let filteredData = [];
+    let rankedData = [];
+    let marketlyCompanies = [];
+    let isProcessing = false;
+    let embeddingCache = new Map();
+    let estimatedCost = 0;
+    let gptCalls = 0;
+    let embeddingCalls = 0;
+    let skippedEmbedding = 0;
+
+    // System Prompts
+    const SYSTEM_PROMPT = `You are Scorely's AI Ranking Engine. Minimize costs by:
+- Using concise responses
+- Focusing on key differentiators
+- Avoiding redundant explanations
+
+Rate profiles 0-100 on: Tech Fit, Experience, Professional Signals, Startup Fit, Red-Flag Penalty.
+Calculate total_score as weighted sum minus red_flag_score.
+Return ONLY JSON format:
+{
+  "tech_fit_score": number,
+  "experience_score": number,
+  "signals_score": number,
+  "startup_fit_score": number,
+  "red_flag_score": number,
+  "total_score": number,
+  "hot_signal": boolean,
+  "rationale": {
+    "tech_fit": string,
+    "experience": string,
+    "signals": string,
+    "startup_fit": string,
+    "red_flag": string
+  }
+}`;
+
+    // No-Go Companies List
+    const NO_GO_COMPANIES = [
+      'isracard', 'matrix', 'harel insurance & finance', 'ness technologies', 'bank leumi',
+      'gav systems', 'amdocs', 'log-on software', 'sapiens', 'aman group', 'nice',
+      'maccabi healthcare services', 'zap group', 'clalit health services', 'bank hapoalim',
+      'israel tax authority', 'discount bank', 'infanity labs', 'experis israel',
+      'sapiens international', 'magic software enterprises', 'ethernity networks',
+      'elad software systems', 'mizrahi-tefahot bank', 'migdal insurance',
+      'menora mivtachim', 'clal insurance', 'taldor', 'bynet data communications',
+      'hachshara insurance', 'psagot investment house', 'max (it finance)'
+    ];
+
+    // Initialize Application
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🚀 Scorely initializing...');
+      console.log('🔍 Checking OpenAI SDK availability...');
+      console.log('window.OpenAI =', window.OpenAI);
+      console.log('typeof OpenAI =', typeof OpenAI);
+      
+      if (typeof OpenAI !== 'undefined') {
+        console.log('✅ OpenAI SDK loaded successfully');
+      } else {
+        console.error('❌ OpenAI SDK not loaded - check network tab');
+      }
+      
+      loadFromStorage();
+      initializeOpenAI();
+      setupEventHandlers();
+      fetchMarketlyCompanies();
+    });
+
+    // OpenAI Initialization
+    function initializeOpenAI() {
+      const apiKey = localStorage.getItem('openaiApiKey');
+      
+      console.log('🔍 SDK Check - window.OpenAI:', !!window.OpenAI);
+      console.log('🔑 API Key Check:', !!apiKey);
+      
+      if (!window.OpenAI) {
+        console.error('❌ OpenAI SDK not loaded!');
+        return false;
+      }
+      
+      if (apiKey && apiKey.trim().length > 0) {
+        try {
+          // Global assignment without const/let
+          openai = new window.OpenAI({ 
+            apiKey: apiKey.trim(), 
+            dangerouslyAllowBrowser: true 
+          });
+          console.log('✅ OpenAI client initialized successfully');
+          return true;
+        } catch (error) {
+          console.error('❌ Failed to initialize OpenAI:', error);
+          openai = null;
+          return false;
+        }
+      } else {
+        console.log('❌ No API key provided');
+        openai = null;
+        return false;
+      }
+    }
+
+    // Event Handlers Setup
+    function setupEventHandlers() {
+      // Settings button
+      document.getElementById('settingsBtn')?.addEventListener('click', () => {
+        document.getElementById('settingsModal').classList.remove('hidden');
+      });
+
+      // File upload
+      const fileInput = document.getElementById('fileInput');
+      const chooseFileBtn = document.getElementById('chooseFileBtn');
+      const dropZone = document.getElementById('dropZone');
+
+      chooseFileBtn?.addEventListener('click', () => fileInput.click());
+      fileInput?.addEventListener('change', handleFileSelect);
+      
+      // Drag and drop
+      dropZone?.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-400');
+      });
+      
+      dropZone?.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-blue-400');
+      });
+      
+      dropZone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFileSelect({ target: { files: [file] } });
+      });
+
+      // Navigation
+      document.getElementById('prevBtn')?.addEventListener('click', () => {
+        if (currentStep > 1) {
+          currentStep--;
+          showStep(currentStep);
+        }
+      });
+
+      document.getElementById('nextBtn')?.addEventListener('click', () => {
+        if (currentStep < 5) {
+          currentStep++;
+          showStep(currentStep);
+        }
+      });
+
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+          currentStep = index + 1;
+          showStep(currentStep);
+        });
+      });
+
+      // Start ranking button
+      document.getElementById('startRankingBtn')?.addEventListener('click', () => {
+        console.log('🔄 Start Ranking clicked');
+        
+        // Re-initialize OpenAI before ranking
+        const initialized = initializeOpenAI();
+        
+        if (!initialized || !openai) {
+          showNotification('Please configure your OpenAI API key in Settings first', 'error');
+          return;
+        }
+        
+        console.log('✅ OpenAI ready - starting ranking');
+        startRanking();
+      });
+
+      // Threshold slider
+      document.getElementById('embeddingThreshold1')?.addEventListener('input', (e) => {
+        document.getElementById('thresholdValue1').textContent = e.target.value;
+      });
+      document.getElementById('embeddingThreshold2')?.addEventListener('input', (e) => {
+        document.getElementById('thresholdValue2').textContent = e.target.value;
+      });
+    }
+
+    // Load from Storage
+    function loadFromStorage() {
+      console.log('📂 Loading settings from localStorage...');
+      
+      // API Key
+      const savedApiKey = localStorage.getItem('openaiApiKey');
+      const apiKeyInput = document.getElementById('openaiApiKey');
+      if (apiKeyInput && savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+        console.log('🔑 Loaded API key, length:', savedApiKey.length);
+      }
+      
+      // Threshold
+      const savedThreshold1 = localStorage.getItem('embeddingThreshold1');
+      const savedThreshold2 = localStorage.getItem('embeddingThreshold2');
+      const thresholdInput1 = document.getElementById('embeddingThreshold1');
+      const thresholdInput2 = document.getElementById('embeddingThreshold2');
+      if (thresholdInput1) {
+        thresholdInput1.value = savedThreshold1 || '0.7';
+        document.getElementById('thresholdValue1').textContent = savedThreshold1 || '0.7';
+      }
+      if (thresholdInput2) {
+        thresholdInput2.value = savedThreshold2 || '0.9';
+        document.getElementById('thresholdValue2').textContent = savedThreshold2 || '0.9';
+      }
+      
+      // Other settings
+      loadTextareaFromStorage('blacklistInput', 'blacklist');
+      loadTextareaFromStorage('pastCandidatesInput', 'pastCandidates');
+      loadTextareaFromStorage('jobDescription', 'jobDescription');
+      loadTextareaFromStorage('idealProfile1', 'idealProfile1');
+      loadTextareaFromStorage('idealProfile2', 'idealProfile2');
+      loadTextareaFromStorage('customTraits', 'customTraits');
+      
+      loadScoringWeights();
+      loadCheckboxStates();
+      loadPreFilterSettings();
+    }
+
+    function loadTextareaFromStorage(elementId, storageKey) {
+      const element = document.getElementById(elementId);
+      const value = localStorage.getItem(storageKey);
+      if (element && value) {
+        element.value = value;
+      }
+    }
+
+    function loadScoringWeights() {
+      const weights = JSON.parse(localStorage.getItem('scoringWeights') || '{}');
+      
+      document.getElementById('techFitWeight').value = weights.techFit || 25;
+      document.getElementById('experienceWeight').value = weights.experience || 25;
+      document.getElementById('signalsWeight').value = weights.signals || 25;
+      document.getElementById('startupWeight').value = weights.startup || 25;
+      document.getElementById('redFlagWeight').value = weights.redFlag || 10;
+      
+      updateWeights();
+    }
+
+    function loadCheckboxStates() {
+      // Load various checkbox states from localStorage
+      const companySize = JSON.parse(localStorage.getItem('companySize') || '[]');
+      const industry = JSON.parse(localStorage.getItem('industry') || '[]');
+      const badges = JSON.parse(localStorage.getItem('badges') || '[]');
+      const education = JSON.parse(localStorage.getItem('education') || '[]');
+      const redflags = JSON.parse(localStorage.getItem('redflags') || '[]');
+      
+      // Set checkbox states
+      companySize.forEach(value => {
+        const checkbox = document.querySelector(`input[name="companySize"][value="${value}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      industry.forEach(value => {
+        const checkbox = document.querySelector(`input[name="industry"][value="${value}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      badges.forEach(value => {
+        const checkbox = document.querySelector(`input[name="badges"][value="${value}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      education.forEach(value => {
+        const checkbox = document.querySelector(`input[name="education"][value="${value}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      redflags.forEach(value => {
+        const checkbox = document.querySelector(`input[name="redflags"][value="${value}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
+    }
+
+    // Settings Functions
+    function saveSettings() {
+      console.log('🔄 Saving settings...');
+      
+      const apiKeyInput = document.getElementById('openaiApiKey');
+      const thresholdInput1 = document.getElementById('embeddingThreshold1');
+      const thresholdInput2 = document.getElementById('embeddingThreshold2');
+      
+      if (!apiKeyInput || !thresholdInput1 || !thresholdInput2) {
+        console.error('❌ Input elements not found');
+        return;
+      }
+      
+      const apiKey = apiKeyInput.value.trim();
+      const threshold1 = thresholdInput1.value;
+      const threshold2 = thresholdInput2.value;
+      
+      console.log('📝 Saving API Key (length):', apiKey.length);
+      
+      localStorage.setItem('openaiApiKey', apiKey);
+      localStorage.setItem('embeddingThreshold1', threshold1);
+      localStorage.setItem('embeddingThreshold2', threshold2);
+      
+      console.log('💾 Saved to localStorage');
+      
+      // Re-initialize OpenAI
+      const initialized = initializeOpenAI();
+      
+      if (apiKey.length > 0) {
+        showNotification('✅ Settings saved successfully!', 'success');
+        console.log('✅ API key saved, will be validated during actual API calls');
+      } else {
+        showNotification('⚠️ Please enter an API key', 'warning');
+      }
+      
+      closeSettings();
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    // Navigation Functions
+    function showStep(step) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+      
+      // Show current tab
+      const tabs = ['uploadTab', 'prefilterTab', 'configurationTab', 'rankingTab', 'resultsTab'];
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      
+      if (step >= 1 && step <= 5) {
+        document.getElementById(tabs[step - 1]).classList.remove('hidden');
+        tabButtons[step - 1].classList.add('tab-active');
+      }
+      
+      // Update step indicator
+      document.querySelector('.step-text').textContent = `Step ${step} of 5`;
+      document.querySelectorAll('.dot').forEach((dot, index) => {
+        dot.classList.toggle('active', index === step - 1);
+      });
+      
+      // Update navigation buttons
+      document.getElementById('prevBtn').style.opacity = step === 1 ? '0.5' : '1';
+      document.getElementById('nextBtn').style.opacity = step === 5 ? '0.5' : '1';
+    }
+
+    // File Handling Functions
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      console.log('📁 File selected:', file.name);
+      
+      // Show file info
+      document.getElementById('fileName').textContent = `File: ${file.name}`;
+      document.getElementById('fileSize').textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      document.getElementById('fileInfo').classList.remove('hidden');
+      
+      // Parse file
+      if (file.name.endsWith('.csv')) {
+        parseCSV(file);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        parseExcel(file);
+      } else {
+        showNotification('Please upload a CSV or Excel file', 'error');
+      }
+    }
+
+    function parseCSV(file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          console.log('✅ CSV parsed:', results.data.length, 'rows');
+          handleParsedData(results.data, results.meta.fields);
+        },
+        error: (error) => {
+          console.error('❌ CSV parse error:', error);
+          showNotification('Error parsing CSV file', 'error');
+        }
+      });
+    }
+
+    function parseExcel(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          console.log('✅ Excel parsed:', jsonData.length, 'rows');
+          
+          const headers = Object.keys(jsonData[0] || {});
+          handleParsedData(jsonData, headers);
+        } catch (error) {
+          console.error('❌ Excel parse error:', error);
+          showNotification('Error parsing Excel file', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function handleParsedData(data, headers) {
+      document.getElementById('recordCount').textContent = `Records: ${data.length}`;
+      
+      // Show column mapping modal
+      showColumnMapping(headers);
+      
+      // Store raw data
+      window.uploadedData = data;
+      window.uploadedHeaders = headers;
+    }
+
+    function showColumnMapping(headers) {
+      const modal = document.getElementById('columnMappingModal');
+      const selects = ['firstNameColumn', 'lastNameColumn', 'companyColumn'];
+      
+      selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Select column...</option>';
+        headers.forEach(header => {
+          const option = document.createElement('option');
+          option.value = header;
+          option.textContent = header;
+          select.appendChild(option);
+        });
+      });
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeColumnMapping() {
+      document.getElementById('columnMappingModal').classList.add('hidden');
+    }
+
+    function processMapping() {
+      const firstNameCol = document.getElementById('firstNameColumn').value;
+      const lastNameCol = document.getElementById('lastNameColumn').value;
+      const companyCol = document.getElementById('companyColumn').value;
+      
+      if (!firstNameCol || !lastNameCol || !companyCol) {
+        showNotification('Please select all required columns', 'error');
+        return;
+      }
+      
+      // Process data
+      rawData = window.uploadedData.map(row => ({
+        firstName: row[firstNameCol] || '',
+        lastName: row[lastNameCol] || '',
+        company: row[companyCol] || '',
+        fullName: `${row[firstNameCol] || ''} ${row[lastNameCol] || ''}`.trim(),
+        raw: row
+      }));
+      
+      // Copy to filtered data initially
+      filteredData = [...rawData];
+      
+      console.log('✅ Data processed:', rawData.length, 'profiles');
+      
+      // Update available columns for profile summary
+      populateAvailableColumns(window.uploadedHeaders);
+      
+      // Update UI
+      document.getElementById('uploadedCount').textContent = rawData.length;
+      document.getElementById('filteredCount').textContent = filteredData.length;
+      document.getElementById('readyCount').textContent = filteredData.length;
+      
+      closeColumnMapping();
+      showNotification('Data processed successfully! You can now configure filters.', 'success');
+      
+      // Auto-advance to next step
+      setTimeout(() => {
+        currentStep = 2;
+        showStep(currentStep);
+      }, 1500);
+    }
+
+    function populateAvailableColumns(headers) {
+      const container = document.getElementById('availableColumns');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      headers.forEach(header => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center';
+        div.innerHTML = `
+          <input type="checkbox" id="col_${header}" value="${header}" 
+                 class="mr-2" onchange="updateSummaryPreview()">
+          <label for="col_${header}" class="text-sm">${header}</label>
+        `;
+        container.appendChild(div);
+      });
+      
+      // Load previous selections
+      const savedColumns = JSON.parse(localStorage.getItem('selectedSummaryColumns') || '[]');
+      savedColumns.forEach(column => {
+        const checkbox = document.getElementById(`col_${column}`);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      updateSummaryPreview();
+    }
+
+    // Filtering Functions
+    function runFiltering() {
+      if (!rawData.length) {
+        showNotification('Please upload and process a file first', 'error');
+        return;
+      }
+      
+      const blacklist = getBlacklistTerms();
+      const pastCandidates = getPastCandidatesTerms();
+      const noGoLowercase = NO_GO_COMPANIES;
+      
+      let blacklistCount = 0;
+      let pastCandidatesCount = 0;
+      let noGoCount = 0;
+      
+      filteredData = rawData.filter(profile => {
+        const text = JSON.stringify(profile).toLowerCase();
+        const name = profile.fullName.toLowerCase();
+        const company = profile.company.toLowerCase();
+        
+        // 1) Past candidates first
+        if (pastCandidates.some(term => text.includes(term) || name.includes(term))) {
+          pastCandidatesCount++;
+          return false;
+        }
+        
+        // 2) Blacklist: filter ONLY if CURRENT company is in blacklist
+        if (blacklist.some(term => company.includes(term))) {
+          blacklistCount++;
+          return false;
+        }
+        
+        // 3) NO GO: filter if current OR any past company is in NO GO list
+        // Try to find all company fields in profile.raw (for past jobs)
+        let allCompanies = [];
+        if (profile.raw) {
+          // Try common fields: 'company', 'currentCompany', 'companies', 'work', 'experience', etc.
+          if (profile.raw.company) allCompanies.push(String(profile.raw.company).toLowerCase());
+          if (profile.raw.currentCompany) allCompanies.push(String(profile.raw.currentCompany).toLowerCase());
+          if (Array.isArray(profile.raw.companies)) {
+            allCompanies = allCompanies.concat(profile.raw.companies.map(c => String(c).toLowerCase()));
+          }
+          if (Array.isArray(profile.raw.work)) {
+            allCompanies = allCompanies.concat(profile.raw.work.map(w => (w.company ? String(w.company).toLowerCase() : '')));
+          }
+          if (Array.isArray(profile.raw.experience)) {
+            allCompanies = allCompanies.concat(profile.raw.experience.map(e => (e.company ? String(e.company).toLowerCase() : '')));
+          }
+          // Fallback: try to extract company names from all values
+          if (allCompanies.length === 0) {
+            const values = Object.values(profile.raw).map(v => String(v).toLowerCase());
+            allCompanies = values.filter(v => noGoLowercase.some(noGo => v.includes(noGo)));
+          }
+        }
+        // Always include current company
+        if (!allCompanies.includes(company)) allCompanies.push(company);
+        // Check if any company matches NO GO
+        if (noGoLowercase.some(noGo => allCompanies.some(c => c.includes(noGo)))) {
+          noGoCount++;
+          return false;
+        }
+        
+        return true;
+      });
+      
+      // Add Marketly checking
+      filteredData = filteredData.map(profile => {
+        const isMarketly = checkMarketlyCompany(profile.company);
+        return {
+          ...profile,
+          is_marketly_company: isMarketly,
+          priority_score: isMarketly ? 1.2 : 1.0
+        };
+      });
+      
+      // Update statistics
+      const totalFiltered = blacklistCount + pastCandidatesCount + noGoCount;
+      
+      document.getElementById('uploadedCount').textContent = rawData.length;
+      document.getElementById('filteredCount').textContent = filteredData.length;
+      document.getElementById('skippedCount').textContent = totalFiltered;
+      document.getElementById('readyCount').textContent = filteredData.length;
+      
+      document.getElementById('filterBreakdown').textContent = 
+        `Past Candidates: ${pastCandidatesCount}, Blacklist: ${blacklistCount}, No-Go: ${noGoCount}`;
+      
+      console.log(`🎯 Found ${filteredData.filter(p => p.is_marketly_company).length} Marketly candidates`);
+      
+      showNotification(`Filtering complete! ${filteredData.length} profiles ready for ranking.`, 'success');
+    }
+
+    function getBlacklistTerms() {
+      const text = document.getElementById('blacklistInput')?.value || '';
+      return text.split('\n').map(line => line.trim().toLowerCase()).filter(line => line);
+    }
+
+    function getPastCandidatesTerms() {
+      const text = document.getElementById('pastCandidatesInput')?.value || '';
+      return text.split('\n').map(line => line.trim().toLowerCase()).filter(line => line);
+    }
+
+    function clearDashboard() {
+      document.getElementById('uploadedCount').textContent = '0';
+      document.getElementById('filteredCount').textContent = '0';
+      document.getElementById('skippedCount').textContent = '0';
+      document.getElementById('readyCount').textContent = '0';
+      document.getElementById('filterBreakdown').textContent = '';
+      
+      rawData = [];
+      filteredData = [];
+      rankedData = [];
+      
+      showNotification('Dashboard cleared', 'success');
+    }
+
+    // Save Functions
+    function saveBlacklist() {
+      localStorage.setItem('blacklist', document.getElementById('blacklistInput').value);
+      showSavedIndicator('blacklistSaved');
+    }
+
+    function savePastCandidates() {
+      localStorage.setItem('pastCandidates', document.getElementById('pastCandidatesInput').value);
+      showSavedIndicator('pastCandidatesSaved');
+    }
+
+    function clearBlacklist() {
+      document.getElementById('blacklistInput').value = '';
+      localStorage.removeItem('blacklist');
+      showNotification('Blacklist cleared', 'success');
+    }
+
+    function clearPastCandidates() {
+      document.getElementById('pastCandidatesInput').value = '';
+      localStorage.removeItem('pastCandidates');
+      showNotification('Past candidates cleared', 'success');
+    }
+
+    function saveJobDescription() {
+      localStorage.setItem('jobDescription', document.getElementById('jobDescription').value);
+      showSavedIndicator('jobDescSaved');
+    }
+
+    function saveIdealProfiles() {
+      localStorage.setItem('idealProfile1', document.getElementById('idealProfile1').value);
+      localStorage.setItem('idealProfile2', document.getElementById('idealProfile2').value);
+      showSavedIndicator('idealProfilesSaved');
+    }
+
+    function saveCompanySize() {
+      const selected = Array.from(document.querySelectorAll('input[name="companySize"]:checked'))
+        .map(cb => cb.value);
+      localStorage.setItem('companySize', JSON.stringify(selected));
+      showSavedIndicator('companySizeSaved');
+    }
+
+    function saveIndustryExperience() {
+      const selected = Array.from(document.querySelectorAll('input[name="industry"]:checked'))
+        .map(cb => cb.value);
+      localStorage.setItem('industry', JSON.stringify(selected));
+      showSavedIndicator('industryExpSaved');
+    }
+
+    function saveExperienceRange() {
+      const min = document.getElementById('minExperience').value;
+      const max = document.getElementById('maxExperience').value;
+      localStorage.setItem('experienceRange', JSON.stringify({ min, max }));
+      showSavedIndicator('experienceRangeSaved');
+    }
+
+    function saveExcellenceBadges() {
+      const selected = Array.from(document.querySelectorAll('input[name="badges"]:checked'))
+        .map(cb => cb.value);
+      localStorage.setItem('badges', JSON.stringify(selected));
+      showSavedIndicator('badgesSaved');
+    }
+
+    function saveRedFlags() {
+      const selected = Array.from(document.querySelectorAll('input[name="redflags"]:checked'))
+        .map(cb => cb.value);
+      localStorage.setItem('redflags', JSON.stringify(selected));
+      showSavedIndicator('redFlagsSaved');
+    }
+
+    function saveCustomTraits() {
+      localStorage.setItem('customTraits', document.getElementById('customTraits').value);
+      showSavedIndicator('customTraitsSaved');
+    }
+
+    function updateWeights() {
+      const techFit = parseInt(document.getElementById('techFitWeight').value);
+      const experience = parseInt(document.getElementById('experienceWeight').value);
+      const signals = parseInt(document.getElementById('signalsWeight').value);
+      const startup = parseInt(document.getElementById('startupWeight').value);
+      const redFlag = parseInt(document.getElementById('redFlagWeight').value);
+      
+      document.getElementById('techFitPercent').textContent = `${techFit}%`;
+      document.getElementById('experiencePercent').textContent = `${experience}%`;
+      document.getElementById('signalsPercent').textContent = `${signals}%`;
+      document.getElementById('startupPercent').textContent = `${startup}%`;
+      document.getElementById('redFlagPercent').textContent = `-${redFlag}%`;
+      
+      const sum = techFit + experience + signals + startup;
+      document.getElementById('weightSum').textContent = `Total: ${sum}%`;
+      document.getElementById('weightSum').style.color = sum === 100 ? 'green' : 'red';
+    }
+
+    function saveScoringWeights() {
+      const sum = parseInt(document.getElementById('techFitWeight').value) +
+                  parseInt(document.getElementById('experienceWeight').value) +
+                  parseInt(document.getElementById('signalsWeight').value) +
+                  parseInt(document.getElementById('startupWeight').value);
+      
+      if (sum !== 100) {
+        showNotification('Weights must sum to 100%', 'error');
+        return;
+      }
+      
+      const weights = {
+        techFit: parseInt(document.getElementById('techFitWeight').value),
+        experience: parseInt(document.getElementById('experienceWeight').value),
+        signals: parseInt(document.getElementById('signalsWeight').value),
+        startup: parseInt(document.getElementById('startupWeight').value),
+        redFlag: parseInt(document.getElementById('redFlagWeight').value)
+      };
+      
+      localStorage.setItem('scoringWeights', JSON.stringify(weights));
+      showSavedIndicator('weightsSaved');
+    }
+
+    function saveModelChoice() {
+      localStorage.setItem('aiModel', document.getElementById('aiModel').value);
+      showSavedIndicator('modelSaved');
+    }
+
+    function saveProfileSummaryConfig() {
+      const checkboxes = document.querySelectorAll('#availableColumns input[type="checkbox"]:checked');
+      const selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+      
+      localStorage.setItem('selectedSummaryColumns', JSON.stringify(selectedColumns));
+      showSavedIndicator('profileSummarySaved');
+      updateSummaryPreview();
+    }
+
+    function selectAllColumns() {
+      document.querySelectorAll('#availableColumns input[type="checkbox"]').forEach(cb => cb.checked = true);
+      updateSummaryPreview();
+    }
+
+    function clearAllColumns() {
+      document.querySelectorAll('#availableColumns input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateSummaryPreview();
+    }
+
+    function updateSummaryPreview() {
+      if (rawData.length > 0) {
+        const sampleProfile = rawData[0];
+        const preview = buildProfileSummary(sampleProfile);
+        document.getElementById('summaryPreview').value = preview;
+      }
+    }
+
+    function buildProfileSummary(profile) {
+      const selectedColumns = JSON.parse(localStorage.getItem('selectedSummaryColumns') || '[]');
+      
+      if (selectedColumns.length === 0) {
+        return `${profile.firstName || ''} ${profile.lastName || ''} - ${profile.company || ''} - ${profile.raw.title || ''}`.trim();
+      }
+      
+      const summaryParts = selectedColumns.map(column => {
+        return profile.raw[column] || '';
+      }).filter(part => part.trim() !== '');
+      
+      return summaryParts.join(' - ');
+    }
+
+    function showSavedIndicator(elementId) {
+      const indicator = document.getElementById(elementId);
+      if (indicator) {
+        indicator.classList.remove('hidden');
+        setTimeout(() => indicator.classList.add('hidden'), 2000);
+      }
+    }
+
+    // Marketly Integration
+    async function fetchMarketlyCompanies() {
+      try {
+        console.log('📥 Fetching Marketly companies...');
+        const response = await fetch('https://script.google.com/macros/s/AKfycbxzq6mWbqU7GQXPCoBzF3r-MiZflOTcHuCXBvW_q-vXGzk_yGEdMNMD6nKoHmwq5FgZ/exec');
+        const data = await response.json();
+        marketlyCompanies = data.map(company => company.toLowerCase());
+        console.log(`✅ Loaded ${marketlyCompanies.length} Marketly companies`);
+      } catch (error) {
+        console.error('❌ Failed to fetch Marketly companies:', error);
+        marketlyCompanies = [];
+      }
+    }
+
+    function checkMarketlyCompany(companyName) {
+      if (!companyName || !marketlyCompanies || marketlyCompanies.length === 0) {
+        return false;
+      }
+      
+      const normalizedCompany = companyName.toLowerCase().trim();
+      
+      const isMarketly = marketlyCompanies.some(marketlyCompany => {
+        const normalizedMarketly = marketlyCompany.toLowerCase().trim();
+        return normalizedCompany.includes(normalizedMarketly) || 
+               normalizedMarketly.includes(normalizedCompany);
+      });
+      
+      if (isMarketly) {
+        console.log(`🎯 Marketly company detected: ${companyName}`);
+      }
+      
+      return isMarketly;
+    }
+
+    // AI Ranking Functions
+    async function startRanking() {
+      if (!filteredData.length) {
+        showNotification('Please upload and filter profiles first', 'error');
+        return;
+      }
+      
+      // Pre-filter candidates
+      let candidates = filteredData;
+      candidates = preFilterByExperienceAndKeywords(candidates);
+      if (candidates.length === 0) {
+        showNotification('No candidates passed the pre-filter.', 'warning');
+        return;
+      }
+      
+      // Ensure Marketly is loaded
+      if (!marketlyCompanies || marketlyCompanies.length === 0) {
+        console.log('📥 Loading Marketly companies...');
+        await fetchMarketlyCompanies();
+      }
+      
+      const startRow = parseInt(document.getElementById('startRow').value);
+      const endRow = parseInt(document.getElementById('endRow').value);
+      
+      if (startRow < 2 || endRow < startRow || endRow > candidates.length) {
+        showNotification('Please check your row range settings', 'error');
+        return;
+      }
+      
+      // Show progress
+      document.getElementById('rankingProgress').classList.remove('hidden');
+      document.getElementById('startRankingBtn').classList.add('hidden');
+      document.getElementById('stopRankingBtn').classList.remove('hidden');
+      
+      isProcessing = true;
+      
+      // Reset counters
+      gptCalls = 0;
+      embeddingCalls = 0;
+      estimatedCost = 0;
+      
+      try {
+        await processProfileRangeWithPreFilter(candidates, startRow, endRow);
+      } catch (error) {
+        console.error('❌ Ranking error:', error);
+        showNotification('Error during ranking: ' + error.message, 'error');
+      }
+      
+      // Hide progress
+      document.getElementById('startRankingBtn').classList.remove('hidden');
+      document.getElementById('stopRankingBtn').classList.add('hidden');
+      isProcessing = false;
+      
+      // Show results
+      currentStep = 5;
+      showStep(currentStep);
+      renderResults();
+    }
+
+    function stopRanking() {
+      isProcessing = false;
+      document.getElementById('startRankingBtn').classList.remove('hidden');
+      document.getElementById('stopRankingBtn').classList.add('hidden');
+      showNotification('Ranking stopped', 'warning');
+    }
+
+    async function processProfileRangeWithPreFilter(candidates, startRow, endRow) {
+      const selectedModel = document.getElementById('aiModel').value;
+      const slicedCandidates = candidates.slice(startRow - 2, endRow - 1);
+      if (selectedModel === 'embedding-only') {
+        await processEmbeddingOnlyMode(slicedCandidates);
+      } else if (selectedModel === 'gpt-only') {
+        await processGPTOnlyMode(slicedCandidates);
+      } else {
+        await processHybridMode(slicedCandidates);
+      }
+    }
+
+    async function processEmbeddingOnlyMode(candidates) {
+      console.log('🔍 Embedding-only mode');
+      
+      for (let i = 0; i < candidates.length; i++) {
+        if (!isProcessing) break;
+        
+        const candidate = candidates[i];
+        const summary = buildProfileSummary(candidate);
+        const embedding = await getCachedEmbedding(summary, 'profile_');
+        
+        // Simple scoring based on embedding similarity
+        const jobDesc = document.getElementById('jobDescription').value || '';
+        const jobEmbedding = await getCachedEmbedding(jobDesc, 'job_');
+        const similarity = cosineSimilarity(jobEmbedding, embedding);
+        
+        const embeddingBasedScores = {
+          tech_fit_score: Math.round(similarity * 100),
+          experience_score: 75,
+          signals_score: 70,
+          startup_fit_score: 80,
+          red_flag_score: 5,
+          total_score: Math.round(similarity * 100),
+          hot_signal: false,
+          rationale: { tech_fit: "Based on embedding similarity only" }
+        };
+        
+        // Check Marketly
+        const isMarketly = checkMarketlyCompany(candidate.company);
+        if (embeddingBasedScores.total_score >= 60 && isMarketly) {
+          embeddingBasedScores.hot_signal = true;
+        }
+        
+        rankedData.push({
+          raw: candidate,
+          embedding_score: similarity,
+          is_marketly_company: isMarketly,
+          ...embeddingBasedScores
+        });
+        
+        updateProgress(i + 1, candidates.length);
+      }
+    }
+
+    async function processGPTOnlyMode(candidates) {
+      console.log('🧠 GPT-only mode');
+      await processWithRealBatchAPI(candidates);
+    }
+
+    async function processHybridMode(candidates) {
+      console.log('🔄 Hybrid mode (multi-model)');
+      const threshold1 = parseFloat(document.getElementById('embeddingThreshold1').value); // e.g. 0.7
+      const threshold2 = parseFloat(document.getElementById('embeddingThreshold2').value); // e.g. 0.9
+      const jobDesc = document.getElementById('jobDescription').value || '';
+      const jobEmbedding = await getCachedEmbedding(jobDesc, 'job_');
+      if (!jobEmbedding) {
+        showNotification('❌ Failed to get job description embedding. Ranking stopped.', 'error');
+        return;
+      }
+      const group_35 = [];
+      const group_4o = [];
+      const embeddingOnly = [];
+      for (const candidate of candidates) {
+        const summary = buildProfileSummary(candidate);
+        const embedding = await getCachedEmbedding(summary, 'profile_');
+        if (!embedding) {
+          skippedEmbedding++;
+          continue;
+        }
+        const similarity = cosineSimilarity(jobEmbedding, embedding);
+        if (similarity >= threshold2) {
+          group_4o.push({ ...candidate, similarity });
+        } else if (similarity >= threshold1) {
+          group_35.push({ ...candidate, similarity });
+        } else {
+          embeddingOnly.push({ ...candidate, similarity });
+        }
+      }
+      // דירוג embedding בלבד
+      for (let i = 0; i < embeddingOnly.length; i++) {
+        const candidate = embeddingOnly[i];
+        const embeddingBasedScores = {
+          tech_fit_score: Math.round(candidate.similarity * 100),
+          experience_score: 75,
+          signals_score: 70,
+          startup_fit_score: 80,
+          red_flag_score: 5,
+          total_score: Math.round(candidate.similarity * 100),
+          hot_signal: false,
+          rationale: { tech_fit: "Based on embedding similarity only" }
+        };
+        const isMarketly = checkMarketlyCompany(candidate.company);
+        if (embeddingBasedScores.total_score >= 60 && isMarketly) {
+          embeddingBasedScores.hot_signal = true;
+        }
+        rankedData.push({
+          raw: candidate,
+          embedding_score: candidate.similarity,
+          is_marketly_company: isMarketly,
+          ...embeddingBasedScores
+        });
+        updateProgress(i + 1, candidates.length);
+      }
+      // שלח ל-GPT-3.5-turbo
+      if (group_35.length > 0) {
+        await processWithRealBatchAPI(group_35, "gpt-3.5-turbo");
+      }
+      // שלח ל-GPT-4o-mini-turbo
+      if (group_4o.length > 0) {
+        await processWithRealBatchAPI(group_4o, "gpt-4o-mini-turbo");
+      }
+    }
+
+    async function processWithRealBatchAPI(candidates, modelOverride = null) {
+      const BATCH_SIZE = parseInt(document.getElementById('batchSize').value) || 25;
+      let batchNumber = 1;
+      const jobDesc = document.getElementById('jobDescription').value || '';
+      const ideals = [
+        document.getElementById('idealProfile1').value || '',
+        document.getElementById('idealProfile2').value || ''
+      ].filter(ideal => ideal.trim());
+      const weights = getScoringWeights();
+      const model = modelOverride || document.getElementById('aiModel').value === 'gpt-only' ? "gpt-4o-mini-turbo" : "gpt-3.5-turbo";
+      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+        if (!isProcessing) break;
+        const batch = candidates.slice(i, i + BATCH_SIZE);
+        console.log(`📦 Processing batch ${batchNumber} with ${batch.length} candidates on model ${model}`);
+        const messagesList = batch.map(candidate => [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: makeRankingPrompt(candidate, jobDesc, ideals, weights) }
+        ]);
+        try {
+          const batchResponse = await openai.chat.completions.batch.create({
+            model: model,
+            messagesList: messagesList,
+            temperature: 0,
+            max_tokens: 400
+          });
+          console.log(`✅ Batch ${batchNumber} completed with ${batchResponse.choices.length} results`);
+          batchResponse.choices.forEach((choice, index) => {
+            try {
+              const json = JSON.parse(choice.message.content);
+              const profile = batch[index];
+              const isMarketly = checkMarketlyCompany(profile.company);
+              const isHiddenGem = (json.total_score >= 40 && json.total_score < 60 && 
+                                   (json.tech_fit_score >= 80 || json.signals_score >= 80));
+              if ((json.total_score >= 60 || isHiddenGem) && isMarketly) {
+                json.hot_signal = true;
+                console.log(`🔥 HOT SIGNAL: ${profile.firstName} ${profile.lastName} at ${profile.company}`);
+              }
+              rankedData.push({
+                raw: profile,
+                embedding_score: profile.similarity || 0.5,
+                is_marketly_company: isMarketly,
+                ...json
+              });
+            } catch (error) {
+              console.error('JSON parse error:', error);
+              rankedData.push({
+                raw: batch[index],
+                embedding_score: batch[index].similarity || 0.5,
+                tech_fit_score: 70,
+                experience_score: 65,
+                signals_score: 60,
+                startup_fit_score: 55,
+                red_flag_score: 15,
+                total_score: 65,
+                hot_signal: false,
+                rationale: { tech_fit: "Parsing error - fallback scoring" }
+              });
+            }
+          });
+          const realCost = calculateTrueBatchCost(batchResponse.usage, model);
+          estimatedCost += realCost;
+          gptCalls++;
+          await logAIUsage(batchResponse.usage, model, realCost, batchNumber);
+          updateProgress(Math.min(i + BATCH_SIZE, candidates.length), candidates.length);
+          batchNumber++;
+        } catch (error) {
+          console.error('❌ Batch API error:', error);
+          showNotification('Error in AI processing: ' + error.message, 'error');
+          break;
+        }
+      }
+      console.log(`✅ All batches completed. Processed ${rankedData.length} profiles`);
+      showFeedbackPanel();
+    }
+
+    function makeRankingPrompt(candidate, jobDesc, ideals, weights) {
+      const profileSummary = buildProfileSummary(candidate);
+      const idealText = ideals.length > 0 ? ideals.map((ideal, i) => `${i+1}. ${ideal}`).join('\n') : 'None provided.';
+      
+      return `Candidate Summary:
+${profileSummary}
+
+Job Description:
+${jobDesc.slice(0, 500)}${jobDesc.length > 500 ? '...' : ''}
+
+Ideal Profile Summaries:
+${idealText}
+
+Scoring Weights:
+- Tech Fit: ${weights.techFit}%
+- Experience: ${weights.experience}%
+- Professional Signals: ${weights.signals}%
+- Startup Fit: ${weights.startup}%
+- Red-Flag Penalty: ${weights.redFlag}%
+
+Follow instructions in the system prompt and return only JSON.`;
+    }
+
+    function getScoringWeights() {
+      return {
+        techFit: parseInt(document.getElementById('techFitWeight').value) || 25,
+        experience: parseInt(document.getElementById('experienceWeight').value) || 25,
+        signals: parseInt(document.getElementById('signalsWeight').value) || 25,
+        startup: parseInt(document.getElementById('startupWeight').value) || 25,
+        redFlag: parseInt(document.getElementById('redFlagWeight').value) || 10
+      };
+    }
+
+    async function getCachedEmbedding(text, prefix = '') {
+      const key = hashText(prefix + text.slice(0, 300));
+      
+      if (embeddingCache.has(key)) {
+        console.log(`🎯 Cache hit for ${prefix}embedding`);
+        return embeddingCache.get(key);
+      }
+      
+      try {
+        const response = await openai.embeddings.create({
+          model: "text-embedding-3-small",
+          input: text
+        });
+        
+        // SAFETY CHECKS!
+        if (
+          !response ||
+          !response.data ||
+          !Array.isArray(response.data) ||
+          !response.data[0] ||
+          !response.data[0].embedding
+        ) {
+          showNotification('❌ Embedding API returned no embeddings. Please check your API Key and quota.', 'error');
+          return null;
+        }
+        
+        const embedding = response.data[0].embedding;
+        embeddingCache.set(key, embedding);
+        embeddingCalls++;
+        
+        console.log(`💾 Cached new ${prefix}embedding`);
+        return embedding;
+      } catch (error) {
+        console.error('❌ Embedding error:', error);
+        showNotification('❌ Embedding error: ' + error.message, 'error');
+        return null;
+      }
+    }
+
+    function hashText(text) {
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) {
+        const char = text.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return hash.toString();
+    }
+
+    function cosineSimilarity(a, b) {
+      const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+      const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+      const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+      return dotProduct / (magnitudeA * magnitudeB);
+    }
+
+    function calculateTrueBatchCost(usage, model) {
+      let inputRate, outputRate;
+      
+      if (model.includes('gpt-4o-mini-turbo')) {
+        inputRate = 0.15;
+        outputRate = 0.60;
+      } else if (model.includes('gpt-3.5-turbo')) {
+        inputRate = 0.0015;
+        outputRate = 0.002;
+      }
+      
+      const inputCost = (usage.prompt_tokens / 1000) * inputRate;
+      const outputCost = (usage.completion_tokens / 1000) * outputRate;
+      let totalCost = inputCost + outputCost;
+      
+      // Batch API discount
+      totalCost *= 0.5;
+      
+      console.log(`💰 Batch cost: Input: $${inputCost.toFixed(4)}, Output: $${outputCost.toFixed(4)}, With batch discount: $${totalCost.toFixed(4)}`);
+      
+      return totalCost;
+    }
+
+    async function logAIUsage(usage, model, realCost, batchNumber = 1) {
+      try {
+        console.log('📊 Logging AI usage to Google Sheets...');
+        
+        const logData = {
+          model: model,
+          tokens: usage.total_tokens,
+          prompt_tokens: usage.prompt_tokens || 0,
+          completion_tokens: usage.completion_tokens || 0,
+          cost: realCost,
+          batch: batchNumber,
+          timestamp: new Date().toISOString(),
+          user_id: 'scorely_user',
+          session_id: generateSessionId()
+        };
+        
+        const response = await fetch('https://script.google.com/a/macros/added-value.co.il/s/AKfycbzf3seMAhiM7N90ep_wvFSl04el-W6aVznRFwhcKbyHzYp4Y5-k8Qa1u4pmlMO7mzx/exec', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(logData)
+        });
+        
+        if (response.ok) {
+          console.log('✅ AI usage logged successfully');
+        } else {
+          console.error('❌ Failed to log AI usage:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error logging AI usage:', error);
+      }
+    }
+
+    function generateSessionId() {
+      return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function updateProgress(processed, total) {
+      const progressPercent = Math.round((processed / total) * 100);
+      
+      document.getElementById('processedCount').textContent = processed;
+      document.getElementById('progressFill').style.width = `${progressPercent}%`;
+      document.getElementById('progressText').textContent = `${processed}/${total} (${progressPercent}%)`;
+      
+      document.getElementById('embeddingCalls').textContent = embeddingCalls;
+      document.getElementById('gptCalls').textContent = gptCalls;
+      
+      // Cost only in console for debugging
+      if (estimatedCost > 0) {
+        console.log(`💰 Running cost (internal): $${estimatedCost.toFixed(4)}`);
+      }
+    }
+
+    function showFeedbackPanel() {
+      document.getElementById('feedbackPanel').classList.remove('hidden');
+    }
+
+    function submitFeedback() {
+      const feedback = document.getElementById('feedbackText').value;
+      if (!feedback.trim()) {
+        showNotification('Please enter feedback', 'error');
+        return;
+      }
+      
+      console.log('📝 Feedback submitted:', feedback);
+      
+      // Here you could implement NLP-based weight adjustment
+      showNotification('Feedback submitted! Continue ranking with adjusted weights.', 'success');
+      
+      document.getElementById('feedbackText').value = '';
+      document.getElementById('feedbackPanel').classList.add('hidden');
+    }
+
+    // Results Functions
+    function renderResults() {
+      const grid = document.getElementById('resultsGrid');
+      grid.innerHTML = '';
+      
+      if (rankedData.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Results Yet</h3>
+            <p class="text-gray-500">Upload profiles and run AI ranking to see results here.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      rankedData.forEach((candidate, index) => {
+        const category = getCandidateCategory(candidate);
+        const isHot = isHotSignalCandidate(candidate, marketlyCompanies);
+        const scoreColor = candidate.total_score >= 75 ? 'text-green-600' : 
+                          candidate.total_score >= 60 ? 'text-blue-600' : 'text-gray-500';
+        const hotTag = isHot ? `<span class="hot-signal mb-3 inline-block" title="This candidate currently works at a company flagged as HOT (e.g., layoffs, instability, or negative signals).">🔥 HOT SIGNALS</span>` : '';
+        const catTag = `<span class="px-2 py-1 rounded text-xs font-bold ${category === 'TOP' ? 'bg-green-100 text-green-800' : category === 'GOOD' ? 'bg-blue-100 text-blue-800' : category === 'HIDDEN GEM' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}">${category}</span>`;
+        grid.innerHTML += `
+          <div class="card-border bg-white rounded-lg p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="font-semibold text-lg">${candidate.raw.fullName || 'Unknown'}</h3>
+                <p class="text-gray-600">${candidate.raw.raw.title || ''}</p>
+                <p class="text-sm text-gray-500">${candidate.raw.company}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold ${scoreColor}">
+                  ${candidate.total_score}
+                </div>
+                <div class="text-sm text-gray-500">Score</div>
+                <div class="mt-2">${catTag}</div>
+                ${hotTag}
+              </div>
+            </div>
+            <div class="flex gap-2 mb-2">
+              <a href="https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}" 
+                 target="_blank" class="text-green-600 hover:underline text-sm">
+                LinkedIn
+              </a>
+              <button onclick="viewCandidateDetails(${index})" class="text-blue-600 hover:underline text-sm">
+                VIEW
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      showNotification(`Displaying ${rankedData.length} ranked candidates`, 'success');
+    }
+
+    function filterResults(category) {
+      // Update active filter button
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      let filteredResults = [...rankedData];
+      
+      switch(category) {
+        case 'top':
+          filteredResults = rankedData.filter(c => c.total_score >= 75);
+          break;
+        case 'good':
+          filteredResults = rankedData.filter(c => c.total_score >= 60 && c.total_score < 75);
+          break;
+        case 'average':
+          filteredResults = rankedData.filter(c => c.total_score < 60);
+          break;
+        case 'hidden':
+          filteredResults = rankedData.filter(c => 
+            c.total_score >= 40 && c.total_score < 60 && 
+            (c.tech_fit_score >= 80 || c.signals_score >= 80)
+          );
+          break;
+        case 'hot':
+          filteredResults = rankedData.filter(c => c.hot_signal);
+          break;
+        default:
+          // 'all' - show everything
+          break;
+      }
+      
+      // Temporarily replace rankedData for rendering
+      const originalData = rankedData;
+      rankedData = filteredResults;
+      renderResults();
+      rankedData = originalData;
+    }
+
+    function viewCandidateDetails(index) {
+      const candidate = rankedData[index];
+      const modal = document.getElementById('candidateModal');
+      const details = document.getElementById('candidateDetails');
+      const category = getCandidateCategory(candidate);
+      const isHot = isHotSignalCandidate(candidate, marketlyCompanies);
+      let gemReason = '';
+      if (category === 'HIDDEN GEM') {
+        gemReason = `<div class="mt-4 p-3 bg-yellow-50 rounded text-yellow-900 text-sm">
+          <b>Why is this a GEM?</b><br>
+          This profile is considered a "Hidden Gem" because, despite a borderline total score, it shows high potential due to strong skills, excellent companies, honors, or unique signals. Sometimes, limited profile data can also result in a GEM tag if the available information is impressive.
+        </div>`;
+      }
+      details.innerHTML = `
+        <h2 class="text-2xl font-bold mb-6">${candidate.raw.fullName}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold mb-3">Profile Information</h3>
+            <p><strong>Company:</strong> ${candidate.raw.company}</p>
+            <p><strong>Title:</strong> ${candidate.raw.raw.title || 'Not specified'}</p>
+            <p><strong>Embedding Score:</strong> ${(candidate.embedding_score * 100).toFixed(1)}%</p>
+            ${isHot ? '<p class="text-red-600 font-bold"><strong>🔥 HOT SIGNALS</strong> <span title="This candidate currently works at a company flagged as HOT (e.g., layoffs, instability, or negative signals).">(see details)</span></p>' : ''}
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-3">AI Scores</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <span>Tech Fit:</span>
+                <span class="font-bold">${candidate.tech_fit_score}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Experience:</span>
+                <span class="font-bold">${candidate.experience_score}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Professional Signals:</span>
+                <span class="font-bold">${candidate.signals_score}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Startup Fit:</span>
+                <span class="font-bold">${candidate.startup_fit_score}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Red Flags:</span>
+                <span class="font-bold text-red-600">-${candidate.red_flag_score}</span>
+              </div>
+              <div class="flex justify-between pt-2 border-t">
+                <span class="font-semibold">Total Score:</span>
+                <span class="font-bold text-xl ${candidate.total_score >= 75 ? 'text-green-600' : candidate.total_score >= 60 ? 'text-blue-600' : 'text-gray-500'}">${candidate.total_score}/100</span>
+              </div>
+              <div class="flex justify-between pt-2 border-t">
+                <span class="font-semibold">Category:</span>
+                <span class="font-bold">${category}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${gemReason}
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-3">AI Insights</h3>
+          <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+            <p><strong>Profile Summary:</strong> ${candidate.rationale && candidate.rationale.summary ? candidate.rationale.summary : 'No summary provided.'}</p>
+            <p><strong>Key Experience:</strong> ${candidate.rationale && candidate.rationale.experience ? candidate.rationale.experience : 'No experience analysis.'}</p>
+            <p><strong>Strengths:</strong> ${candidate.rationale && candidate.rationale.tech_fit ? candidate.rationale.tech_fit : 'No strengths analysis.'}</p>
+            <p><strong>Signals:</strong> ${candidate.rationale && candidate.rationale.signals ? candidate.rationale.signals : 'No signals analysis.'}</p>
+            <p><strong>Startup Fit:</strong> ${candidate.rationale && candidate.rationale.startup_fit ? candidate.rationale.startup_fit : 'No startup fit analysis.'}</p>
+            <p><strong>Red Flags:</strong> ${candidate.rationale && candidate.rationale.red_flag ? candidate.rationale.red_flag : 'No red flag analysis.'}</p>
+            <p><strong>Point Deductions:</strong> ${candidate.rationale && candidate.rationale.deductions ? candidate.rationale.deductions : 'No deduction reasons provided.'}</p>
+          </div>
+        </div>
+        <div class="mt-6">
+          <label class="block text-sm font-medium mb-2">User Notes:</label>
+          <textarea id="userNotes${index}" class="w-full h-24 p-3 border rounded-lg" placeholder="Add your notes about this candidate..."></textarea>
+        </div>
+        <div class="mt-6 flex gap-4 flex-wrap">
+          <a href="https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}" 
+             target="_blank" class="btn-primary">
+            <i class="fab fa-linkedin mr-2"></i>View on LinkedIn
+          </a>
+          <button onclick="exportCandidatePDF(${index})" class="btn-secondary">Export as PDF</button>
+          <div>
+            <label for="categorySelect${index}" class="block text-xs font-medium mb-1">Change Category:</label>
+            <select id="categorySelect${index}" class="border p-2 rounded">
+              <option value="TOP" ${category === 'TOP' ? 'selected' : ''}>TOP</option>
+              <option value="GOOD" ${category === 'GOOD' ? 'selected' : ''}>GOOD</option>
+              <option value="HIDDEN GEM" ${category === 'HIDDEN GEM' ? 'selected' : ''}>HIDDEN GEM</option>
+              <option value="AVERAGE" ${category === 'AVERAGE' ? 'selected' : ''}>AVERAGE</option>
+            </select>
+            <input type="text" id="categoryChangeReason${index}" class="border p-2 rounded mt-1 w-full" placeholder="Reason for category change (AI will learn from this)">
+            <button onclick="submitCategoryChange(${index})" class="btn-save mt-1">Submit</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    function closeCandidateModal() {
+      document.getElementById('candidateModal').classList.add('hidden');
+    }
+
+    function exportRankedCandidates() {
+      const topCandidates = rankedData.filter(c => c.total_score >= 60);
+      
+      if (topCandidates.length === 0) {
+        showNotification('No candidates with score ≥60 to export', 'error');
+        return;
+      }
+      
+      const csvData = [
+        ['Name', 'Company', 'Total Score', 'Tech Fit', 'Experience', 'Signals', 'Startup Fit', 'Red Flags', 'Hot Signal', 'Marketly', 'LinkedIn Search']
+      ];
+      
+      topCandidates.forEach(candidate => {
+        const linkedinUrl = `https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}`;
+        csvData.push([
+          candidate.raw.fullName,
+          candidate.raw.company,
+          candidate.total_score,
+          candidate.tech_fit_score,
+          candidate.experience_score,
+          candidate.signals_score,
+          candidate.startup_fit_score,
+          candidate.red_flag_score,
+          candidate.hot_signal ? 'YES' : 'NO',
+          candidate.is_marketly_company ? 'YES' : 'NO',
+          linkedinUrl
+        ]);
+      });
+      
+      downloadCSV(csvData, 'ranked_candidates.csv');
+      showNotification(`Exported ${topCandidates.length} ranked candidates`, 'success');
+    }
+
+    function exportAverageReport() {
+      const averageCandidates = rankedData.filter(c => c.total_score < 60);
+      
+      if (averageCandidates.length === 0) {
+        showNotification('No candidates with score <60 to export', 'error');
+        return;
+      }
+      
+      const csvData = [
+        ['Name', 'Company', 'Total Score', 'Primary Concerns', 'Tech Fit', 'Experience', 'Signals', 'Startup Fit', 'Red Flags']
+      ];
+      
+      averageCandidates.forEach(candidate => {
+        const concerns = [];
+        if (candidate.tech_fit_score < 60) concerns.push('Tech Fit');
+        if (candidate.experience_score < 60) concerns.push('Experience');
+        if (candidate.signals_score < 60) concerns.push('Professional Signals');
+        if (candidate.startup_fit_score < 60) concerns.push('Startup Fit');
+        if (candidate.red_flag_score > 20) concerns.push('High Red Flags');
+        
+        csvData.push([
+          candidate.raw.fullName,
+          candidate.raw.company,
+          candidate.total_score,
+          concerns.join(', ') || 'General fit concerns',
+          candidate.tech_fit_score,
+          candidate.experience_score,
+          candidate.signals_score,
+          candidate.startup_fit_score,
+          candidate.red_flag_score
+        ]);
+      });
+      
+      downloadCSV(csvData, 'average_score_report.csv');
+      showNotification(`Exported ${averageCandidates.length} average candidates`, 'success');
+    }
+
+    function downloadCSV(data, filename) {
+      const csvContent = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    // Utility Functions
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Custom add functions for configuration
+    function addCustomIndustry() {
+      const input = document.getElementById('customIndustry');
+      const value = input.value.trim();
+      if (value) {
+        // Add to industry list (implementation depends on UI structure)
+        showNotification(`Added custom industry: ${value}`, 'success');
+        input.value = '';
+      }
+    }
+
+    function addCustomBadge() {
+      const input = document.getElementById('customBadge');
+      const value = input.value.trim();
+      if (value) {
+        showNotification(`Added custom badge: ${value}`, 'success');
+        input.value = '';
+      }
+    }
+
+    function addCustomEducation() {
+      const input = document.getElementById('customEducation');
+      const value = input.value.trim();
+      if (value) {
+        showNotification(`Added custom education: ${value}`, 'success');
+        input.value = '';
+      }
+    }
+
+    function addCustomRedFlag() {
+      const input = document.getElementById('customRedFlag');
+      const value = input.value.trim();
+      if (value) {
+        showNotification(`Added custom red flag: ${value}`, 'success');
+        input.value = '';
+      }
+    }
+
+    // --- פונקציות שמירה וטעינה ל-pre-filter ---
+    function savePreFilterSettings() {
+      localStorage.setItem('minYearsExperience', document.getElementById('minYearsExperience').value);
+      localStorage.setItem('requiredKeywords', document.getElementById('requiredKeywords').value);
+      localStorage.setItem('requiredEducation', document.getElementById('requiredEducation').value);
+      localStorage.setItem('requiredLocation', document.getElementById('requiredLocation').value);
+      localStorage.setItem('requiredJobTitle', document.getElementById('requiredJobTitle').value);
+      showSavedIndicator('preFilterSaved');
+    }
+    function loadPreFilterSettings() {
+      document.getElementById('minYearsExperience').value = localStorage.getItem('minYearsExperience') || '0';
+      document.getElementById('requiredKeywords').value = localStorage.getItem('requiredKeywords') || '';
+      document.getElementById('requiredEducation').value = localStorage.getItem('requiredEducation') || '';
+      document.getElementById('requiredLocation').value = localStorage.getItem('requiredLocation') || '';
+      document.getElementById('requiredJobTitle').value = localStorage.getItem('requiredJobTitle') || '';
+    }
+
+    // --- פונקציית pre-filter ---
+    function preFilterByExperienceAndKeywords(candidates) {
+      const minYears = parseInt(localStorage.getItem('minYearsExperience') || '0');
+      const keywords = (localStorage.getItem('requiredKeywords') || '').split(',').map(k => k.trim().toLowerCase()).filter(k => k);
+      const educations = (localStorage.getItem('requiredEducation') || '').split(',').map(e => e.trim().toLowerCase()).filter(e => e);
+      const locations = (localStorage.getItem('requiredLocation') || '').split(',').map(l => l.trim().toLowerCase()).filter(l => l);
+      let jobTitles = (localStorage.getItem('requiredJobTitle') || '').split(',').map(j => j.trim().toLowerCase()).filter(j => j);
+      jobTitles = expandJobTitles(jobTitles);
+      return candidates.filter(profile => {
+        let years = 0;
+        if (profile.raw['yearsExperience']) years = parseInt(profile.raw['yearsExperience']);
+        else if (profile.raw['experience']) years = parseInt(profile.raw['experience']);
+        else {
+          const text = JSON.stringify(profile.raw).toLowerCase();
+          const match = text.match(/(\d{1,2})\s*(years|שנות|שנה)/);
+          if (match) years = parseInt(match[1]);
+        }
+        const profileText = JSON.stringify(profile.raw).toLowerCase();
+        const hasKeyword = keywords.length === 0 || keywords.some(kw => profileText.includes(kw));
+        const hasEducation = educations.length === 0 || educations.some(edu => profileText.includes(edu));
+        const hasLocation = locations.length === 0 || locations.some(loc => profileText.includes(loc));
+        const hasJobTitle = jobTitles.length === 0 || jobTitles.some(job => profileText.includes(job));
+        return years >= minYears && hasKeyword && hasEducation && hasLocation && hasJobTitle;
+      });
+    }
+
+    // --- מילון מילים נרדפות לתפקידים נפוצים ---
+    const JOB_TITLE_SYNONYMS = {
+      "software engineer": ["מפתח תוכנה", "software developer", "developer", "engineer", "programmer", "software programmer"],
+      "frontend developer": ["מפתח פרונטאנד", "front end developer", "frontend engineer", "front-end developer", "front-end engineer", "ui developer", "web developer"],
+      "backend developer": ["מפתח בקאנד", "back end developer", "backend engineer", "back-end developer", "back-end engineer", "server side developer"],
+      "fullstack developer": ["מפתח פולסטאק", "full stack developer", "fullstack engineer", "fs developer", "fs engineer", "full-stack developer", "full-stack engineer"],
+      "mobile developer": ["מפתח מובייל", "android developer", "ios developer", "mobile engineer", "android engineer", "ios engineer"],
+      "embedded developer": ["מפתח אמבדד", "embedded engineer", "firmware developer", "firmware engineer", "embedded software engineer"],
+      // נתונים ובינה מלאכותית
+      "data scientist": ["data science", "data analyst", "machine learning engineer", "ml engineer", "ai researcher", "חוקר בינה מלאכותית"],
+      "data engineer": ["data platform engineer", "data infrastructure engineer"],
+      "machine learning engineer": ["ml engineer", "ai engineer", "deep learning engineer"],
+      "data analyst": ["business analyst", "data analytics", "data science analyst"],
+      "ai researcher": ["artificial intelligence researcher", "ai scientist", "חוקר ai"],
+      // תשתיות ו-DevOps
+      "devops engineer": ["devops", "site reliability engineer", "sre", "cloud engineer", "cloud architect", "platform engineer", "network engineer"],
+      "site reliability engineer": ["sre", "devops", "reliability engineer"],
+      "cloud engineer": ["cloud architect", "cloud developer", "cloud platform engineer"],
+      "platform engineer": ["infrastructure engineer", "devops platform engineer"],
+      "network engineer": ["network architect", "system engineer", "network administrator"],
+      // אבטחת מידע
+      "security engineer": ["application security engineer", "devsecops engineer", "security analyst", "penetration tester", "pentester", "soc analyst", "information security engineer"],
+      "application security engineer": ["appsec engineer", "application security analyst"],
+      "devsecops engineer": ["devops security", "devsecops", "security devops"],
+      "security analyst": ["cyber analyst", "information security analyst", "soc analyst"],
+      "penetration tester": ["pentester", "ethical hacker", "penetration testing engineer"],
+      "soc analyst": ["security operations center analyst", "security operations analyst"],
+      // בדיקות והבטחת איכות
+      "qa engineer": ["quality assurance", "qa tester", "qa automation", "qa analyst", "test automation engineer", "performance tester", "software tester"],
+      "test automation engineer": ["automation engineer", "qa automation", "test engineer"],
+      "performance tester": ["load tester", "performance test engineer"],
+      // ארכיטקטורה וניהול טכני
+      "solutions architect": ["technical architect", "system architect", "enterprise architect"],
+      "technical architect": ["system architect", "solutions architect"],
+      "technical lead": ["tech lead", "lead developer", "team lead", "development lead"],
+      "chief technology officer": ["cto", "vp engineering", "head of technology"],
+      // מוצר ועיצוב
+      "product manager": ["product owner", "product lead", "product management"],
+      "ux/ui designer": ["ux designer", "ui designer", "user experience designer", "user interface designer", "ux researcher"],
+      "technical writer": ["documentation specialist", "tech writer", "technical documentation"],
+      // טכנולוגיות מתקדמות / תחומי נישה
+      "blockchain developer": ["blockchain engineer", "blockchain architect", "crypto developer"],
+      "iot engineer": ["iot developer", "internet of things engineer", "iot architect"],
+      "ar/vr developer": ["ar developer", "vr developer", "augmented reality developer", "virtual reality developer", "ar engineer", "vr engineer"],
+      "robotics engineer": ["robotics developer", "robotics architect", "automation engineer"],
+    };
+    function expandJobTitles(jobTitles) {
+      const expanded = new Set();
+      jobTitles.forEach(title => {
+        expanded.add(title);
+        const synonyms = JOB_TITLE_SYNONYMS[title];
+        if (synonyms) {
+          synonyms.forEach(syn => expanded.add(syn));
+        }
+      });
+      return Array.from(expanded);
+    }
+
+    // --- Update renderResults to show: Full Name, Company, Title, Score, Category, LinkedIn, View, and HOT SIGNALS tag only for relevant candidates ---
+    function getCandidateCategory(candidate) {
+      if (candidate.total_score >= 75) return 'TOP';
+      if (candidate.total_score >= 60) return 'GOOD';
+      if (
+        candidate.total_score >= 40 && candidate.total_score < 60 &&
+        (candidate.tech_fit_score >= 80 || candidate.signals_score >= 80)
+      ) return 'HIDDEN GEM';
+      return 'AVERAGE';
+    }
+    function isHotSignalCandidate(candidate, marketlyCompanies) {
+      // Only for TOP/GOOD/HIDDEN GEM
+      const cat = getCandidateCategory(candidate);
+      if (cat === 'TOP' || cat === 'GOOD' || cat === 'HIDDEN GEM') {
+        if (marketlyCompanies && marketlyCompanies.length > 0) {
+          const currentCompany = (candidate.raw.company || '').toLowerCase().trim();
+          return marketlyCompanies.some(m => currentCompany.includes(m));
+        }
+      }
+      return false;
+    }
+
+    // --- Add stubs for exportCandidatePDF and submitCategoryChange ---
+    function exportCandidatePDF(index) {
+      // TODO: Implement PDF export (can use jsPDF or similar library)
+      alert('PDF export coming soon!');
+    }
+    function submitCategoryChange(index) {
+      const candidate = rankedData[index];
+      const newCategory = document.getElementById(`categorySelect${index}`).value;
+      const reason = document.getElementById(`categoryChangeReason${index}`).value;
+      // TODO: Send feedback to AI for learning (can be implemented via API or local log)
+      alert(`Category changed to ${newCategory} for ${candidate.raw.fullName}. Reason: ${reason}\n(This feedback will be used to improve future rankings.)`);
+    }
+
+    // Initialize first step
+    showStep(1);
+  </script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDrNyZkMo%2FQVq%2FDtHcRjYaPZo1JWG0%2FXaKM0TCf2kOgptvRFH3SaHm8UxSVyRKR%2By6HbI7bv9sAlYLDhRSwmf25xnw3DxkTeSNuZaRjMzvayseps9277ckc5jlZ4fCLvPBmCAyAqLdHYZ5Sb0Xh%2BMrzIuFkAncOKQT8EqZGfbLVXwUeZiy6ltZPxiPXboQKL8KeDRm5gC5JMOsealPnZ7Fc54QTfIv9Op4wrmtLH0Yl0I916bGB0AlMimtDeE4tTNspcvZvjh%2FwL%2F7keI8LNyCcgJomWWN3OHgp9i%2FjtpJo%2F9ksjPVc9ntCAMYTXtNhHAmV4CytA%2FDoEQckWMPXbgYWcUzNtWQn%2BJhZ6ICSBL%2B5RImotsErfdTgnd6JmE1w0mVVpIQ86b%2FzgdYvesM5QA9oqMBpnlNXpXGCY%2FLCcF8Mh0giaxiMMwd6le3X4oAJAauZANj5rwO4OujzyHKNWDF7ghRboEm70JrcfFzhbcxBpSATrIUVyvXm9sXoBV84IlVbYXRE196J24n%2BrPpIR6440%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDrNyZkMo/QVq/DtHcRjYaPZo1JWG0/XaKM0TCf2kOgptvRFH3SaHm8UxSVyRKR+y6HbI7bv9sAlYLDhRSwmf25xnw3DxkTeSNuZaRjMzvayseps9277ckc5jlZ4fCLvPBmCAyAqLdHYZ5Sb0Xh+MrzIuFkAncOKQT8EqZGfbLVXwUeZiy6ltZPxiPXboQKL8KeDRm5gC5JMOsealPnZ7Fc54QTfIv9Op4wrmtLH0Yl0I916bGB0AlMimtDeE4tTNspcvZvjh/wL/7keI8LNyCcgJomWWN3OHgp9i/jtpJo/9ksjPVc9ntCAMYTXtNhHAmV4CytA/DoEQckWMPXbgYWcUzNtWQn+JhZ6ICSBL+5RImotsErfdTgnd6JmE1w0mVVpIQ86b/zgdYvesM5QA9oqMBpnlNXpXGCY/LCcF8Mh0giaxiMMwd6le3X4oAJAauZANj5rwO4OujzyHKNWDF7ghRboEm70JrcfFzhbcxBpSATrIUVyvXm9sXoBV84IlVbYXRE196J24n+rPpIR6440=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
