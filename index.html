@@ -1106,17 +1106,19 @@
       });
 
       // Navigation
-      document.getElementById('prevBtn')?.addEventListener('click', () => {
-        if (currentStep > 1) {
-          currentStep--;
-          showStep(currentStep);
-        }
-      });
-
       document.getElementById('nextBtn')?.addEventListener('click', () => {
         if (currentStep < 5) {
           currentStep++;
           showStep(currentStep);
+          updateNavigationButtons(currentStep);
+        }
+      });
+
+      document.getElementById('prevBtn')?.addEventListener('click', () => {
+        if (currentStep > 1) {
+          currentStep--;
+          showStep(currentStep);
+          updateNavigationButtons(currentStep);
         }
       });
 
@@ -1125,6 +1127,7 @@
         btn.addEventListener('click', () => {
           currentStep = index + 1;
           showStep(currentStep);
+          updateNavigationButtons(currentStep);
         });
       });
 
@@ -1288,7 +1291,6 @@
     function closeSettings() {
       document.getElementById('settingsModal').classList.add('hidden');
     }
-
     // Navigation Functions
     function showStep(step) {
       // Hide all tabs
@@ -1300,19 +1302,31 @@
       const tabButtons = document.querySelectorAll('.tab-btn');
       
       if (step >= 1 && step <= 5) {
-        document.getElementById(tabs[step - 1]).classList.remove('hidden');
-        tabButtons[step - 1].classList.add('tab-active');
+        const targetTab = document.getElementById(tabs[step - 1]);
+        if (targetTab) {
+          targetTab.classList.remove('hidden');
+        }
+        if (tabButtons[step - 1]) {
+          tabButtons[step - 1].classList.add('tab-active');
+        }
       }
       
       // Update step indicator
-      document.querySelector('.step-text').textContent = `Step ${step} of 5`;
+      const stepText = document.querySelector('.step-text');
+      if (stepText) {
+        stepText.textContent = `Step ${step} of 5`;
+      }
       document.querySelectorAll('.dot').forEach((dot, index) => {
         dot.classList.toggle('active', index === step - 1);
       });
-      
+    }
+    
+    function updateNavigationButtons(step) {
       // Update navigation buttons
-      document.getElementById('prevBtn').style.opacity = step === 1 ? '0.5' : '1';
-      document.getElementById('nextBtn').style.opacity = step === 5 ? '0.5' : '1';
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      if (prevBtn) prevBtn.style.opacity = step === 1 ? '0.5' : '1';
+      if (nextBtn) nextBtn.style.opacity = step === 5 ? '0.5' : '1';
     }
 
     // File Handling Functions
@@ -3389,6 +3403,7 @@ Weights: Tech ${weights.techFit}%, Exp ${weights.experience}%, Signals ${weights
 
     // Initialize first step
     showStep(1);
+    updateNavigationButtons(1);
 
     function saveHotSignals() {
       localStorage.setItem('hotSignals', document.getElementById('hotSignalsInput').value);
@@ -3478,3 +3493,5 @@ Weights: Tech ${weights.techFit}%, Exp ${weights.experience}%, Signals ${weights
         window.__genspark_locale = "en-US";
         window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDrNyZkMo/QVq/DtHcRjYaPZo1JWG0/XaKM0TCf2kOgptvRFH3SaHm8UxSVyRKR+y6HbI7bv9sAlYLDhRSwmf25xnw3DxkTeSNuZaRjMzvayseps9277ckc5jlZ4fCLvPBmCAyAqLdHYZ5Sb0Xh+MrzIuFkAncOKQT8EqZGfbLVXwUeZiy6ltZPxiPXboQKL8KeDRm5gC5JMOsealPnZ7Fc54QTfIv9Op4wrmtLH0Yl0I916bGB0AlMimtDeE4tTNspcvZvjh/wL/7keI8LNyCcgJomWWN3OHgp9i/jtpJo/9ksjPVc9ntCAMYTXtNhHAmV4CytA/DoEQckWMPXbgYWcUzNtWQn+JhZ6ICSBL+5RImotsErfdTgnd6JmE1w0mVVpIQ86b/zgdYvesM5QA9oqMBpnlNXpXGCY/LCcF8Mh0giaxiMMwd6le3X4oAJAauZANj5rwO4OujzyHKNWDF7ghRboEm70JrcfFzhbcxBpSATrIUVyvXm9sXoBV84IlVbYXRE196J24n+rPpIR6440=";
     </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
