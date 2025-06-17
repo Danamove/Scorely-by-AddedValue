@@ -410,6 +410,45 @@
             <button onclick="clearDashboard()" class="btn-secondary ml-2">Clear Dashboard</button>
           </div>
         </div>
+
+        <div class="config-section">
+          <h3><i class="fas fa-filter mr-2"></i>Pre-Filter: Experience, Keywords, Education, Location & Job Title</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Minimum Years of Experience:</label>
+              <input type="number" id="minYearsExperience" min="0" max="50" value="0" class="w-full p-2 border rounded">
+              <p class="text-xs text-gray-500 mt-1">Only candidates with at least this number of years of experience will be considered.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Keywords (comma-separated):</label>
+              <input type="text" id="requiredKeywords" class="w-full p-2 border rounded" placeholder="data, ai, manager">
+              <p class="text-xs text-gray-500 mt-1">At least one of these keywords must appear in the candidate's profile.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Education (comma-separated):</label>
+              <input type="text" id="requiredEducation" class="w-full p-2 border rounded" placeholder="Technion, Tel Aviv University, Bar Ilan">
+              <p class="text-xs text-gray-500 mt-1">At least one of these education terms must appear in the profile (or leave blank to skip this filter).</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Location (comma-separated):</label>
+              <input type="text" id="requiredLocation" class="w-full p-2 border rounded" placeholder="Tel Aviv, Haifa, Jerusalem">
+              <p class="text-xs text-gray-500 mt-1">At least one of these locations must appear in the profile (or leave blank to skip this filter).</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Required Job Title (comma-separated):</label>
+              <input type="text" id="requiredJobTitle" class="w-full p-2 border rounded" placeholder="Fullstack Developer, Data Scientist, Product Manager">
+              <p class="text-xs text-gray-500 mt-1">
+                The system also recognizes common synonyms and variations (e.g., "Fullstack Developer" will also match "Full Stack Developer", "FS Developer", "Fullstack Engineer", and more).<br>
+                <b>Examples:</b> <span class="block">Fullstack Developer, Data Scientist, Product Manager, QA Engineer, DevOps, Backend Developer, Frontend Developer</span>
+                <br>At least one of these job titles (or their synonyms) must appear in the profile (or leave blank to skip this filter).
+              </p>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button onclick="savePreFilterSettings()" class="btn-save">Save Pre-Filter</button>
+            <span id="preFilterSaved" class="saved-indicator hidden">Saved ✓</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -511,33 +550,6 @@
           <div class="mt-3">
             <button onclick="saveExcellenceBadges()" class="btn-save">Save Excellence Badges</button>
             <span id="badgesSaved" class="saved-indicator hidden">Saved ✓</span>
-          </div>
-        </div>
-
-        <div class="config-section">
-          <h3><i class="fas fa-graduation-cap mr-2"></i>Education</h3>
-          <div class="space-y-2">
-            <label class="flex items-center"><input type="checkbox" name="education" value="hebrew" class="mr-2"> Hebrew University of Jerusalem</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="technion" class="mr-2"> Technion - Israel Institute of Technology</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="tau" class="mr-2"> Tel Aviv University</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="biu" class="mr-2"> Bar-Ilan University</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="bgu" class="mr-2"> Ben-Gurion University of the Negev</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="weizmann" class="mr-2"> Weizmann Institute of Science</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="reichman" class="mr-2"> Reichman University</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="haifa" class="mr-2"> University of Haifa</label>
-            <label class="flex items-center"><input type="checkbox" name="education" value="academic" class="mr-2"> The Academic College of Tel-Aviv-Yaffo</label>
-          </div>
-          <div class="mt-4 flex gap-2">
-            <button onclick="selectAllEducation()" class="btn-secondary">Select All</button>
-            <button onclick="clearEducation()" class="btn-secondary">It's not relevant</button>
-          </div>
-          <div class="mt-3">
-            <input type="text" id="customEducation" placeholder="Custom education..." class="border p-2 rounded mr-2">
-            <button onclick="addCustomEducation()" class="btn-secondary">Add</button>
-          </div>
-          <div class="mt-3">
-            <button onclick="saveEducation()" class="btn-save">Save Education</button>
-            <span id="educationSaved" class="saved-indicator hidden">Saved ✓</span>
           </div>
         </div>
 
@@ -796,13 +808,21 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium mb-2">Embedding Threshold:</label>
-          <input type="range" id="embeddingThreshold" min="0.1" max="1.0" step="0.1" value="0.7" class="w-full">
+          <label class="block text-sm font-medium mb-2">Embedding Threshold 1 (for GPT-3.5-turbo):</label>
+          <input type="range" id="embeddingThreshold1" min="0.1" max="1.0" step="0.01" value="0.7" class="w-full">
           <div class="flex justify-between text-sm text-gray-600">
             <span>0.1 (More candidates)</span>
-            <span id="thresholdValue">0.7</span>
+            <span id="thresholdValue1">0.7</span>
             <span>1.0 (Fewer candidates)</span>
           </div>
+          <label class="block text-sm font-medium mb-2 mt-4">Embedding Threshold 2 (for GPT-4o-mini-turbo):</label>
+          <input type="range" id="embeddingThreshold2" min="0.1" max="1.0" step="0.01" value="0.9" class="w-full">
+          <div class="flex justify-between text-sm text-gray-600">
+            <span>0.1</span>
+            <span id="thresholdValue2">0.9</span>
+            <span>1.0</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Candidates with similarity below Threshold 1 are scored by embedding only.<br>Between Threshold 1 and 2: GPT-3.5-turbo.<br>Above Threshold 2: GPT-4o-mini-turbo.</p>
         </div>
       </div>
       
@@ -1037,8 +1057,11 @@ Return ONLY JSON format:
       });
 
       // Threshold slider
-      document.getElementById('embeddingThreshold')?.addEventListener('input', (e) => {
-        document.getElementById('thresholdValue').textContent = e.target.value;
+      document.getElementById('embeddingThreshold1')?.addEventListener('input', (e) => {
+        document.getElementById('thresholdValue1').textContent = e.target.value;
+      });
+      document.getElementById('embeddingThreshold2')?.addEventListener('input', (e) => {
+        document.getElementById('thresholdValue2').textContent = e.target.value;
       });
     }
 
@@ -1055,11 +1078,17 @@ Return ONLY JSON format:
       }
       
       // Threshold
-      const savedThreshold = localStorage.getItem('embeddingThreshold');
-      const thresholdInput = document.getElementById('embeddingThreshold');
-      if (thresholdInput) {
-        thresholdInput.value = savedThreshold || '0.7';
-        document.getElementById('thresholdValue').textContent = savedThreshold || '0.7';
+      const savedThreshold1 = localStorage.getItem('embeddingThreshold1');
+      const savedThreshold2 = localStorage.getItem('embeddingThreshold2');
+      const thresholdInput1 = document.getElementById('embeddingThreshold1');
+      const thresholdInput2 = document.getElementById('embeddingThreshold2');
+      if (thresholdInput1) {
+        thresholdInput1.value = savedThreshold1 || '0.7';
+        document.getElementById('thresholdValue1').textContent = savedThreshold1 || '0.7';
+      }
+      if (thresholdInput2) {
+        thresholdInput2.value = savedThreshold2 || '0.9';
+        document.getElementById('thresholdValue2').textContent = savedThreshold2 || '0.9';
       }
       
       // Other settings
@@ -1072,6 +1101,7 @@ Return ONLY JSON format:
       
       loadScoringWeights();
       loadCheckboxStates();
+      loadPreFilterSettings();
     }
 
     function loadTextareaFromStorage(elementId, storageKey) {
@@ -1134,20 +1164,23 @@ Return ONLY JSON format:
       console.log('🔄 Saving settings...');
       
       const apiKeyInput = document.getElementById('openaiApiKey');
-      const thresholdInput = document.getElementById('embeddingThreshold');
+      const thresholdInput1 = document.getElementById('embeddingThreshold1');
+      const thresholdInput2 = document.getElementById('embeddingThreshold2');
       
-      if (!apiKeyInput || !thresholdInput) {
+      if (!apiKeyInput || !thresholdInput1 || !thresholdInput2) {
         console.error('❌ Input elements not found');
         return;
       }
       
       const apiKey = apiKeyInput.value.trim();
-      const threshold = thresholdInput.value;
+      const threshold1 = thresholdInput1.value;
+      const threshold2 = thresholdInput2.value;
       
       console.log('📝 Saving API Key (length):', apiKey.length);
       
       localStorage.setItem('openaiApiKey', apiKey);
-      localStorage.setItem('embeddingThreshold', threshold);
+      localStorage.setItem('embeddingThreshold1', threshold1);
+      localStorage.setItem('embeddingThreshold2', threshold2);
       
       console.log('💾 Saved to localStorage');
       
@@ -1381,14 +1414,38 @@ Return ONLY JSON format:
           return false;
         }
         
-        // 2) Then blacklist companies
-        if (blacklist.some(term => text.includes(term) || company.includes(term))) {
+        // 2) Blacklist: filter ONLY if CURRENT company is in blacklist
+        if (blacklist.some(term => company.includes(term))) {
           blacklistCount++;
           return false;
         }
         
-        // 3) Finally No-Go
-        if (noGoLowercase.some(noGo => company.includes(noGo))) {
+        // 3) NO GO: filter if current OR any past company is in NO GO list
+        // Try to find all company fields in profile.raw (for past jobs)
+        let allCompanies = [];
+        if (profile.raw) {
+          // Try common fields: 'company', 'currentCompany', 'companies', 'work', 'experience', etc.
+          if (profile.raw.company) allCompanies.push(String(profile.raw.company).toLowerCase());
+          if (profile.raw.currentCompany) allCompanies.push(String(profile.raw.currentCompany).toLowerCase());
+          if (Array.isArray(profile.raw.companies)) {
+            allCompanies = allCompanies.concat(profile.raw.companies.map(c => String(c).toLowerCase()));
+          }
+          if (Array.isArray(profile.raw.work)) {
+            allCompanies = allCompanies.concat(profile.raw.work.map(w => (w.company ? String(w.company).toLowerCase() : '')));
+          }
+          if (Array.isArray(profile.raw.experience)) {
+            allCompanies = allCompanies.concat(profile.raw.experience.map(e => (e.company ? String(e.company).toLowerCase() : '')));
+          }
+          // Fallback: try to extract company names from all values
+          if (allCompanies.length === 0) {
+            const values = Object.values(profile.raw).map(v => String(v).toLowerCase());
+            allCompanies = values.filter(v => noGoLowercase.some(noGo => v.includes(noGo)));
+          }
+        }
+        // Always include current company
+        if (!allCompanies.includes(company)) allCompanies.push(company);
+        // Check if any company matches NO GO
+        if (noGoLowercase.some(noGo => allCompanies.some(c => c.includes(noGo)))) {
           noGoCount++;
           return false;
         }
@@ -1506,21 +1563,6 @@ Return ONLY JSON format:
         .map(cb => cb.value);
       localStorage.setItem('badges', JSON.stringify(selected));
       showSavedIndicator('badgesSaved');
-    }
-
-    function saveEducation() {
-      const selected = Array.from(document.querySelectorAll('input[name="education"]:checked'))
-        .map(cb => cb.value);
-      localStorage.setItem('education', JSON.stringify(selected));
-      showSavedIndicator('educationSaved');
-    }
-
-    function selectAllEducation() {
-      document.querySelectorAll('input[name="education"]').forEach(cb => cb.checked = true);
-    }
-
-    function clearEducation() {
-      document.querySelectorAll('input[name="education"]').forEach(cb => cb.checked = false);
     }
 
     function saveRedFlags() {
@@ -1671,6 +1713,14 @@ Return ONLY JSON format:
         return;
       }
       
+      // Pre-filter candidates
+      let candidates = filteredData;
+      candidates = preFilterByExperienceAndKeywords(candidates);
+      if (candidates.length === 0) {
+        showNotification('No candidates passed the pre-filter.', 'warning');
+        return;
+      }
+      
       // Ensure Marketly is loaded
       if (!marketlyCompanies || marketlyCompanies.length === 0) {
         console.log('📥 Loading Marketly companies...');
@@ -1680,7 +1730,7 @@ Return ONLY JSON format:
       const startRow = parseInt(document.getElementById('startRow').value);
       const endRow = parseInt(document.getElementById('endRow').value);
       
-      if (startRow < 2 || endRow < startRow || endRow > filteredData.length) {
+      if (startRow < 2 || endRow < startRow || endRow > candidates.length) {
         showNotification('Please check your row range settings', 'error');
         return;
       }
@@ -1698,7 +1748,7 @@ Return ONLY JSON format:
       estimatedCost = 0;
       
       try {
-        await processProfileRange(startRow, endRow);
+        await processProfileRangeWithPreFilter(candidates, startRow, endRow);
       } catch (error) {
         console.error('❌ Ranking error:', error);
         showNotification('Error during ranking: ' + error.message, 'error');
@@ -1722,18 +1772,15 @@ Return ONLY JSON format:
       showNotification('Ranking stopped', 'warning');
     }
 
-    async function processProfileRange(startRow, endRow) {
+    async function processProfileRangeWithPreFilter(candidates, startRow, endRow) {
       const selectedModel = document.getElementById('aiModel').value;
-      const candidates = filteredData.slice(startRow - 2, endRow - 1);
-      
-      console.log(`🚀 Processing ${candidates.length} candidates with ${selectedModel} model`);
-      
+      const slicedCandidates = candidates.slice(startRow - 2, endRow - 1);
       if (selectedModel === 'embedding-only') {
-        await processEmbeddingOnlyMode(candidates);
+        await processEmbeddingOnlyMode(slicedCandidates);
       } else if (selectedModel === 'gpt-only') {
-        await processGPTOnlyMode(candidates);
+        await processGPTOnlyMode(slicedCandidates);
       } else {
-        await processHybridMode(candidates);
+        await processHybridMode(slicedCandidates);
       }
     }
 
@@ -1786,100 +1833,114 @@ Return ONLY JSON format:
     }
 
     async function processHybridMode(candidates) {
-      console.log('🔄 Hybrid mode');
-      
-      const threshold = parseFloat(document.getElementById('embeddingThreshold').value);
+      console.log('🔄 Hybrid mode (multi-model)');
+      const threshold1 = parseFloat(document.getElementById('embeddingThreshold1').value); // e.g. 0.7
+      const threshold2 = parseFloat(document.getElementById('embeddingThreshold2').value); // e.g. 0.9
       const jobDesc = document.getElementById('jobDescription').value || '';
       const jobEmbedding = await getCachedEmbedding(jobDesc, 'job_');
-      
-      const filteredCandidates = [];
-      
-      // First pass: embedding filtering
+      if (!jobEmbedding) {
+        showNotification('❌ Failed to get job description embedding. Ranking stopped.', 'error');
+        return;
+      }
+      const group_35 = [];
+      const group_4o = [];
+      const embeddingOnly = [];
       for (const candidate of candidates) {
         const summary = buildProfileSummary(candidate);
         const embedding = await getCachedEmbedding(summary, 'profile_');
-        const similarity = cosineSimilarity(jobEmbedding, embedding);
-        
-        if (similarity >= threshold) {
-          filteredCandidates.push({
-            ...candidate,
-            similarity: similarity
-          });
-        } else {
+        if (!embedding) {
           skippedEmbedding++;
+          continue;
+        }
+        const similarity = cosineSimilarity(jobEmbedding, embedding);
+        if (similarity >= threshold2) {
+          group_4o.push({ ...candidate, similarity });
+        } else if (similarity >= threshold1) {
+          group_35.push({ ...candidate, similarity });
+        } else {
+          embeddingOnly.push({ ...candidate, similarity });
         }
       }
-      
-      console.log(`🎯 ${filteredCandidates.length} candidates passed embedding filter (${skippedEmbedding} skipped)`);
-      
-      // Second pass: GPT ranking for candidates that passed
-      if (filteredCandidates.length > 0) {
-        await processWithRealBatchAPI(filteredCandidates);
+      // דירוג embedding בלבד
+      for (let i = 0; i < embeddingOnly.length; i++) {
+        const candidate = embeddingOnly[i];
+        const embeddingBasedScores = {
+          tech_fit_score: Math.round(candidate.similarity * 100),
+          experience_score: 75,
+          signals_score: 70,
+          startup_fit_score: 80,
+          red_flag_score: 5,
+          total_score: Math.round(candidate.similarity * 100),
+          hot_signal: false,
+          rationale: { tech_fit: "Based on embedding similarity only" }
+        };
+        const isMarketly = checkMarketlyCompany(candidate.company);
+        if (embeddingBasedScores.total_score >= 60 && isMarketly) {
+          embeddingBasedScores.hot_signal = true;
+        }
+        rankedData.push({
+          raw: candidate,
+          embedding_score: candidate.similarity,
+          is_marketly_company: isMarketly,
+          ...embeddingBasedScores
+        });
+        updateProgress(i + 1, candidates.length);
+      }
+      // שלח ל-GPT-3.5-turbo
+      if (group_35.length > 0) {
+        await processWithRealBatchAPI(group_35, "gpt-3.5-turbo");
+      }
+      // שלח ל-GPT-4o-mini-turbo
+      if (group_4o.length > 0) {
+        await processWithRealBatchAPI(group_4o, "gpt-4o-mini-turbo");
       }
     }
 
-    async function processWithRealBatchAPI(candidates) {
+    async function processWithRealBatchAPI(candidates, modelOverride = null) {
       const BATCH_SIZE = parseInt(document.getElementById('batchSize').value) || 25;
       let batchNumber = 1;
-      
       const jobDesc = document.getElementById('jobDescription').value || '';
       const ideals = [
         document.getElementById('idealProfile1').value || '',
         document.getElementById('idealProfile2').value || ''
       ].filter(ideal => ideal.trim());
-      
       const weights = getScoringWeights();
-      
+      const model = modelOverride || document.getElementById('aiModel').value === 'gpt-only' ? "gpt-4o-mini-turbo" : "gpt-3.5-turbo";
       for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
         if (!isProcessing) break;
-        
         const batch = candidates.slice(i, i + BATCH_SIZE);
-        
-        console.log(`📦 Processing batch ${batchNumber} with ${batch.length} candidates`);
-        
-        // Build messagesList for batch
+        console.log(`📦 Processing batch ${batchNumber} with ${batch.length} candidates on model ${model}`);
         const messagesList = batch.map(candidate => [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: makeRankingPrompt(candidate, jobDesc, ideals, weights) }
         ]);
-        
         try {
-          // Real Batch API call
           const batchResponse = await openai.chat.completions.batch.create({
-            model: "gpt-4o-mini-turbo",
+            model: model,
             messagesList: messagesList,
             temperature: 0,
             max_tokens: 400
           });
-          
           console.log(`✅ Batch ${batchNumber} completed with ${batchResponse.choices.length} results`);
-          
-          // Process results
           batchResponse.choices.forEach((choice, index) => {
             try {
               const json = JSON.parse(choice.message.content);
               const profile = batch[index];
-              
-              // Check Marketly
               const isMarketly = checkMarketlyCompany(profile.company);
               const isHiddenGem = (json.total_score >= 40 && json.total_score < 60 && 
                                    (json.tech_fit_score >= 80 || json.signals_score >= 80));
-              
               if ((json.total_score >= 60 || isHiddenGem) && isMarketly) {
                 json.hot_signal = true;
                 console.log(`🔥 HOT SIGNAL: ${profile.firstName} ${profile.lastName} at ${profile.company}`);
               }
-              
               rankedData.push({
                 raw: profile,
                 embedding_score: profile.similarity || 0.5,
                 is_marketly_company: isMarketly,
                 ...json
               });
-              
             } catch (error) {
               console.error('JSON parse error:', error);
-              // Fallback scoring
               rankedData.push({
                 raw: batch[index],
                 embedding_score: batch[index].similarity || 0.5,
@@ -1894,25 +1955,18 @@ Return ONLY JSON format:
               });
             }
           });
-          
-          // Calculate cost and log usage
-          const realCost = calculateTrueBatchCost(batchResponse.usage, "gpt-4o-mini-turbo");
+          const realCost = calculateTrueBatchCost(batchResponse.usage, model);
           estimatedCost += realCost;
           gptCalls++;
-          
-          // Log to Google Sheets
-          await logAIUsage(batchResponse.usage, "gpt-4o-mini-turbo", realCost, batchNumber);
-          
+          await logAIUsage(batchResponse.usage, model, realCost, batchNumber);
           updateProgress(Math.min(i + BATCH_SIZE, candidates.length), candidates.length);
           batchNumber++;
-          
         } catch (error) {
           console.error('❌ Batch API error:', error);
           showNotification('Error in AI processing: ' + error.message, 'error');
           break;
         }
       }
-      
       console.log(`✅ All batches completed. Processed ${rankedData.length} profiles`);
       showFeedbackPanel();
     }
@@ -2120,51 +2174,41 @@ Follow instructions in the system prompt and return only JSON.`;
       }
       
       rankedData.forEach((candidate, index) => {
-        const card = document.createElement('div');
-        card.className = 'card-border bg-white rounded-lg p-6 hover:shadow-lg transition-shadow';
-        
+        const category = getCandidateCategory(candidate);
+        const isHot = isHotSignalCandidate(candidate, marketlyCompanies);
         const scoreColor = candidate.total_score >= 75 ? 'text-green-600' : 
                           candidate.total_score >= 60 ? 'text-blue-600' : 'text-gray-500';
-        
-        card.innerHTML = `
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="font-semibold text-lg">${candidate.raw.fullName || 'Unknown'}</h3>
-              <p class="text-gray-600">${candidate.raw.raw.title || ''}</p>
-              <p class="text-sm text-gray-500">${candidate.raw.company}</p>
-            </div>
-            <div class="text-right">
-              <div class="text-2xl font-bold ${scoreColor}">
-                ${candidate.total_score}
+        const hotTag = isHot ? `<span class="hot-signal mb-3 inline-block" title="This candidate currently works at a company flagged as HOT (e.g., layoffs, instability, or negative signals).">🔥 HOT SIGNALS</span>` : '';
+        const catTag = `<span class="px-2 py-1 rounded text-xs font-bold ${category === 'TOP' ? 'bg-green-100 text-green-800' : category === 'GOOD' ? 'bg-blue-100 text-blue-800' : category === 'HIDDEN GEM' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}">${category}</span>`;
+        grid.innerHTML += `
+          <div class="card-border bg-white rounded-lg p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="font-semibold text-lg">${candidate.raw.fullName || 'Unknown'}</h3>
+                <p class="text-gray-600">${candidate.raw.raw.title || ''}</p>
+                <p class="text-sm text-gray-500">${candidate.raw.company}</p>
               </div>
-              <div class="text-sm text-gray-500">Total Score</div>
+              <div class="text-right">
+                <div class="text-2xl font-bold ${scoreColor}">
+                  ${candidate.total_score}
+                </div>
+                <div class="text-sm text-gray-500">Score</div>
+                <div class="mt-2">${catTag}</div>
+                ${hotTag}
+              </div>
             </div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-2 text-sm mb-4">
-            <div>Tech Fit: <span class="font-medium">${candidate.tech_fit_score}</span></div>
-            <div>Experience: <span class="font-medium">${candidate.experience_score}</span></div>
-            <div>Signals: <span class="font-medium">${candidate.signals_score}</span></div>
-            <div>Startup: <span class="font-medium">${candidate.startup_fit_score}</span></div>
-          </div>
-          
-          ${candidate.hot_signal ? '<span class="hot-signal mb-3 inline-block">🔥 HOT SIGNAL</span>' : ''}
-          ${candidate.is_marketly_company ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mb-3 inline-block">📍 Marketly</span>' : ''}
-          
-          <div class="flex gap-2">
-            <button onclick="viewCandidateDetails(${index})" class="text-blue-600 hover:underline text-sm">
-              VIEW DETAILS
-            </button>
-            <a href="https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}" 
-               target="_blank" class="text-green-600 hover:underline text-sm">
-              LINKEDIN
-            </a>
+            <div class="flex gap-2 mb-2">
+              <a href="https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}" 
+                 target="_blank" class="text-green-600 hover:underline text-sm">
+                LinkedIn
+              </a>
+              <button onclick="viewCandidateDetails(${index})" class="text-blue-600 hover:underline text-sm">
+                VIEW
+              </button>
+            </div>
           </div>
         `;
-        
-        grid.appendChild(card);
       });
-      
       showNotification(`Displaying ${rankedData.length} ranked candidates`, 'success');
     }
 
@@ -2210,19 +2254,25 @@ Follow instructions in the system prompt and return only JSON.`;
       const candidate = rankedData[index];
       const modal = document.getElementById('candidateModal');
       const details = document.getElementById('candidateDetails');
-      
+      const category = getCandidateCategory(candidate);
+      const isHot = isHotSignalCandidate(candidate, marketlyCompanies);
+      let gemReason = '';
+      if (category === 'HIDDEN GEM') {
+        gemReason = `<div class="mt-4 p-3 bg-yellow-50 rounded text-yellow-900 text-sm">
+          <b>Why is this a GEM?</b><br>
+          This profile is considered a "Hidden Gem" because, despite a borderline total score, it shows high potential due to strong skills, excellent companies, honors, or unique signals. Sometimes, limited profile data can also result in a GEM tag if the available information is impressive.
+        </div>`;
+      }
       details.innerHTML = `
         <h2 class="text-2xl font-bold mb-6">${candidate.raw.fullName}</h2>
-        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h3 class="text-lg font-semibold mb-3">Profile Information</h3>
             <p><strong>Company:</strong> ${candidate.raw.company}</p>
             <p><strong>Title:</strong> ${candidate.raw.raw.title || 'Not specified'}</p>
             <p><strong>Embedding Score:</strong> ${(candidate.embedding_score * 100).toFixed(1)}%</p>
-            ${candidate.is_marketly_company ? '<p class="text-blue-600"><strong>🎯 Marketly Company</strong></p>' : ''}
+            ${isHot ? '<p class="text-red-600 font-bold"><strong>🔥 HOT SIGNALS</strong> <span title="This candidate currently works at a company flagged as HOT (e.g., layoffs, instability, or negative signals).">(see details)</span></p>' : ''}
           </div>
-          
           <div>
             <h3 class="text-lg font-semibold mb-3">AI Scores</h3>
             <div class="space-y-2">
@@ -2250,32 +2300,49 @@ Follow instructions in the system prompt and return only JSON.`;
                 <span class="font-semibold">Total Score:</span>
                 <span class="font-bold text-xl ${candidate.total_score >= 75 ? 'text-green-600' : candidate.total_score >= 60 ? 'text-blue-600' : 'text-gray-500'}">${candidate.total_score}/100</span>
               </div>
+              <div class="flex justify-between pt-2 border-t">
+                <span class="font-semibold">Category:</span>
+                <span class="font-bold">${category}</span>
+              </div>
             </div>
           </div>
         </div>
-        
-        ${candidate.rationale ? `
+        ${gemReason}
         <div class="mt-6">
-          <h3 class="text-lg font-semibold mb-3">AI Analysis</h3>
+          <h3 class="text-lg font-semibold mb-3">AI Insights</h3>
           <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-            <p><strong>Tech Fit:</strong> ${candidate.rationale.tech_fit || 'No analysis provided'}</p>
-            <p><strong>Experience:</strong> ${candidate.rationale.experience || 'No analysis provided'}</p>
-            <p><strong>Professional Signals:</strong> ${candidate.rationale.signals || 'No analysis provided'}</p>
-            <p><strong>Startup Fit:</strong> ${candidate.rationale.startup_fit || 'No analysis provided'}</p>
-            <p><strong>Red Flags:</strong> ${candidate.rationale.red_flag || 'No analysis provided'}</p>
+            <p><strong>Profile Summary:</strong> ${candidate.rationale && candidate.rationale.summary ? candidate.rationale.summary : 'No summary provided.'}</p>
+            <p><strong>Key Experience:</strong> ${candidate.rationale && candidate.rationale.experience ? candidate.rationale.experience : 'No experience analysis.'}</p>
+            <p><strong>Strengths:</strong> ${candidate.rationale && candidate.rationale.tech_fit ? candidate.rationale.tech_fit : 'No strengths analysis.'}</p>
+            <p><strong>Signals:</strong> ${candidate.rationale && candidate.rationale.signals ? candidate.rationale.signals : 'No signals analysis.'}</p>
+            <p><strong>Startup Fit:</strong> ${candidate.rationale && candidate.rationale.startup_fit ? candidate.rationale.startup_fit : 'No startup fit analysis.'}</p>
+            <p><strong>Red Flags:</strong> ${candidate.rationale && candidate.rationale.red_flag ? candidate.rationale.red_flag : 'No red flag analysis.'}</p>
+            <p><strong>Point Deductions:</strong> ${candidate.rationale && candidate.rationale.deductions ? candidate.rationale.deductions : 'No deduction reasons provided.'}</p>
           </div>
         </div>
-        ` : ''}
-        
-        <div class="mt-6 flex gap-4">
+        <div class="mt-6">
+          <label class="block text-sm font-medium mb-2">User Notes:</label>
+          <textarea id="userNotes${index}" class="w-full h-24 p-3 border rounded-lg" placeholder="Add your notes about this candidate..."></textarea>
+        </div>
+        <div class="mt-6 flex gap-4 flex-wrap">
           <a href="https://linkedin.com/search/results/people/?keywords=${encodeURIComponent(candidate.raw.fullName + ' ' + candidate.raw.company)}" 
              target="_blank" class="btn-primary">
             <i class="fab fa-linkedin mr-2"></i>View on LinkedIn
           </a>
-          <button onclick="closeCandidateModal()" class="btn-secondary">Close</button>
+          <button onclick="exportCandidatePDF(${index})" class="btn-secondary">Export as PDF</button>
+          <div>
+            <label for="categorySelect${index}" class="block text-xs font-medium mb-1">Change Category:</label>
+            <select id="categorySelect${index}" class="border p-2 rounded">
+              <option value="TOP" ${category === 'TOP' ? 'selected' : ''}>TOP</option>
+              <option value="GOOD" ${category === 'GOOD' ? 'selected' : ''}>GOOD</option>
+              <option value="HIDDEN GEM" ${category === 'HIDDEN GEM' ? 'selected' : ''}>HIDDEN GEM</option>
+              <option value="AVERAGE" ${category === 'AVERAGE' ? 'selected' : ''}>AVERAGE</option>
+            </select>
+            <input type="text" id="categoryChangeReason${index}" class="border p-2 rounded mt-1 w-full" placeholder="Reason for category change (AI will learn from this)">
+            <button onclick="submitCategoryChange(${index})" class="btn-save mt-1">Submit</button>
+          </div>
         </div>
       `;
-      
       modal.classList.remove('hidden');
     }
 
@@ -2420,6 +2487,142 @@ Follow instructions in the system prompt and return only JSON.`;
       }
     }
 
+    // --- פונקציות שמירה וטעינה ל-pre-filter ---
+    function savePreFilterSettings() {
+      localStorage.setItem('minYearsExperience', document.getElementById('minYearsExperience').value);
+      localStorage.setItem('requiredKeywords', document.getElementById('requiredKeywords').value);
+      localStorage.setItem('requiredEducation', document.getElementById('requiredEducation').value);
+      localStorage.setItem('requiredLocation', document.getElementById('requiredLocation').value);
+      localStorage.setItem('requiredJobTitle', document.getElementById('requiredJobTitle').value);
+      showSavedIndicator('preFilterSaved');
+    }
+    function loadPreFilterSettings() {
+      document.getElementById('minYearsExperience').value = localStorage.getItem('minYearsExperience') || '0';
+      document.getElementById('requiredKeywords').value = localStorage.getItem('requiredKeywords') || '';
+      document.getElementById('requiredEducation').value = localStorage.getItem('requiredEducation') || '';
+      document.getElementById('requiredLocation').value = localStorage.getItem('requiredLocation') || '';
+      document.getElementById('requiredJobTitle').value = localStorage.getItem('requiredJobTitle') || '';
+    }
+
+    // --- פונקציית pre-filter ---
+    function preFilterByExperienceAndKeywords(candidates) {
+      const minYears = parseInt(localStorage.getItem('minYearsExperience') || '0');
+      const keywords = (localStorage.getItem('requiredKeywords') || '').split(',').map(k => k.trim().toLowerCase()).filter(k => k);
+      const educations = (localStorage.getItem('requiredEducation') || '').split(',').map(e => e.trim().toLowerCase()).filter(e => e);
+      const locations = (localStorage.getItem('requiredLocation') || '').split(',').map(l => l.trim().toLowerCase()).filter(l => l);
+      let jobTitles = (localStorage.getItem('requiredJobTitle') || '').split(',').map(j => j.trim().toLowerCase()).filter(j => j);
+      jobTitles = expandJobTitles(jobTitles);
+      return candidates.filter(profile => {
+        let years = 0;
+        if (profile.raw['yearsExperience']) years = parseInt(profile.raw['yearsExperience']);
+        else if (profile.raw['experience']) years = parseInt(profile.raw['experience']);
+        else {
+          const text = JSON.stringify(profile.raw).toLowerCase();
+          const match = text.match(/(\d{1,2})\s*(years|שנות|שנה)/);
+          if (match) years = parseInt(match[1]);
+        }
+        const profileText = JSON.stringify(profile.raw).toLowerCase();
+        const hasKeyword = keywords.length === 0 || keywords.some(kw => profileText.includes(kw));
+        const hasEducation = educations.length === 0 || educations.some(edu => profileText.includes(edu));
+        const hasLocation = locations.length === 0 || locations.some(loc => profileText.includes(loc));
+        const hasJobTitle = jobTitles.length === 0 || jobTitles.some(job => profileText.includes(job));
+        return years >= minYears && hasKeyword && hasEducation && hasLocation && hasJobTitle;
+      });
+    }
+
+    // --- מילון מילים נרדפות לתפקידים נפוצים ---
+    const JOB_TITLE_SYNONYMS = {
+      "software engineer": ["מפתח תוכנה", "software developer", "developer", "engineer", "programmer", "software programmer"],
+      "frontend developer": ["מפתח פרונטאנד", "front end developer", "frontend engineer", "front-end developer", "front-end engineer", "ui developer", "web developer"],
+      "backend developer": ["מפתח בקאנד", "back end developer", "backend engineer", "back-end developer", "back-end engineer", "server side developer"],
+      "fullstack developer": ["מפתח פולסטאק", "full stack developer", "fullstack engineer", "fs developer", "fs engineer", "full-stack developer", "full-stack engineer"],
+      "mobile developer": ["מפתח מובייל", "android developer", "ios developer", "mobile engineer", "android engineer", "ios engineer"],
+      "embedded developer": ["מפתח אמבדד", "embedded engineer", "firmware developer", "firmware engineer", "embedded software engineer"],
+      // נתונים ובינה מלאכותית
+      "data scientist": ["data science", "data analyst", "machine learning engineer", "ml engineer", "ai researcher", "חוקר בינה מלאכותית"],
+      "data engineer": ["data platform engineer", "data infrastructure engineer"],
+      "machine learning engineer": ["ml engineer", "ai engineer", "deep learning engineer"],
+      "data analyst": ["business analyst", "data analytics", "data science analyst"],
+      "ai researcher": ["artificial intelligence researcher", "ai scientist", "חוקר ai"],
+      // תשתיות ו-DevOps
+      "devops engineer": ["devops", "site reliability engineer", "sre", "cloud engineer", "cloud architect", "platform engineer", "network engineer"],
+      "site reliability engineer": ["sre", "devops", "reliability engineer"],
+      "cloud engineer": ["cloud architect", "cloud developer", "cloud platform engineer"],
+      "platform engineer": ["infrastructure engineer", "devops platform engineer"],
+      "network engineer": ["network architect", "system engineer", "network administrator"],
+      // אבטחת מידע
+      "security engineer": ["application security engineer", "devsecops engineer", "security analyst", "penetration tester", "pentester", "soc analyst", "information security engineer"],
+      "application security engineer": ["appsec engineer", "application security analyst"],
+      "devsecops engineer": ["devops security", "devsecops", "security devops"],
+      "security analyst": ["cyber analyst", "information security analyst", "soc analyst"],
+      "penetration tester": ["pentester", "ethical hacker", "penetration testing engineer"],
+      "soc analyst": ["security operations center analyst", "security operations analyst"],
+      // בדיקות והבטחת איכות
+      "qa engineer": ["quality assurance", "qa tester", "qa automation", "qa analyst", "test automation engineer", "performance tester", "software tester"],
+      "test automation engineer": ["automation engineer", "qa automation", "test engineer"],
+      "performance tester": ["load tester", "performance test engineer"],
+      // ארכיטקטורה וניהול טכני
+      "solutions architect": ["technical architect", "system architect", "enterprise architect"],
+      "technical architect": ["system architect", "solutions architect"],
+      "technical lead": ["tech lead", "lead developer", "team lead", "development lead"],
+      "chief technology officer": ["cto", "vp engineering", "head of technology"],
+      // מוצר ועיצוב
+      "product manager": ["product owner", "product lead", "product management"],
+      "ux/ui designer": ["ux designer", "ui designer", "user experience designer", "user interface designer", "ux researcher"],
+      "technical writer": ["documentation specialist", "tech writer", "technical documentation"],
+      // טכנולוגיות מתקדמות / תחומי נישה
+      "blockchain developer": ["blockchain engineer", "blockchain architect", "crypto developer"],
+      "iot engineer": ["iot developer", "internet of things engineer", "iot architect"],
+      "ar/vr developer": ["ar developer", "vr developer", "augmented reality developer", "virtual reality developer", "ar engineer", "vr engineer"],
+      "robotics engineer": ["robotics developer", "robotics architect", "automation engineer"],
+    };
+    function expandJobTitles(jobTitles) {
+      const expanded = new Set();
+      jobTitles.forEach(title => {
+        expanded.add(title);
+        const synonyms = JOB_TITLE_SYNONYMS[title];
+        if (synonyms) {
+          synonyms.forEach(syn => expanded.add(syn));
+        }
+      });
+      return Array.from(expanded);
+    }
+
+    // --- Update renderResults to show: Full Name, Company, Title, Score, Category, LinkedIn, View, and HOT SIGNALS tag only for relevant candidates ---
+    function getCandidateCategory(candidate) {
+      if (candidate.total_score >= 75) return 'TOP';
+      if (candidate.total_score >= 60) return 'GOOD';
+      if (
+        candidate.total_score >= 40 && candidate.total_score < 60 &&
+        (candidate.tech_fit_score >= 80 || candidate.signals_score >= 80)
+      ) return 'HIDDEN GEM';
+      return 'AVERAGE';
+    }
+    function isHotSignalCandidate(candidate, marketlyCompanies) {
+      // Only for TOP/GOOD/HIDDEN GEM
+      const cat = getCandidateCategory(candidate);
+      if (cat === 'TOP' || cat === 'GOOD' || cat === 'HIDDEN GEM') {
+        if (marketlyCompanies && marketlyCompanies.length > 0) {
+          const currentCompany = (candidate.raw.company || '').toLowerCase().trim();
+          return marketlyCompanies.some(m => currentCompany.includes(m));
+        }
+      }
+      return false;
+    }
+
+    // --- Add stubs for exportCandidatePDF and submitCategoryChange ---
+    function exportCandidatePDF(index) {
+      // TODO: Implement PDF export (can use jsPDF or similar library)
+      alert('PDF export coming soon!');
+    }
+    function submitCategoryChange(index) {
+      const candidate = rankedData[index];
+      const newCategory = document.getElementById(`categorySelect${index}`).value;
+      const reason = document.getElementById(`categoryChangeReason${index}`).value;
+      // TODO: Send feedback to AI for learning (can be implemented via API or local log)
+      alert(`Category changed to ${newCategory} for ${candidate.raw.fullName}. Reason: ${reason}\n(This feedback will be used to improve future rankings.)`);
+    }
+
     // Initialize first step
     showStep(1);
   </script>
@@ -2433,3 +2636,4 @@ Follow instructions in the system prompt and return only JSON.`;
     </script>
     
     <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
