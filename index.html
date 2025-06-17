@@ -157,6 +157,9 @@
         const state = {
             currentView: 'setup',
             apiKey: localStorage.getItem('scorely_api_key') || '',
+            embeddingModel: localStorage.getItem('scorely_embedding_model') || 'text-embedding-3-small',
+            gptModel: localStorage.getItem('scorely_gpt_model') || 'gpt-4o-mini',
+            hybridMode: localStorage.getItem('scorely_hybrid_mode') !== 'false', // Default to true
             profiles: [],
             columnMapping: {},
             filters: {
@@ -640,12 +643,27 @@
                                                placeholder="sk-...">
                                     </div>
                                     <div>
-                                        <label class="block text-sm text-gray-700">Model</label>
-                                        <select id="modelSelect" class="w-full border border-gray-300 rounded-md p-2">
-                                            <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                            <option value="gpt-4o-mini-turbo">GPT-4o Mini Turbo</option>
-                                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        <label class="block text-sm text-gray-700">Embedding Model</label>
+                                        <select id="embeddingModelSelect" class="w-full border border-gray-300 rounded-md p-2">
+                                            <option value="text-embedding-3-small" ${state.embeddingModel === 'text-embedding-3-small' ? 'selected' : ''}>Embedding Small 3</option>
+                                            <option value="text-embedding-3-large" ${state.embeddingModel === 'text-embedding-3-large' ? 'selected' : ''}>Embedding Large 3</option>
+                                            <option value="text-embedding-ada-002" ${state.embeddingModel === 'text-embedding-ada-002' ? 'selected' : ''}>Embedding Ada 002</option>
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-700">GPT Model</label>
+                                        <select id="gptModelSelect" class="w-full border border-gray-300 rounded-md p-2">
+                                            <option value="gpt-4o-mini" ${state.gptModel === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini</option>
+                                            <option value="gpt-4o-mini-turbo" ${state.gptModel === 'gpt-4o-mini-turbo' ? 'selected' : ''}>GPT-4o Mini Turbo</option>
+                                            <option value="gpt-3.5-turbo" ${state.gptModel === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-700">Hybrid Mode</label>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="hybridMode" ${state.hybridMode ? 'checked' : ''} class="mr-2">
+                                            <span class="text-sm text-gray-600">Use embeddings + GPT for optimal results</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -700,6 +718,24 @@
             document.getElementById('apiKey').addEventListener('change', function() {
                 state.apiKey = this.value;
                 localStorage.setItem('scorely_api_key', this.value);
+            });
+
+            // Embedding model
+            document.getElementById('embeddingModelSelect').addEventListener('change', function() {
+                state.embeddingModel = this.value;
+                localStorage.setItem('scorely_embedding_model', this.value);
+            });
+
+            // GPT model
+            document.getElementById('gptModelSelect').addEventListener('change', function() {
+                state.gptModel = this.value;
+                localStorage.setItem('scorely_gpt_model', this.value);
+            });
+
+            // Hybrid mode
+            document.getElementById('hybridMode').addEventListener('change', function() {
+                state.hybridMode = this.checked;
+                localStorage.setItem('scorely_hybrid_mode', this.checked);
             });
 
             // Start ranking
