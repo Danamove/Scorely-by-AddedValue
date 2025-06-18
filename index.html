@@ -252,9 +252,182 @@
             'The Academic College of Tel‑Aviv‑Yaffo'
         ];
 
-        // Initialize Application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+        // --- WIZARD STRUCTURE ---
+        const wizardSteps = [
+            { key: 'upload', label: 'Upload File' },
+            { key: 'map', label: 'Map Columns' },
+            { key: 'prefilter', label: 'Pre-Filter (Round 1)' },
+            { key: 'advanced', label: 'Advanced Filter (Round 2)' },
+            { key: 'job', label: 'Job Config' },
+            { key: 'ranking', label: 'Ranking' },
+            { key: 'results', label: 'Results' }
+        ];
+        let wizardIndex = 0;
+
+        function renderWizard() {
+            const app = document.getElementById('app');
+            // Progress bar
+            let progressHtml = `<div class='flex items-center mb-6'>`;
+            wizardSteps.forEach((step, idx) => {
+                progressHtml += `<div class='flex-1 flex flex-col items-center'>
+                    <div class='w-8 h-8 flex items-center justify-center rounded-full font-bold text-white ${idx <= wizardIndex ? 'bg-blue-600' : 'bg-gray-300'}'>${idx+1}</div>
+                    <div class='text-xs mt-1 ${idx === wizardIndex ? 'font-bold text-blue-700' : 'text-gray-500'}'>${step.label}</div>
+                </div>`;
+                if (idx < wizardSteps.length-1) {
+                    progressHtml += `<div class='flex-1 h-1 ${idx < wizardIndex ? 'bg-blue-600' : 'bg-gray-200'}'></div>`;
+                }
+            });
+            progressHtml += `</div>`;
+            // Step content
+            let contentHtml = `<div id='wizardStepContent'></div>`;
+            // Navigation
+            let navHtml = `<div class='flex justify-between mt-8'>`;
+            navHtml += `<button id='wizardPrevBtn' class='px-4 py-2 rounded bg-gray-300 text-gray-700 font-medium' ${wizardIndex===0?'disabled':''}>Previous</button>`;
+            navHtml += `<button id='wizardNextBtn' class='px-4 py-2 rounded bg-blue-600 text-white font-medium' ${wizardIndex===wizardSteps.length-1?'disabled':''}>Next</button>`;
+            navHtml += `</div>`;
+            app.innerHTML = progressHtml + contentHtml + navHtml;
+            renderWizardStep();
+            // Navigation handlers
+            document.getElementById('wizardPrevBtn').onclick = () => {
+                if (wizardIndex > 0) { wizardIndex--; renderWizard(); }
+            };
+            document.getElementById('wizardNextBtn').onclick = () => {
+                if (wizardIndex < wizardSteps.length-1) { wizardIndex++; renderWizard(); }
+            };
+        }
+
+        function renderWizardStep() {
+            const stepKey = wizardSteps[wizardIndex].key;
+            const container = document.getElementById('wizardStepContent');
+            if (stepKey === 'upload') {
+                // Upload UI
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-8 max-w-xl mx-auto">
+                        <h2 class="text-2xl font-bold mb-4 text-blue-700">Upload Candidates File</h2>
+                        <div class="mb-4">
+                            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="block w-full text-sm text-gray-700" />
+                        </div>
+                        <div id="uploadStatus" class="text-sm text-gray-600 mb-2"></div>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 mb-4" id="dropZone">
+                            Drag & drop your CSV or Excel file here
+                        </div>
+                        <div class="text-xs text-gray-500">Supported formats: CSV, XLSX, XLS. First row must be headers.</div>
+                    </div>
+                `;
+                // Upload logic
+                const fileInput = document.getElementById('fileInput');
+                const dropZone = document.getElementById('dropZone');
+                const uploadStatus = document.getElementById('uploadStatus');
+                fileInput.addEventListener('change', e => handleFileUpload(e.target.files[0]));
+                dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('bg-blue-50'); });
+                dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('bg-blue-50'); });
+                dropZone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    dropZone.classList.remove('bg-blue-50');
+                    if (e.dataTransfer.files.length > 0) {
+                        handleFileUpload(e.dataTransfer.files[0]);
+                    }
+                });
+                function handleFileUpload(file) {
+                    if (!file) return;
+                    uploadStatus.textContent = 'Processing file...';
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            let data = [];
+                            if (ext === 'csv') {
+                                data = parseCSV(e.target.result);
+                            } else if (ext === 'xlsx' || ext === 'xls') {
+                                data = parseXLSX(e.target.result);
+                            } else {
+                                throw new Error('Unsupported file type');
+                            }
+                            if (!Array.isArray(data) || data.length === 0) throw new Error('No data found');
+                            // Save to state
+                            state.profiles = data.map(row => ({ ...row, raw: row }));
+                            state.stats.uploaded = data.length;
+                            uploadStatus.innerHTML = `<span class='text-green-600'>File uploaded successfully! ${data.length} profiles loaded.</span>`;
+                        } catch (error) {
+                            uploadStatus.innerHTML = `<span class='text-red-600'>Error: ${error.message}</span>`;
+                        }
+                    };
+                    if (ext === 'csv') reader.readAsText(file);
+                    else reader.readAsBinaryString(file);
+                }
+                return;
+            }
+            if (stepKey === 'map') {
+                // Map Columns UI
+                if (!state.profiles || state.profiles.length === 0) {
+                    container.innerHTML = `<div class='text-red-600 text-center p-8'>Please upload a file first.</div>`;
+                    return;
+                }
+                const headers = Object.keys(state.profiles[0].raw || state.profiles[0]);
+                const mappingFields = [
+                    { key: 'firstName', label: 'First Name' },
+                    { key: 'lastName', label: 'Last Name' },
+                    { key: 'company', label: 'Company' },
+                    { key: 'title', label: 'Title/Role' },
+                    { key: 'email', label: 'Email' },
+                    { key: 'phone', label: 'Phone' },
+                    { key: 'location', label: 'Location' }
+                ];
+                let savedMapping = state.columnMapping || {};
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-8 max-w-xl mx-auto">
+                        <h2 class="text-2xl font-bold mb-4 text-blue-700">Map Columns</h2>
+                        <div class="mb-4 text-gray-600 text-sm">Map the columns from your file to the required fields. This helps Scorely understand your data.</div>
+                        <form id="columnMappingForm" class="space-y-4">
+                            ${mappingFields.map(f => `
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${f.label}</label>
+                                    <select name="${f.key}" class="w-full border border-gray-300 rounded-md p-2">
+                                        <option value="">-- Not Mapped --</option>
+                                        ${headers.map(h => `<option value="${h}" ${savedMapping[f.key]===h?'selected':''}>${h}</option>`).join('')}
+                                    </select>
+                                </div>
+                            `).join('')}
+                        </form>
+                        <div id="columnMappingStatus" class="text-xs text-green-600 mt-2 hidden">Mapping saved!</div>
+                        <div class="mt-4 flex space-x-2">
+                            <button id="saveColumnMappingBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Mapping</button>
+                            <button id="clearColumnMappingBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Clear</button>
+                        </div>
+                    </div>
+                `;
+                // Save/clear logic
+                document.getElementById('saveColumnMappingBtn').onclick = function(e) {
+                    e.preventDefault();
+                    const form = document.getElementById('columnMappingForm');
+                    const mapping = {};
+                    mappingFields.forEach(f => {
+                        mapping[f.key] = form.elements[f.key].value;
+                    });
+                    state.columnMapping = mapping;
+                    localStorage.setItem('scorely_column_mapping', JSON.stringify(mapping));
+                    const status = document.getElementById('columnMappingStatus');
+                    status.classList.remove('hidden');
+                    setTimeout(() => status.classList.add('hidden'), 1500);
+                };
+                document.getElementById('clearColumnMappingBtn').onclick = function(e) {
+                    e.preventDefault();
+                    const form = document.getElementById('columnMappingForm');
+                    mappingFields.forEach(f => {
+                        form.elements[f.key].value = '';
+                    });
+                    state.columnMapping = {};
+                    localStorage.removeItem('scorely_column_mapping');
+                };
+                return;
+            }
+            // Placeholder for other steps
+            container.innerHTML = `<div class='p-8 text-center text-xl text-blue-700 font-bold'>${wizardSteps[wizardIndex].label} (Step ${wizardIndex+1} of ${wizardSteps.length})</div>`;
+        }
+
+        // On load, render wizard
+        window.addEventListener('DOMContentLoaded', () => {
+            renderWizard();
         });
 
         function initializeApp() {
