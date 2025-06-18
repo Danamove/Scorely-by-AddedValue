@@ -264,6 +264,10 @@
             document.getElementById('nav-results').addEventListener('click', () => switchView('results'));
             document.getElementById('reset-session').addEventListener('click', resetSession);
 
+            // Set up navigation footer buttons
+            document.getElementById('prevBtn').addEventListener('click', navigatePrevious);
+            document.getElementById('nextBtn').addEventListener('click', navigateNext);
+
             // Set up modal close handlers
             document.querySelectorAll('.close').forEach(closeBtn => {
                 closeBtn.addEventListener('click', function() {
@@ -497,6 +501,17 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
                                         <input type="text" id="essentialSkills" class="w-full border border-gray-300 rounded-md p-2" 
                                                placeholder="JavaScript, React, Python (comma-separated)">
+                                        <div class="mt-1 flex space-x-2">
+                                            <button id="saveEssentialSkills" class="bg-green-600 text-white px-2 py-1 rounded-md hover:bg-green-700 text-xs">
+                                                Save Skills
+                                            </button>
+                                            <button id="clearEssentialSkills" class="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 text-xs">
+                                                Clear
+                                            </button>
+                                        </div>
+                                        <div id="essentialSkillsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                            <span class="text-green-600">✓ Skills saved!</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Role</label>
@@ -628,6 +643,12 @@
             document.getElementById('clearBasicThresholds').addEventListener('click', clearBasicThresholds);
             document.getElementById('saveRedFlags').addEventListener('click', saveRedFlags);
             document.getElementById('clearRedFlags').addEventListener('click', clearRedFlags);
+            
+            // Individual save buttons for Essential Skills and Ideal Profiles
+            document.getElementById('saveEssentialSkills').addEventListener('click', saveEssentialSkills);
+            document.getElementById('clearEssentialSkills').addEventListener('click', clearEssentialSkills);
+            document.getElementById('saveIdealProfiles').addEventListener('click', saveIdealProfiles);
+            document.getElementById('clearIdealProfiles').addEventListener('click', clearIdealProfiles);
             
             // Set up predefined lists buttons
             document.getElementById('addPredefinedNoGo').addEventListener('click', addPredefinedNoGo);
@@ -1419,6 +1440,17 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ideal Profile Examples (Optional)</label>
                                 <textarea id="idealProfiles" rows="3" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Paste ideal candidate profiles...">${state.jobConfig.idealProfiles.join('\n\n')}</textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveIdealProfiles" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save Ideal Profiles
+                                    </button>
+                                    <button id="clearIdealProfiles" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="idealProfilesSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Ideal profiles saved!</span>
+                                </div>
                             </div>
                             <div class="flex space-x-2">
                                 <button id="saveJobConfig" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
@@ -1900,8 +1932,10 @@
                 return;
             }
 
+            // Show progress bar and disable start button
             document.getElementById('rankingProgress').classList.remove('hidden');
             document.getElementById('startRankingBtn').disabled = true;
+            document.getElementById('startRankingBtn').textContent = 'Ranking in Progress...';
 
             // Start the ranking process
             await performRanking(profilesToRank);
@@ -1912,6 +1946,8 @@
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const progressCount = document.getElementById('progressCount');
+
+            console.log(`Starting ranking for ${totalProfiles} profiles`);
 
             // Create profile summaries
             const profilesWithSummaries = profilesToRank.map(profile => ({
@@ -1929,6 +1965,8 @@
                 const batch = profilesWithSummaries.slice(i, i + batchSize);
                 
                 try {
+                    console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(profilesWithSummaries.length/batchSize)}`);
+                    
                     // Get embeddings for batch
                     const embeddings = await getEmbeddings(batch.map(p => p.summary));
                     
@@ -1946,9 +1984,14 @@
                     
                     processedCount += batch.length;
                     const progress = (processedCount / totalProfiles) * 100;
+                    
+                    // Update progress bar
                     progressFill.style.width = progress + '%';
-                    progressText.textContent = `Processing batch ${Math.floor(i/batchSize) + 1}...`;
+                    progressText.textContent = `Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(profilesWithSummaries.length/batchSize)}...`;
                     progressCount.textContent = `${processedCount} / ${totalProfiles}`;
+                    
+                    // Force UI update
+                    await new Promise(resolve => setTimeout(resolve, 10));
                     
                 } catch (error) {
                     console.error('Error processing batch:', error);
@@ -1956,11 +1999,17 @@
                 }
             }
 
+            console.log('Generating final results...');
+            progressText.textContent = 'Generating results...';
+            
             // Generate final results
             generateResults(profilesWithSummaries);
             
             progressText.textContent = 'Ranking complete!';
             document.getElementById('startRankingBtn').disabled = false;
+            document.getElementById('startRankingBtn').textContent = 'Start Ranking Process';
+            
+            console.log('Ranking completed, switching to results view');
             
             // Switch to results view
             setTimeout(() => {
@@ -2160,12 +2209,32 @@
         }
 
         function createProfileSummary(profile) {
+            console.log('Creating summary for profile:', profile);
+            
+            // Check if profile has raw data
+            if (!profile.raw) {
+                console.warn('Profile has no raw data:', profile);
+                return JSON.stringify(profile);
+            }
+            
+            // Check if selected columns exist
             if (!state.selectedColumns || state.selectedColumns.length === 0) {
+                console.log('No selected columns, using all columns');
                 // Use all columns if none selected
                 return Object.values(profile.raw).join(' ');
             }
             
-            return state.selectedColumns.map(col => profile.raw[col] || '').join(' ');
+            console.log('Selected columns:', state.selectedColumns);
+            console.log('Profile raw data:', profile.raw);
+            
+            const summary = state.selectedColumns.map(col => {
+                const value = profile.raw[col] || '';
+                console.log(`Column ${col}: ${value}`);
+                return value;
+            }).join(' ');
+            
+            console.log('Generated summary:', summary);
+            return summary;
         }
 
         async function getEmbeddings(texts) {
@@ -2207,10 +2276,14 @@
         }
 
         function generateResults(profilesWithSummaries) {
+            console.log('Generating results for profiles:', profilesWithSummaries.length);
+            
             // Sort by embedding score
             const sortedProfiles = profilesWithSummaries
                 .filter(p => p.embeddingScore >= EMBEDDING_THRESHOLD)
                 .sort((a, b) => b.embeddingScore - a.embeddingScore);
+
+            console.log(`Profiles after embedding filter: ${sortedProfiles.length}`);
 
             // Generate mock AI scores for demo
             const scoredProfiles = sortedProfiles.map(profile => {
@@ -2227,6 +2300,8 @@
                 };
             });
 
+            console.log(`Scored profiles: ${scoredProfiles.length}`);
+
             // Categorize results
             state.results = {
                 top: scoredProfiles.filter(p => p.score >= 85),
@@ -2239,8 +2314,16 @@
                 )
             };
 
+            console.log('Results categorized:', {
+                top: state.results.top.length,
+                good: state.results.good.length,
+                hidden: state.results.hidden.length,
+                hotSignals: state.results.hotSignals.length
+            });
+
             // Save results to localStorage
             localStorage.setItem('scorely_results', JSON.stringify(state.results));
+            console.log('Results saved to localStorage');
         }
 
         function generateMockStrengths(profile) {
@@ -2272,6 +2355,17 @@
         }
 
         function renderResultsView() {
+            // Load results from localStorage if they exist
+            const savedResults = localStorage.getItem('scorely_results');
+            if (savedResults && !state.results.top.length && !state.results.good.length && !state.results.hidden.length) {
+                try {
+                    state.results = JSON.parse(savedResults);
+                    console.log('Loaded results from localStorage:', state.results);
+                } catch (error) {
+                    console.error('Error loading results from localStorage:', error);
+                }
+            }
+
             const app = document.getElementById('app');
             app.innerHTML = `
                 <div class="space-y-8">
@@ -2449,13 +2543,19 @@
         }
 
         function showResultsTab(tabName) {
+            console.log(`Showing tab: ${tabName}`);
+            console.log('Available results:', state.results);
+            
             const resultsContent = document.getElementById('resultsContent');
             const candidates = state.results[tabName] || [];
+            
+            console.log(`Candidates for ${tabName}:`, candidates.length);
             
             if (candidates.length === 0) {
                 resultsContent.innerHTML = `
                     <div class="text-center py-8 text-gray-500">
                         <p>No candidates in this category.</p>
+                        <p class="text-sm mt-2">Try running the ranking process first.</p>
                     </div>
                 `;
                 return;
@@ -2465,11 +2565,11 @@
                 <div class="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <h3 class="font-medium text-lg">${candidate.fullName}</h3>
-                            <p class="text-gray-600">${candidate.company}</p>
+                            <h3 class="font-medium text-lg">${candidate.fullName || 'Unknown Name'}</h3>
+                            <p class="text-gray-600">${candidate.company || 'Unknown Company'}</p>
                         </div>
                         <div class="text-right">
-                            <div class="text-2xl font-bold text-blue-600">${Math.round(candidate.score)}</div>
+                            <div class="text-2xl font-bold text-blue-600">${Math.round(candidate.score || 0)}</div>
                             <div class="text-sm text-gray-500">Score</div>
                         </div>
                     </div>
@@ -2478,13 +2578,13 @@
                         <div>
                             <h4 class="font-medium text-green-700 mb-1">Strengths:</h4>
                             <ul class="text-sm text-gray-700">
-                                ${candidate.strengths.map(s => `<li>• ${s}</li>`).join('')}
+                                ${(candidate.strengths || []).map(s => `<li>• ${s}</li>`).join('')}
                             </ul>
                         </div>
                         <div>
                             <h4 class="font-medium text-red-700 mb-1">Concerns:</h4>
                             <ul class="text-sm text-gray-700">
-                                ${candidate.concerns.map(c => `<li>• ${c}</li>`).join('')}
+                                ${(candidate.concerns || []).map(c => `<li>• ${c}</li>`).join('')}
                             </ul>
                         </div>
                     </div>
@@ -2494,8 +2594,8 @@
                             candidate.category === 'TOP' ? 'bg-green-100 text-green-800' :
                             candidate.category === 'GOOD' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-purple-100 text-purple-800'
-                        }">${candidate.category}</span>
-                        <button onclick="showCandidateDetail('${candidate.fullName}')" 
+                        }">${candidate.category || 'UNKNOWN'}</span>
+                        <button onclick="showCandidateDetail('${candidate.fullName || 'Unknown'}')" 
                                 class="text-blue-600 hover:text-blue-800 text-sm">
                             View Details
                         </button>
@@ -2735,6 +2835,32 @@
             showSaveStatus('redFlagsSaveStatus', 1500);
         }
 
+        function saveEssentialSkills() {
+            state.filters.essentialSkills = document.getElementById('essentialSkills').value;
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('essentialSkillsSaveStatus', 1500);
+        }
+
+        function clearEssentialSkills() {
+            document.getElementById('essentialSkills').value = '';
+            state.filters.essentialSkills = '';
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('essentialSkillsSaveStatus', 1500);
+        }
+
+        function saveIdealProfiles() {
+            state.jobConfig.idealProfiles = document.getElementById('idealProfiles').value.split('\n\n').filter(p => p.trim());
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('idealProfilesSaveStatus', 1500);
+        }
+
+        function clearIdealProfiles() {
+            document.getElementById('idealProfiles').value = '';
+            state.jobConfig.idealProfiles = [];
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('idealProfilesSaveStatus', 1500);
+        }
+
         // Make functions globally accessible
         window.switchView = switchView;
         window.showCandidateDetail = showCandidateDetail;
@@ -2821,6 +2947,13 @@
         window.generateMockStrengths = generateMockStrengths;
         window.generateMockConcerns = generateMockConcerns;
         window.getCategory = getCategory;
+        window.clearRedFlags = clearRedFlags;
+        window.saveEssentialSkills = saveEssentialSkills;
+        window.clearEssentialSkills = clearEssentialSkills;
+        window.saveIdealProfiles = saveIdealProfiles;
+        window.clearIdealProfiles = clearIdealProfiles;
+        window.showResultsTab = showResultsTab;
+        window.setupResultsHandlers = setupResultsHandlers;
     </script>
 </body>
 </html> 
