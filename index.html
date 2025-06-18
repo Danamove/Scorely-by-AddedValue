@@ -471,77 +471,36 @@
                         </div>
                     </div>
 
-                    <div id="advancedFilterSection" class="hidden bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">5. Advanced Pre-Filter Criteria (Round 2)</h2>
-                        
+                    <div id="advancedFilterSection" class="bg-white rounded-lg shadow p-6 mt-8">
+                        <h2 class="text-xl font-semibold mb-4">Advanced Filters (Round 2)</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <h3 class="text-lg font-medium mb-3">Basic Thresholds</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
-                                        <input type="number" id="minYears" min="0" max="50" class="w-full border border-gray-300 rounded-md p-2" 
-                                               placeholder="0">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Education (Universities)</label>
-                                        <div class="mb-2 p-2 bg-gray-50 rounded-md">
-                                            <p class="text-xs text-gray-600 mb-1">Predefined Israeli universities:</p>
-                                            <div class="text-xs text-gray-700 space-y-1 max-h-20 overflow-y-auto">
-                                                ${PREDEFINED_UNIVERSITIES.join(', ')}
-                                            </div>
-                                        </div>
-                                        <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" 
-                                                  placeholder="Enter university names, one per line"></textarea>
-                                        <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
-                                            Add Predefined Universities
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
-                                        <input type="text" id="essentialSkills" class="w-full border border-gray-300 rounded-md p-2" 
-                                               placeholder="JavaScript, React, Python (comma-separated)">
-                                        <div class="mt-1 flex space-x-2">
-                                            <button id="saveEssentialSkills" class="bg-green-600 text-white px-2 py-1 rounded-md hover:bg-green-700 text-xs">
-                                                Save Skills
-                                            </button>
-                                            <button id="clearEssentialSkills" class="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 text-xs">
-                                                Clear
-                                            </button>
-                                        </div>
-                                        <div id="essentialSkillsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
-                                            <span class="text-green-600">✓ Skills saved!</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Role</label>
-                                        <input type="text" id="suitableRoles" class="w-full border border-gray-300 rounded-md p-2" 
-                                               placeholder="Software Engineer, Developer, Programmer">
-                                    </div>
-                                </div>
-                                <div class="mt-3 flex space-x-2">
-                                    <button id="saveBasicThresholds" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
-                                        Save Thresholds
-                                    </button>
-                                    <button id="clearBasicThresholds" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
-                                        Clear All
-                                    </button>
-                                </div>
-                                <div id="basicThresholdsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
-                                    <span class="text-green-600">✓ Basic thresholds saved!</span>
-                                </div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Years of Experience</label>
+                                <input type="number" id="minYears" min="0" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 3">
                             </div>
-                            
                             <div>
-                                <h3 class="text-lg font-medium mb-3">Red-Flag Patterns</h3>
-                                <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (universities, one per line)</label>
+                                <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Technion, Tel Aviv University"></textarea>
+                                <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Add Predefined Universities</button>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
+                                <input type="text" id="essentialSkills" class="w-full border border-gray-300 rounded-md p-2" placeholder="JavaScript, React, Python (comma-separated)">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Roles</label>
+                                <input type="text" id="suitableRoles" class="w-full border border-gray-300 rounded-md p-2" placeholder="Software Engineer, Developer, Programmer">
+                            </div>
+                            <div class="col-span-2 mt-4">
+                                <h3 class="text-lg font-medium mb-2">Red-Flag Patterns</h3>
+                                <div class="flex flex-wrap gap-4">
                                     <div class="flex items-center">
                                         <input type="checkbox" id="instability" class="mr-2">
-                                        <label for="instability" class="text-sm text-gray-700">Instability (<1 year in role or job hops in last 6 years)</label>
+                                        <label for="instability" class="text-sm text-gray-700">Instability (&lt;1 year in role or job hops in last 6 years)</label>
                                     </div>
                                     <div class="flex items-center">
                                         <input type="checkbox" id="stagnation" class="mr-2">
-                                        <label for="stagnation" class="text-sm text-gray-700">Stagnation (>7 years at same company)</label>
+                                        <label for="stagnation" class="text-sm text-gray-700">Stagnation (&gt;7 years at same company)</label>
                                     </div>
                                     <div class="flex items-center">
                                         <input type="checkbox" id="enterpriseOnly" class="mr-2">
@@ -552,36 +511,14 @@
                                         <label for="freelancer" class="text-sm text-gray-700">Freelancer/Independent</label>
                                     </div>
                                 </div>
-                                <div class="mt-3 flex space-x-2">
-                                    <button id="saveRedFlags" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
-                                        Save Red Flags
-                                    </button>
-                                    <button id="clearRedFlags" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
-                                        Clear All
-                                    </button>
-                                </div>
-                                <div id="redFlagsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
-                                    <span class="text-green-600">✓ Red flags saved!</span>
-                                </div>
                             </div>
                         </div>
-                        
-                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                            <h4 class="font-medium text-blue-900 mb-2">Benefits of Advanced Filtering:</h4>
-                            <ul class="text-sm text-blue-800 space-y-1">
-                                <li>• <strong>Cost Savings:</strong> Reduce AI calls by 60-80%</li>
-                                <li>• <strong>Speed:</strong> Process 1000+ profiles in minutes</li>
-                                <li>• <strong>Accuracy:</strong> Focus on relevant candidates only</li>
-                            </ul>
+                        <div class="mt-3 flex space-x-2">
+                            <button id="saveAdvancedFiltersBtn" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">Save Advanced Filters</button>
+                            <button id="runFilteringRound2Btn" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Run Round 2 Filtering</button>
                         </div>
-
-                        <div class="mt-6 flex space-x-4">
-                            <button id="runFilteringRound2Btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                Run Round 2 Filtering
-                            </button>
-                            <button id="saveAdvancedFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-                                Save Advanced Filters
-                            </button>
+                        <div id="advancedFiltersSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                            <span class="text-green-600">✓ Advanced filters saved!</span>
                         </div>
                     </div>
 
@@ -1753,7 +1690,7 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Start from profile</label>
-                                        <input type="number" id="rankingStart" min="1" value="1" class="w-full border border-gray-300 rounded-md p-2">
+                                        <input type="number" id="rankingStart" min="2" value="2" class="w-full border border-gray-300 rounded-md p-2">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">End at profile</label>
@@ -1923,9 +1860,16 @@
             saveJobConfiguration();
 
             // Get ranking range
-            const start = parseInt(document.getElementById('rankingStart').value) || 1;
-            const end = parseInt(document.getElementById('rankingEnd').value) || state.stats.toBeSentToGPT;
+            let start = parseInt(document.getElementById('rankingStart').value) || 2;
+            let end = parseInt(document.getElementById('rankingEnd').value) || state.stats.toBeSentToGPT;
+            if (start < 2) start = 2;
+            if (end > state.profiles.length) end = state.profiles.length;
+            if (end < start) end = start;
+
+            console.log('Profiles available for ranking:', state.profiles.length);
+            console.log('Ranking range:', start, end);
             const profilesToRank = state.profiles.slice(start - 1, end);
+            console.log('Profiles to rank:', profilesToRank.length);
 
             if (profilesToRank.length === 0) {
                 alert('No profiles in the selected range');
