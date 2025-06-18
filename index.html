@@ -173,7 +173,7 @@
             currentView: 'setup',
             apiKey: localStorage.getItem('scorely_api_key') || '',
             embeddingModel: localStorage.getItem('scorely_embedding_model') || 'text-embedding-3-small',
-            gptModel: localStorage.getItem('scorely_gpt_model') || 'gpt-4o-mini',
+            gptModel: localStorage.getItem('scorely_gpt_model') || 'gpt-3.5-turbo',
             hybridMode: localStorage.getItem('scorely_hybrid_mode') !== 'false', // Default to true
             profiles: [],
             columnMapping: {},
@@ -342,11 +342,33 @@
                                 <h3 class="text-lg font-medium mb-2">Blacklist Companies</h3>
                                 <textarea id="blacklist" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Enter company names, one per line"></textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveBlacklist" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save Blacklist
+                                    </button>
+                                    <button id="clearBlacklist" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear
+                                    </button>
+                                </div>
+                                <div id="blacklistSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Blacklist saved!</span>
+                                </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-2">Past Candidates</h3>
                                 <textarea id="pastCandidates" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Enter names or LinkedIn URLs"></textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="savePastCandidates" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save Past Candidates
+                                    </button>
+                                    <button id="clearPastCandidates" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear
+                                    </button>
+                                </div>
+                                <div id="pastCandidatesSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Past candidates saved!</span>
+                                </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-2">No-Go Companies</h3>
@@ -358,9 +380,20 @@
                                 </div>
                                 <textarea id="noGoCompanies" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Enter additional company names (one per line)"></textarea>
-                                <button id="addPredefinedNoGo" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
-                                    Add Predefined NO-GO List
-                                </button>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="addPredefinedNoGo" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
+                                        Add Predefined NO-GO List
+                                    </button>
+                                    <button id="saveNoGoCompanies" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save No-Go
+                                    </button>
+                                    <button id="clearNoGoCompanies" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear
+                                    </button>
+                                </div>
+                                <div id="noGoCompaniesSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ No-Go companies saved!</span>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-4 flex space-x-4">
@@ -471,6 +504,17 @@
                                                placeholder="Software Engineer, Developer, Programmer">
                                     </div>
                                 </div>
+                                <div class="mt-3 flex space-x-2">
+                                    <button id="saveBasicThresholds" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save Thresholds
+                                    </button>
+                                    <button id="clearBasicThresholds" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="basicThresholdsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Basic thresholds saved!</span>
+                                </div>
                             </div>
                             
                             <div>
@@ -492,6 +536,17 @@
                                         <input type="checkbox" id="freelancer" class="mr-2">
                                         <label for="freelancer" class="text-sm text-gray-700">Freelancer/Independent</label>
                                     </div>
+                                </div>
+                                <div class="mt-3 flex space-x-2">
+                                    <button id="saveRedFlags" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                        Save Red Flags
+                                    </button>
+                                    <button id="clearRedFlags" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="redFlagsSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Red flags saved!</span>
                                 </div>
                             </div>
                         </div>
@@ -559,6 +614,20 @@
             document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
             document.getElementById('runFilteringRound1Btn').addEventListener('click', runFilteringRound1);
             document.getElementById('mapColumnsBtn').addEventListener('click', showColumnMappingModal);
+            
+            // Individual save buttons for Setup categories
+            document.getElementById('saveBlacklist').addEventListener('click', saveBlacklist);
+            document.getElementById('clearBlacklist').addEventListener('click', clearBlacklist);
+            document.getElementById('savePastCandidates').addEventListener('click', savePastCandidates);
+            document.getElementById('clearPastCandidates').addEventListener('click', clearPastCandidates);
+            document.getElementById('saveNoGoCompanies').addEventListener('click', saveNoGoCompanies);
+            document.getElementById('clearNoGoCompanies').addEventListener('click', clearNoGoCompanies);
+            
+            // Individual save buttons for Advanced Filters
+            document.getElementById('saveBasicThresholds').addEventListener('click', saveBasicThresholds);
+            document.getElementById('clearBasicThresholds').addEventListener('click', clearBasicThresholds);
+            document.getElementById('saveRedFlags').addEventListener('click', saveRedFlags);
+            document.getElementById('clearRedFlags').addEventListener('click', clearRedFlags);
             
             // Set up predefined lists buttons
             document.getElementById('addPredefinedNoGo').addEventListener('click', addPredefinedNoGo);
@@ -638,25 +707,27 @@
         }
 
         function saveCustomTraits() {
-            localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
-            showSaveStatus('customTraitsSaveStatus');
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('customTraitsSaveStatus', 1500);
         }
 
         function clearCustomTraits() {
             if (confirm('Are you sure you want to clear all custom traits?')) {
                 state.jobConfig.customTraits = [];
-                localStorage.removeItem('scorely_custom_traits');
+                localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
                 renderRankingView(); // Refresh to show empty list
-                alert('All custom traits cleared!');
+                showSaveStatus('customTraitsSaveStatus', 1500);
             }
         }
 
-        function showSaveStatus(elementId) {
+        function showSaveStatus(elementId, timeout = 3000) {
             const statusElement = document.getElementById(elementId);
-            statusElement.classList.remove('hidden');
-            setTimeout(() => {
-                statusElement.classList.add('hidden');
-            }, 3000);
+            if (statusElement) {
+                statusElement.classList.remove('hidden');
+                setTimeout(() => {
+                    statusElement.classList.add('hidden');
+                }, timeout);
+            }
         }
 
         function updateNavigation() {
@@ -1312,6 +1383,17 @@
                                 <textarea id="idealProfiles" rows="3" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Paste ideal candidate profiles...">${state.jobConfig.idealProfiles.join('\n\n')}</textarea>
                             </div>
+                            <div class="flex space-x-2">
+                                <button id="saveJobConfig" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                    Save Job Config
+                                </button>
+                                <button id="clearJobConfig" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                    Clear All
+                                </button>
+                            </div>
+                            <div id="jobConfigSaveStatus" class="text-sm text-gray-600 hidden">
+                                <span class="text-green-600">✓ Job configuration saved successfully!</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1323,6 +1405,17 @@
                                 <p class="text-sm text-gray-600 mb-2">Companies experiencing layoffs, closures, etc.</p>
                                 <textarea id="hotSignals" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
                                           placeholder="Enter company names, one per line">${state.jobConfig.hotSignals.join('\n')}</textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveHotSignals" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Hot Signals
+                                    </button>
+                                    <button id="clearHotSignals" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="hotSignalsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Hot signals saved successfully!</span>
+                                </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-3">Company Size</h3>
@@ -1390,6 +1483,17 @@
                                 </div>
                                 <input type="text" id="customIndustry" class="mt-2 w-full border border-gray-300 rounded-md p-2" 
                                        placeholder="Custom industry">
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveIndustry" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Industry
+                                    </button>
+                                    <button id="clearIndustry" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="industrySaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Industry settings saved successfully!</span>
+                                </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-3">Experience Range</h3>
@@ -1401,31 +1505,18 @@
                                            placeholder="Max" value="${state.jobConfig.experienceRange.max}">
                                     <span class="text-gray-600">years</span>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6">
-                            <h3 class="text-lg font-medium mb-3">Excellence Badges</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="badge-faang" class="mr-2">
-                                    <label for="badge-faang" class="text-sm text-gray-700">FAANG</label>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveExperienceRange" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Experience Range
+                                    </button>
+                                    <button id="clearExperienceRange" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
                                 </div>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="badge-unicorn" class="mr-2">
-                                    <label for="badge-unicorn" class="text-sm text-gray-700">Unicorn</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="badge-startup" class="mr-2">
-                                    <label for="badge-startup" class="text-sm text-gray-700">Startup</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="badge-enterprise" class="mr-2">
-                                    <label for="badge-enterprise" class="text-sm text-gray-700">Enterprise</label>
+                                <div id="experienceRangeSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Experience range saved successfully!</span>
                                 </div>
                             </div>
-                            <input type="text" id="customBadge" class="mt-2 w-full border border-gray-300 rounded-md p-2" 
-                                   placeholder="Add custom badge">
                         </div>
                         
                         <div class="mt-6">
@@ -1502,6 +1593,17 @@
                                         <span id="startupFitValue" class="text-sm text-gray-600">${state.jobConfig.weights.startupFit}%</span>
                                     </div>
                                 </div>
+                                <div class="mt-3 flex space-x-2">
+                                    <button id="saveWeights" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Weights
+                                    </button>
+                                    <button id="clearWeights" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Reset to Default
+                                    </button>
+                                </div>
+                                <div id="weightsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Weights saved successfully!</span>
+                                </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-2">API Configuration</h3>
@@ -1515,18 +1617,20 @@
                                     <div>
                                         <label class="block text-sm text-gray-700">Embedding Model</label>
                                         <select id="embeddingModelSelect" class="w-full border border-gray-300 rounded-md p-2">
-                                            <option value="text-embedding-3-small" ${state.embeddingModel === 'text-embedding-3-small' ? 'selected' : ''}>Embedding Small 3</option>
-                                            <option value="text-embedding-3-large" ${state.embeddingModel === 'text-embedding-3-large' ? 'selected' : ''}>Embedding Large 3</option>
-                                            <option value="text-embedding-ada-002" ${state.embeddingModel === 'text-embedding-ada-002' ? 'selected' : ''}>Embedding Ada 002</option>
+                                            <option value="text-embedding-3-small" ${state.embeddingModel === 'text-embedding-3-small' ? 'selected' : ''}>Embedding Small 3 (Cheapest)</option>
+                                            <option value="text-embedding-3-large" ${state.embeddingModel === 'text-embedding-3-large' ? 'selected' : ''}>Embedding Large 3 (More Accurate)</option>
+                                            <option value="text-embedding-ada-002" ${state.embeddingModel === 'text-embedding-ada-002' ? 'selected' : ''}>Embedding Ada 002 (Legacy)</option>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">Small 3 is 5x cheaper than Large 3</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-700">GPT Model</label>
                                         <select id="gptModelSelect" class="w-full border border-gray-300 rounded-md p-2">
-                                            <option value="gpt-4o-mini" ${state.gptModel === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini</option>
-                                            <option value="gpt-4o-mini-turbo" ${state.gptModel === 'gpt-4o-mini-turbo' ? 'selected' : ''}>GPT-4o Mini Turbo</option>
-                                            <option value="gpt-3.5-turbo" ${state.gptModel === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo</option>
+                                            <option value="gpt-3.5-turbo" ${state.gptModel === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo (Cheapest)</option>
+                                            <option value="gpt-4o-mini" ${state.gptModel === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini (Balanced)</option>
+                                            <option value="gpt-4o-mini-turbo" ${state.gptModel === 'gpt-4o-mini-turbo' ? 'selected' : ''}>GPT-4o Mini Turbo (Fastest)</option>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">GPT-3.5 Turbo is 10x cheaper than GPT-4o</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-700">Hybrid Mode</label>
@@ -1534,7 +1638,28 @@
                                             <input type="checkbox" id="hybridMode" ${state.hybridMode ? 'checked' : ''} class="mr-2">
                                             <span class="text-sm text-gray-600">Use embeddings + GPT for optimal results</span>
                                         </div>
+                                        <p class="text-xs text-gray-500 mt-1">Uncheck to save costs (embeddings only)</p>
                                     </div>
+                                    <div class="p-3 bg-yellow-50 rounded-lg">
+                                        <h4 class="text-sm font-medium text-yellow-800 mb-2">💰 Cost Optimization Tips:</h4>
+                                        <ul class="text-xs text-yellow-700 space-y-1">
+                                            <li>• Use Embedding Small 3 + GPT-3.5 Turbo for maximum savings</li>
+                                            <li>• Disable Hybrid Mode to use embeddings only</li>
+                                            <li>• Process profiles in smaller batches (10-20)</li>
+                                            <li>• Use pre-filtering to reduce profiles sent to AI</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex space-x-2">
+                                    <button id="saveApiConfig" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save API Config
+                                    </button>
+                                    <button id="clearApiConfig" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="apiConfigSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ API configuration saved successfully!</span>
                                 </div>
                             </div>
                         </div>
@@ -1670,6 +1795,28 @@
 
             // Start ranking
             document.getElementById('startRankingBtn').addEventListener('click', startRankingProcess);
+
+            // Save buttons
+            document.getElementById('saveJobConfig').addEventListener('click', saveJobConfiguration);
+            document.getElementById('clearJobConfig').addEventListener('click', clearJobConfiguration);
+            
+            document.getElementById('saveHotSignals').addEventListener('click', saveHotSignals);
+            document.getElementById('clearHotSignals').addEventListener('click', clearHotSignals);
+            
+            document.getElementById('saveIndustry').addEventListener('click', saveIndustry);
+            document.getElementById('clearIndustry').addEventListener('click', clearIndustry);
+            
+            document.getElementById('saveExperienceRange').addEventListener('click', saveExperienceRange);
+            document.getElementById('clearExperienceRange').addEventListener('click', clearExperienceRange);
+            
+            document.getElementById('saveWeights').addEventListener('click', saveWeights);
+            document.getElementById('clearWeights').addEventListener('click', clearWeights);
+            
+            document.getElementById('saveApiConfig').addEventListener('click', saveApiConfig);
+            document.getElementById('clearApiConfig').addEventListener('click', clearApiConfig);
+            
+            document.getElementById('saveCustomTraits').addEventListener('click', saveCustomTraits);
+            document.getElementById('clearCustomTraits').addEventListener('click', clearCustomTraits);
         }
 
         async function startRankingProcess() {
@@ -1799,17 +1946,160 @@
                 max: parseInt(document.getElementById('maxExperience').value) || 50
             };
             
-            // Save excellence badges
-            state.jobConfig.excellenceBadges = [];
-            if (document.getElementById('badge-faang').checked) state.jobConfig.excellenceBadges.push('FAANG');
-            if (document.getElementById('badge-unicorn').checked) state.jobConfig.excellenceBadges.push('Unicorn');
-            if (document.getElementById('badge-startup').checked) state.jobConfig.excellenceBadges.push('Startup');
-            if (document.getElementById('badge-enterprise').checked) state.jobConfig.excellenceBadges.push('Enterprise');
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+        }
+
+        function clearJobConfiguration() {
+            document.getElementById('jobDescription').value = '';
+            document.getElementById('idealProfiles').value = '';
+            state.jobConfig.description = '';
+            state.jobConfig.idealProfiles = [];
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('jobConfigSaveStatus', 1500);
+        }
+
+        function saveHotSignals() {
+            state.jobConfig.hotSignals = document.getElementById('hotSignals').value.split('\n').filter(s => s.trim());
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('hotSignalsSaveStatus', 1500);
+        }
+
+        function clearHotSignals() {
+            document.getElementById('hotSignals').value = '';
+            state.jobConfig.hotSignals = [];
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('hotSignalsSaveStatus', 1500);
+        }
+
+        function saveIndustry() {
+            state.jobConfig.industry = [];
+            if (document.getElementById('industry-tech').checked) state.jobConfig.industry.push('Technology');
+            if (document.getElementById('industry-finance').checked) state.jobConfig.industry.push('Finance');
+            if (document.getElementById('industry-healthcare').checked) state.jobConfig.industry.push('Healthcare');
+            if (document.getElementById('industry-fintech').checked) state.jobConfig.industry.push('Fintech');
+            if (document.getElementById('industry-ai').checked) state.jobConfig.industry.push('AI');
+            if (document.getElementById('industry-saas').checked) state.jobConfig.industry.push('SAAS');
+            if (document.getElementById('industry-data').checked) state.jobConfig.industry.push('Data');
+            if (document.getElementById('industry-security').checked) state.jobConfig.industry.push('Security');
+            if (document.getElementById('industry-other').checked) state.jobConfig.industry.push('Other');
             
-            const customBadge = document.getElementById('customBadge').value.trim();
-            if (customBadge) state.jobConfig.excellenceBadges.push(customBadge);
+            const customIndustry = document.getElementById('customIndustry').value.trim();
+            if (customIndustry) state.jobConfig.industry.push(customIndustry);
             
             localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('industrySaveStatus', 1500);
+        }
+
+        function clearIndustry() {
+            // Uncheck all checkboxes
+            ['industry-tech', 'industry-finance', 'industry-healthcare', 'industry-fintech', 
+             'industry-ai', 'industry-saas', 'industry-data', 'industry-security', 'industry-other'].forEach(id => {
+                document.getElementById(id).checked = false;
+            });
+            document.getElementById('customIndustry').value = '';
+            state.jobConfig.industry = [];
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('industrySaveStatus', 1500);
+        }
+
+        function saveExperienceRange() {
+            state.jobConfig.experienceRange = {
+                min: parseInt(document.getElementById('minExperience').value) || 0,
+                max: parseInt(document.getElementById('maxExperience').value) || 50
+            };
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('experienceRangeSaveStatus', 1500);
+        }
+
+        function clearExperienceRange() {
+            document.getElementById('minExperience').value = '0';
+            document.getElementById('maxExperience').value = '50';
+            state.jobConfig.experienceRange = { min: 0, max: 50 };
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('experienceRangeSaveStatus', 1500);
+        }
+
+        function saveWeights() {
+            state.jobConfig.weights.techFit = parseInt(document.getElementById('techFitWeight').value);
+            state.jobConfig.weights.experience = parseInt(document.getElementById('experienceWeight').value);
+            state.jobConfig.weights.signals = parseInt(document.getElementById('signalsWeight').value);
+            state.jobConfig.weights.startupFit = parseInt(document.getElementById('startupFitWeight').value);
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('weightsSaveStatus', 1500);
+        }
+
+        function clearWeights() {
+            // Reset to default weights
+            const defaultWeights = { techFit: 30, experience: 25, signals: 25, startupFit: 20 };
+            state.jobConfig.weights = defaultWeights;
+            
+            document.getElementById('techFitWeight').value = defaultWeights.techFit;
+            document.getElementById('experienceWeight').value = defaultWeights.experience;
+            document.getElementById('signalsWeight').value = defaultWeights.signals;
+            document.getElementById('startupFitWeight').value = defaultWeights.startupFit;
+            
+            document.getElementById('techFitValue').textContent = defaultWeights.techFit + '%';
+            document.getElementById('experienceValue').textContent = defaultWeights.experience + '%';
+            document.getElementById('signalsValue').textContent = defaultWeights.signals + '%';
+            document.getElementById('startupFitValue').textContent = defaultWeights.startupFit + '%';
+            
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+            showSaveStatus('weightsSaveStatus', 1500);
+        }
+
+        function saveApiConfig() {
+            state.apiKey = document.getElementById('apiKey').value;
+            state.embeddingModel = document.getElementById('embeddingModelSelect').value;
+            state.gptModel = document.getElementById('gptModelSelect').value;
+            state.hybridMode = document.getElementById('hybridMode').checked;
+            
+            localStorage.setItem('scorely_api_key', state.apiKey);
+            localStorage.setItem('scorely_embedding_model', state.embeddingModel);
+            localStorage.setItem('scorely_gpt_model', state.gptModel);
+            localStorage.setItem('scorely_hybrid_mode', state.hybridMode);
+            
+            showSaveStatus('apiConfigSaveStatus', 1500);
+        }
+
+        function clearApiConfig() {
+            document.getElementById('apiKey').value = '';
+            document.getElementById('embeddingModelSelect').value = 'text-embedding-3-small';
+            document.getElementById('gptModelSelect').value = 'gpt-3.5-turbo';
+            document.getElementById('hybridMode').checked = false;
+            
+            state.apiKey = '';
+            state.embeddingModel = 'text-embedding-3-small';
+            state.gptModel = 'gpt-3.5-turbo';
+            state.hybridMode = false;
+            
+            localStorage.removeItem('scorely_api_key');
+            localStorage.setItem('scorely_embedding_model', state.embeddingModel);
+            localStorage.setItem('scorely_gpt_model', state.gptModel);
+            localStorage.setItem('scorely_hybrid_mode', state.hybridMode);
+            
+            showSaveStatus('apiConfigSaveStatus', 1500);
+        }
+
+        function saveCustomTraits() {
+            // Custom traits are already saved in the addCustomTrait function
+            showSaveStatus('customTraitsSaveStatus', 1500);
+        }
+
+        function clearCustomTraits() {
+            if (confirm('Are you sure you want to clear all custom traits?')) {
+                state.jobConfig.customTraits = [];
+                localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+                renderRankingView(); // Refresh to show empty list
+                showSaveStatus('customTraitsSaveStatus', 1500);
+            }
+        }
+
+        function showSaveStatus(elementId) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.classList.remove('hidden');
+            setTimeout(() => {
+                statusElement.classList.add('hidden');
+            }, 3000);
         }
 
         function createProfileSummary(profile) {
@@ -2259,8 +2549,9 @@
             
             if (trait && !state.jobConfig.customTraits.includes(trait)) {
                 state.jobConfig.customTraits.push(trait);
-                localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
+                localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
                 renderRankingView(); // Refresh to show new trait
+                showSaveStatus('customTraitsSaveStatus', 1500);
             }
             
             input.value = '';
@@ -2268,13 +2559,136 @@
 
         function removeCustomTrait(trait) {
             state.jobConfig.customTraits = state.jobConfig.customTraits.filter(t => t !== trait);
-            localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
             renderRankingView(); // Refresh to remove trait
+            showSaveStatus('customTraitsSaveStatus', 1500);
         }
 
         // Make functions globally available for onclick handlers
         window.showCandidateDetail = showCandidateDetail;
         window.removeCustomTrait = removeCustomTrait;
+
+        function saveBlacklist() {
+            state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(line => line.trim());
+            localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
+            showSaveStatus('blacklistSaveStatus', 1500);
+        }
+
+        function clearBlacklist() {
+            document.getElementById('blacklist').value = '';
+            state.filters.blacklist = [];
+            localStorage.removeItem('scorely_blacklist');
+            showSaveStatus('blacklistSaveStatus', 1500);
+        }
+
+        function savePastCandidates() {
+            state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(line => line.trim());
+            localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
+            showSaveStatus('pastCandidatesSaveStatus', 1500);
+        }
+
+        function clearPastCandidates() {
+            document.getElementById('pastCandidates').value = '';
+            state.filters.pastCandidates = [];
+            localStorage.removeItem('scorely_past_candidates');
+            showSaveStatus('pastCandidatesSaveStatus', 1500);
+        }
+
+        function saveNoGoCompanies() {
+            state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(line => line.trim());
+            localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+            showSaveStatus('noGoCompaniesSaveStatus', 1500);
+        }
+
+        function clearNoGoCompanies() {
+            document.getElementById('noGoCompanies').value = '';
+            state.filters.noGoCompanies = [];
+            localStorage.removeItem('scorely_nogo_companies');
+            showSaveStatus('noGoCompaniesSaveStatus', 1500);
+        }
+
+        function saveBasicThresholds() {
+            state.filters.minYears = parseInt(document.getElementById('minYears').value) || 0;
+            state.filters.education = document.getElementById('education').value.split('\n').filter(line => line.trim());
+            state.filters.essentialSkills = document.getElementById('essentialSkills').value;
+            state.filters.suitableRoles = document.getElementById('suitableRoles').value.split(',').map(s => s.trim()).filter(s => s);
+            
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('basicThresholdsSaveStatus', 1500);
+        }
+
+        function clearBasicThresholds() {
+            document.getElementById('minYears').value = '0';
+            document.getElementById('education').value = '';
+            document.getElementById('essentialSkills').value = '';
+            document.getElementById('suitableRoles').value = '';
+            
+            state.filters.minYears = 0;
+            state.filters.education = [];
+            state.filters.essentialSkills = '';
+            state.filters.suitableRoles = [];
+            
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('basicThresholdsSaveStatus', 1500);
+        }
+
+        function saveRedFlags() {
+            state.filters.redFlags = {
+                instability: document.getElementById('instability').checked,
+                stagnation: document.getElementById('stagnation').checked,
+                enterpriseOnly: document.getElementById('enterpriseOnly').checked,
+                freelancer: document.getElementById('freelancer').checked
+            };
+            
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('redFlagsSaveStatus', 1500);
+        }
+
+        function clearRedFlags() {
+            document.getElementById('instability').checked = false;
+            document.getElementById('stagnation').checked = false;
+            document.getElementById('enterpriseOnly').checked = false;
+            document.getElementById('freelancer').checked = false;
+            
+            state.filters.redFlags = {
+                instability: false,
+                stagnation: false,
+                enterpriseOnly: false,
+                freelancer: false
+            };
+            
+            localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+            showSaveStatus('redFlagsSaveStatus', 1500);
+        }
+
+        // Make functions globally accessible
+        window.switchView = switchView;
+        window.showCandidateDetail = showCandidateDetail;
+        window.removeCustomTrait = removeCustomTrait;
+        window.saveBlacklist = saveBlacklist;
+        window.clearBlacklist = clearBlacklist;
+        window.savePastCandidates = savePastCandidates;
+        window.clearPastCandidates = clearPastCandidates;
+        window.saveNoGoCompanies = saveNoGoCompanies;
+        window.clearNoGoCompanies = clearNoGoCompanies;
+        window.saveBasicThresholds = saveBasicThresholds;
+        window.clearBasicThresholds = clearBasicThresholds;
+        window.saveRedFlags = saveRedFlags;
+        window.clearRedFlags = clearRedFlags;
+        window.saveJobConfiguration = saveJobConfiguration;
+        window.clearJobConfiguration = clearJobConfiguration;
+        window.saveHotSignals = saveHotSignals;
+        window.clearHotSignals = clearHotSignals;
+        window.saveIndustry = saveIndustry;
+        window.clearIndustry = clearIndustry;
+        window.saveExperienceRange = saveExperienceRange;
+        window.clearExperienceRange = clearExperienceRange;
+        window.saveWeights = saveWeights;
+        window.clearWeights = clearWeights;
+        window.saveApiConfig = saveApiConfig;
+        window.clearApiConfig = clearApiConfig;
+        window.saveCustomTraits = saveCustomTraits;
+        window.clearCustomTraits = clearCustomTraits;
     </script>
 </body>
 </html> 
