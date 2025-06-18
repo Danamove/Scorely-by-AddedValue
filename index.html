@@ -136,6 +136,21 @@
         <!-- Content will be rendered here by JavaScript -->
     </div>
 
+    <!-- Navigation Footer -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <button id="prevBtn" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+            </button>
+            <div class="text-sm text-gray-600">
+                <span id="currentStep">Setup</span> / <span id="totalSteps">3</span>
+            </div>
+            <button id="nextBtn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+            </button>
+        </div>
+    </div>
+
     <!-- Modals -->
     <div id="columnMappingModal" class="modal">
         <div class="modal-content">
@@ -217,6 +232,26 @@
 
         const EMBEDDING_THRESHOLD = 0.7;
 
+        // Predefined lists
+        const PREDEFINED_NO_GO_COMPANIES = [
+            'Isracard', 'Matrix', 'Harel Insurance & Finance', 'Ness Technologies', 
+            'Bank Leumi', 'GAV Systems', 'Amdocs', 'Log-On Software', 'Sapiens', 
+            'Aman Group', 'NICE', 'Maccabi Healthcare Services', 'Zap Group', 
+            'Clalit Health Services', 'Bank Hapoalim', 'Israel Tax Authority', 
+            'Discount Bank', 'Infanity Labs', 'Experis Israel', 'Sapiens International', 
+            'Magic Software Enterprises', 'Ethernity Networks', 'Elad Software Systems', 
+            'Mizrahi-Tefahot Bank', 'Migdal Insurance', 'Menora Mivtachim', 
+            'Clal Insurance', 'Taldor', 'Bynet Data Communications', 'Hachshara Insurance', 
+            'Psagot Investment House', 'Max (It Finance)'
+        ];
+
+        const PREDEFINED_UNIVERSITIES = [
+            'Hebrew University of Jerusalem', 'Technion – Israel Institute of Technology', 
+            'Tel Aviv University', 'Bar-Ilan University', 'Ben-Gurion University of the Negev', 
+            'Weizmann Institute of Science', 'Reichman University', 'University of Haifa', 
+            'The Academic College of Tel‑Aviv‑Yaffo'
+        ];
+
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -268,6 +303,9 @@
                     renderResultsView();
                     break;
             }
+            
+            // Update navigation footer
+            updateNavigation();
         }
 
         function renderSetupView() {
@@ -312,17 +350,32 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium mb-2">No-Go Companies</h3>
+                                <div class="mb-3 p-3 bg-gray-50 rounded-md">
+                                    <p class="text-sm text-gray-600 mb-2">Predefined NO-GO companies:</p>
+                                    <div class="text-xs text-gray-700 space-y-1 max-h-32 overflow-y-auto">
+                                        ${PREDEFINED_NO_GO_COMPANIES.join(', ')}
+                                    </div>
+                                </div>
                                 <textarea id="noGoCompanies" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
-                                          placeholder="Enter company names"></textarea>
+                                          placeholder="Enter additional company names (one per line)"></textarea>
+                                <button id="addPredefinedNoGo" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
+                                    Add Predefined NO-GO List
+                                </button>
                             </div>
                         </div>
                         <div class="mt-4 flex space-x-4">
                             <button id="saveFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
                                 Save Filters
                             </button>
+                            <button id="clearFiltersBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                Clear All
+                            </button>
                             <button id="runFilteringRound1Btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                 Run Round 1 Filtering
                             </button>
+                        </div>
+                        <div id="filtersSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                            <span class="text-green-600">✓ Filters saved successfully!</span>
                         </div>
                     </div>
 
@@ -372,6 +425,12 @@
                             <button id="saveColumnSelection" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                 Save Selection
                             </button>
+                            <button id="clearColumnSelection" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                Clear Selection
+                            </button>
+                        </div>
+                        <div id="columnSelectionSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                            <span class="text-green-600">✓ Column selection saved successfully!</span>
                         </div>
                     </div>
 
@@ -389,8 +448,17 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Education (Universities)</label>
+                                        <div class="mb-2 p-2 bg-gray-50 rounded-md">
+                                            <p class="text-xs text-gray-600 mb-1">Predefined Israeli universities:</p>
+                                            <div class="text-xs text-gray-700 space-y-1 max-h-20 overflow-y-auto">
+                                                ${PREDEFINED_UNIVERSITIES.join(', ')}
+                                            </div>
+                                        </div>
                                         <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" 
                                                   placeholder="Enter university names, one per line"></textarea>
+                                        <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
+                                            Add Predefined Universities
+                                        </button>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
@@ -480,6 +548,156 @@
             setupFilterHandlers();
         }
 
+        function setupFilterHandlers() {
+            // Load existing filter data
+            document.getElementById('blacklist').value = state.filters.blacklist.join('\n');
+            document.getElementById('pastCandidates').value = state.filters.pastCandidates.join('\n');
+            document.getElementById('noGoCompanies').value = state.filters.noGoCompanies.join('\n');
+
+            // Set up save and run buttons
+            document.getElementById('saveFiltersBtn').addEventListener('click', saveFilters);
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+            document.getElementById('runFilteringRound1Btn').addEventListener('click', runFilteringRound1);
+            document.getElementById('mapColumnsBtn').addEventListener('click', showColumnMappingModal);
+            
+            // Set up predefined lists buttons
+            document.getElementById('addPredefinedNoGo').addEventListener('click', addPredefinedNoGo);
+            document.getElementById('addPredefinedEducation').addEventListener('click', addPredefinedEducation);
+            
+            // Set up Round 1 results handlers
+            document.getElementById('proceedToRound2Btn').addEventListener('click', proceedToRound2);
+            document.getElementById('clearDashboardBtn').addEventListener('click', clearDashboard);
+            
+            // Set up column selection handlers
+            document.getElementById('selectAllColumns').addEventListener('click', selectAllColumns);
+            document.getElementById('clearAllColumns').addEventListener('click', clearAllColumns);
+            document.getElementById('saveColumnSelection').addEventListener('click', saveColumnSelection);
+            document.getElementById('clearColumnSelection').addEventListener('click', clearColumnSelection);
+            
+            // Set up Round 2 handlers
+            document.getElementById('runFilteringRound2Btn').addEventListener('click', runFilteringRound2);
+            document.getElementById('saveAdvancedFiltersBtn').addEventListener('click', saveAdvancedFilters);
+            
+            // Set up custom traits handlers
+            document.getElementById('addCustomTrait').addEventListener('click', addCustomTrait);
+            document.getElementById('saveCustomTraits').addEventListener('click', saveCustomTraits);
+            document.getElementById('clearCustomTraits').addEventListener('click', clearCustomTraits);
+            document.getElementById('newCustomTrait').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addCustomTrait();
+            });
+            
+            // Set up navigation handlers
+            document.getElementById('prevBtn').addEventListener('click', navigatePrevious);
+            document.getElementById('nextBtn').addEventListener('click', navigateNext);
+            
+            // Set up advanced filter handlers
+            setupAdvancedFilterHandlers();
+            
+            // Update navigation
+            updateNavigation();
+        }
+
+        function saveFilters() {
+            state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(line => line.trim());
+            state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(line => line.trim());
+            state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(line => line.trim());
+            
+            localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
+            localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
+            localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+            
+            showSaveStatus('filtersSaveStatus');
+        }
+
+        function clearFilters() {
+            if (confirm('Are you sure you want to clear all filters?')) {
+                document.getElementById('blacklist').value = '';
+                document.getElementById('pastCandidates').value = '';
+                document.getElementById('noGoCompanies').value = '';
+                state.filters.blacklist = [];
+                state.filters.pastCandidates = [];
+                state.filters.noGoCompanies = [];
+                
+                localStorage.removeItem('scorely_blacklist');
+                localStorage.removeItem('scorely_past_candidates');
+                localStorage.removeItem('scorely_nogo_companies');
+                
+                alert('All filters cleared successfully!');
+            }
+        }
+
+        function clearColumnSelection() {
+            if (confirm('Are you sure you want to clear column selection?')) {
+                document.querySelectorAll('#columnSelection input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                state.selectedColumns = [];
+                localStorage.removeItem('scorely_selected_columns');
+                alert('Column selection cleared!');
+            }
+        }
+
+        function saveCustomTraits() {
+            localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
+            showSaveStatus('customTraitsSaveStatus');
+        }
+
+        function clearCustomTraits() {
+            if (confirm('Are you sure you want to clear all custom traits?')) {
+                state.jobConfig.customTraits = [];
+                localStorage.removeItem('scorely_custom_traits');
+                renderRankingView(); // Refresh to show empty list
+                alert('All custom traits cleared!');
+            }
+        }
+
+        function showSaveStatus(elementId) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.classList.remove('hidden');
+            setTimeout(() => {
+                statusElement.classList.add('hidden');
+            }, 3000);
+        }
+
+        function updateNavigation() {
+            const currentStepElement = document.getElementById('currentStep');
+            const totalStepsElement = document.getElementById('totalSteps');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            const steps = ['Setup', 'Ranking', 'Results'];
+            const currentIndex = steps.indexOf(state.currentView);
+            
+            currentStepElement.textContent = steps[currentIndex];
+            totalStepsElement.textContent = steps.length;
+            
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === steps.length - 1;
+            
+            // Update button text
+            if (currentIndex === steps.length - 1) {
+                nextBtn.textContent = 'Finish';
+            } else {
+                nextBtn.textContent = 'Next';
+            }
+        }
+
+        function navigatePrevious() {
+            const steps = ['setup', 'ranking', 'results'];
+            const currentIndex = steps.indexOf(state.currentView);
+            if (currentIndex > 0) {
+                switchView(steps[currentIndex - 1]);
+            }
+        }
+
+        function navigateNext() {
+            const steps = ['setup', 'ranking', 'results'];
+            const currentIndex = steps.indexOf(state.currentView);
+            if (currentIndex < steps.length - 1) {
+                switchView(steps[currentIndex + 1]);
+            }
+        }
+
         function setupFileUpload() {
             const fileInput = document.getElementById('fileInput');
             fileInput.addEventListener('change', handleFileUpload);
@@ -553,44 +771,40 @@
             });
         }
 
-        function setupFilterHandlers() {
-            // Load existing filter data
-            document.getElementById('blacklist').value = state.filters.blacklist.join('\n');
-            document.getElementById('pastCandidates').value = state.filters.pastCandidates.join('\n');
-            document.getElementById('noGoCompanies').value = state.filters.noGoCompanies.join('\n');
-
-            // Set up save and run buttons
-            document.getElementById('saveFiltersBtn').addEventListener('click', saveFilters);
-            document.getElementById('runFilteringRound1Btn').addEventListener('click', runFilteringRound1);
-            document.getElementById('mapColumnsBtn').addEventListener('click', showColumnMappingModal);
+        function addPredefinedNoGo() {
+            const currentValue = document.getElementById('noGoCompanies').value;
+            const currentCompanies = currentValue ? currentValue.split('\n').filter(line => line.trim()) : [];
             
-            // Set up Round 1 results handlers
-            document.getElementById('proceedToRound2Btn').addEventListener('click', proceedToRound2);
-            document.getElementById('clearDashboardBtn').addEventListener('click', clearDashboard);
+            // Add predefined companies that aren't already in the list
+            const newCompanies = PREDEFINED_NO_GO_COMPANIES.filter(company => 
+                !currentCompanies.some(existing => 
+                    existing.toLowerCase().includes(company.toLowerCase()) || 
+                    company.toLowerCase().includes(existing.toLowerCase())
+                )
+            );
             
-            // Set up column selection handlers
-            document.getElementById('selectAllColumns').addEventListener('click', selectAllColumns);
-            document.getElementById('clearAllColumns').addEventListener('click', clearAllColumns);
-            document.getElementById('saveColumnSelection').addEventListener('click', saveColumnSelection);
+            const allCompanies = [...currentCompanies, ...newCompanies];
+            document.getElementById('noGoCompanies').value = allCompanies.join('\n');
             
-            // Set up Round 2 handlers
-            document.getElementById('runFilteringRound2Btn').addEventListener('click', runFilteringRound2);
-            document.getElementById('saveAdvancedFiltersBtn').addEventListener('click', saveAdvancedFilters);
-            
-            // Set up advanced filter handlers
-            setupAdvancedFilterHandlers();
+            alert(`Added ${newCompanies.length} predefined NO-GO companies to the list.`);
         }
 
-        function saveFilters() {
-            state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(line => line.trim());
-            state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(line => line.trim());
-            state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(line => line.trim());
+        function addPredefinedEducation() {
+            const currentValue = document.getElementById('education').value;
+            const currentUniversities = currentValue ? currentValue.split('\n').filter(line => line.trim()) : [];
             
-            localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
-            localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
-            localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+            // Add predefined universities that aren't already in the list
+            const newUniversities = PREDEFINED_UNIVERSITIES.filter(university => 
+                !currentUniversities.some(existing => 
+                    existing.toLowerCase().includes(university.toLowerCase()) || 
+                    university.toLowerCase().includes(existing.toLowerCase())
+                )
+            );
             
-            alert('Filters saved successfully!');
+            const allUniversities = [...currentUniversities, ...newUniversities];
+            document.getElementById('education').value = allUniversities.join('\n');
+            
+            alert(`Added ${newUniversities.length} predefined Israeli universities to the list.`);
         }
 
         function runFilteringRound1() {
@@ -606,6 +820,9 @@
                 remaining: 0,
                 duplicates: 0
             };
+
+            // Get all NO-GO companies (predefined + custom)
+            const allNoGoCompanies = [...PREDEFINED_NO_GO_COMPANIES, ...state.filters.noGoCompanies];
 
             // Deduplicate profiles
             const uniqueProfiles = new Map();
@@ -637,8 +854,8 @@
                     return false;
                 }
                 
-                // Check no-go companies
-                if (state.filters.noGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
+                // Check no-go companies (predefined + custom)
+                if (allNoGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
@@ -655,10 +872,14 @@
             document.getElementById('round1Remaining').textContent = round1Stats.remaining;
             document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
             
+            // Show results section
             document.getElementById('round1Results').classList.remove('hidden');
             
             // Save Round 1 stats
             localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
+            
+            // Show success message
+            alert(`Round 1 filtering completed!\nUploaded: ${round1Stats.uploaded}\nFiltered Out: ${round1Stats.filteredOut}\nRemaining: ${round1Stats.remaining}\nDuplicates Removed: ${round1Stats.duplicates}`);
         }
 
         function proceedToRound2() {
@@ -883,6 +1104,9 @@
                 duplicates: 0
             };
 
+            // Get all NO-GO companies (predefined + custom)
+            const allNoGoCompanies = [...PREDEFINED_NO_GO_COMPANIES, ...state.filters.noGoCompanies];
+
             // Deduplicate profiles
             const uniqueProfiles = new Map();
             state.profiles.forEach(profile => {
@@ -913,8 +1137,8 @@
                     return false;
                 }
                 
-                // Check no-go companies
-                if (state.filters.noGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
+                // Check no-go companies (predefined + custom)
+                if (allNoGoCompanies.some(nogo => company.includes(nogo.toLowerCase()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
@@ -931,10 +1155,14 @@
             document.getElementById('round1Remaining').textContent = round1Stats.remaining;
             document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
             
+            // Show results section
             document.getElementById('round1Results').classList.remove('hidden');
             
             // Save Round 1 stats
             localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
+            
+            // Show success message
+            alert(`Round 1 filtering completed!\nUploaded: ${round1Stats.uploaded}\nFiltered Out: ${round1Stats.filteredOut}\nRemaining: ${round1Stats.remaining}\nDuplicates Removed: ${round1Stats.duplicates}`);
         }
 
         function proceedToRound2() {
@@ -1037,10 +1265,11 @@
                 // For now, we'll skip this check
             }
 
-            // Apply education filter
-            if (state.filters.education.length > 0) {
+            // Apply education filter (predefined + custom)
+            const allUniversities = [...PREDEFINED_UNIVERSITIES, ...state.filters.education];
+            if (allUniversities.length > 0) {
                 const profileText = JSON.stringify(profile.raw).toLowerCase();
-                const hasEducation = state.filters.education.some(uni => 
+                const hasEducation = allUniversities.some(uni => 
                     profileText.includes(uni.toLowerCase())
                 );
                 if (!hasEducation) return false;
@@ -1135,6 +1364,26 @@
                                         <label for="industry-healthcare" class="text-sm text-gray-700">Healthcare</label>
                                     </div>
                                     <div class="flex items-center">
+                                        <input type="checkbox" id="industry-fintech" class="mr-2">
+                                        <label for="industry-fintech" class="text-sm text-gray-700">Fintech</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="industry-ai" class="mr-2">
+                                        <label for="industry-ai" class="text-sm text-gray-700">AI</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="industry-saas" class="mr-2">
+                                        <label for="industry-saas" class="text-sm text-gray-700">SAAS</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="industry-data" class="mr-2">
+                                        <label for="industry-data" class="text-sm text-gray-700">Data</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="industry-security" class="mr-2">
+                                        <label for="industry-security" class="text-sm text-gray-700">Security</label>
+                                    </div>
+                                    <div class="flex items-center">
                                         <input type="checkbox" id="industry-other" class="mr-2">
                                         <label for="industry-other" class="text-sm text-gray-700">Other</label>
                                     </div>
@@ -1181,6 +1430,18 @@
                         
                         <div class="mt-6">
                             <h3 class="text-lg font-medium mb-3">Custom Traits</h3>
+                            <div class="mb-3 p-3 bg-blue-50 rounded-lg">
+                                <p class="text-sm text-blue-800 mb-2"><strong>What are Custom Traits?</strong></p>
+                                <p class="text-sm text-blue-700 mb-2">Custom traits are specific characteristics or qualities you're looking for in candidates. These can include:</p>
+                                <ul class="text-sm text-blue-700 space-y-1 ml-4">
+                                    <li>• "Has experience with remote teams"</li>
+                                    <li>• "Speaks multiple languages"</li>
+                                    <li>• "Has worked in early-stage startups"</li>
+                                    <li>• "Has international experience"</li>
+                                    <li>• "Has led teams of 10+ people"</li>
+                                    <li>• "Has experience with agile methodologies"</li>
+                                </ul>
+                            </div>
                             <div id="customTraitsList" class="space-y-2 mb-3">
                                 ${state.jobConfig.customTraits.map(trait => `
                                     <div class="flex items-center space-x-2">
@@ -1191,10 +1452,21 @@
                             </div>
                             <div class="flex space-x-2">
                                 <input type="text" id="newCustomTrait" class="flex-1 border border-gray-300 rounded-md p-2" 
-                                       placeholder="Enter custom trait">
+                                       placeholder="Enter a custom trait (e.g., 'Has experience with remote teams')">
                                 <button id="addCustomTrait" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                                     Add Trait
                                 </button>
+                            </div>
+                            <div class="mt-2 flex space-x-2">
+                                <button id="saveCustomTraits" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                    Save Traits
+                                </button>
+                                <button id="clearCustomTraits" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                    Clear All
+                                </button>
+                            </div>
+                            <div id="customTraitsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                <span class="text-green-600">✓ Custom traits saved successfully!</span>
                             </div>
                         </div>
                     </div>
@@ -1270,10 +1542,40 @@
 
                     <div class="bg-white rounded-lg shadow p-6">
                         <h2 class="text-xl font-semibold mb-4">Start Ranking</h2>
-                        <div class="flex items-center justify-between">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <p class="text-sm text-gray-600">Profiles to rank: <span class="font-semibold">${state.stats.toBeSentToGPT}</span></p>
-                                <p class="text-sm text-gray-600">Estimated cost: <span class="font-semibold">$${(state.stats.toBeSentToGPT * 0.01).toFixed(2)}</span></p>
+                                <h3 class="text-lg font-medium mb-3">Ranking Range</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Start from profile</label>
+                                        <input type="number" id="rankingStart" min="1" value="1" class="w-full border border-gray-300 rounded-md p-2">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">End at profile</label>
+                                        <input type="number" id="rankingEnd" min="1" class="w-full border border-gray-300 rounded-md p-2">
+                                    </div>
+                                    <div class="text-sm text-gray-600">
+                                        <span id="rankingRangeInfo">Profiles to rank: 0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium mb-3">Ranking Status</h3>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm text-gray-600">Profiles to rank:</span>
+                                        <span class="text-sm font-medium" id="profilesToRank">0</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm text-gray-600">Current progress:</span>
+                                        <span class="text-sm font-medium" id="rankingProgress">0 / 0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Ready to start AI-powered ranking</p>
                             </div>
                             <button id="startRankingBtn" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium">
                                 Start Ranking Process
@@ -1336,6 +1638,30 @@
                 localStorage.setItem('scorely_hybrid_mode', this.checked);
             });
 
+            // Ranking range
+            const rankingStart = document.getElementById('rankingStart');
+            const rankingEnd = document.getElementById('rankingEnd');
+            const rankingRangeInfo = document.getElementById('rankingRangeInfo');
+            const profilesToRank = document.getElementById('profilesToRank');
+            
+            // Set default end value
+            rankingEnd.value = state.stats.toBeSentToGPT;
+            
+            function updateRankingRange() {
+                const start = parseInt(rankingStart.value) || 1;
+                const end = parseInt(rankingEnd.value) || state.stats.toBeSentToGPT;
+                const count = Math.max(0, end - start + 1);
+                
+                rankingRangeInfo.textContent = `Profiles to rank: ${count}`;
+                profilesToRank.textContent = count;
+                
+                state.rankingRange = { start, end, count };
+            }
+            
+            rankingStart.addEventListener('input', updateRankingRange);
+            rankingEnd.addEventListener('input', updateRankingRange);
+            updateRankingRange();
+
             // Custom traits
             document.getElementById('addCustomTrait').addEventListener('click', addCustomTrait);
             document.getElementById('newCustomTrait').addEventListener('keypress', function(e) {
@@ -1344,25 +1670,6 @@
 
             // Start ranking
             document.getElementById('startRankingBtn').addEventListener('click', startRankingProcess);
-        }
-
-        function addCustomTrait() {
-            const input = document.getElementById('newCustomTrait');
-            const trait = input.value.trim();
-            
-            if (trait && !state.jobConfig.customTraits.includes(trait)) {
-                state.jobConfig.customTraits.push(trait);
-                localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
-                renderRankingView(); // Refresh to show new trait
-            }
-            
-            input.value = '';
-        }
-
-        function removeCustomTrait(trait) {
-            state.jobConfig.customTraits = state.jobConfig.customTraits.filter(t => t !== trait);
-            localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
-            renderRankingView(); // Refresh to remove trait
         }
 
         async function startRankingProcess() {
@@ -1385,62 +1692,31 @@
             // Save job configuration
             saveJobConfiguration();
 
+            // Get ranking range
+            const start = parseInt(document.getElementById('rankingStart').value) || 1;
+            const end = parseInt(document.getElementById('rankingEnd').value) || state.stats.toBeSentToGPT;
+            const profilesToRank = state.profiles.slice(start - 1, end);
+
+            if (profilesToRank.length === 0) {
+                alert('No profiles in the selected range');
+                return;
+            }
+
             document.getElementById('rankingProgress').classList.remove('hidden');
             document.getElementById('startRankingBtn').disabled = true;
 
             // Start the ranking process
-            await performRanking();
+            await performRanking(profilesToRank);
         }
 
-        function saveJobConfiguration() {
-            state.jobConfig.description = document.getElementById('jobDescription').value;
-            state.jobConfig.idealProfiles = document.getElementById('idealProfiles').value.split('\n\n').filter(p => p.trim());
-            state.jobConfig.hotSignals = document.getElementById('hotSignals').value.split('\n').filter(s => s.trim());
-            
-            // Save company size preferences
-            state.jobConfig.companySize = [];
-            if (document.getElementById('size1-20').checked) state.jobConfig.companySize.push('1-20');
-            if (document.getElementById('size21-100').checked) state.jobConfig.companySize.push('21-100');
-            if (document.getElementById('size101-500').checked) state.jobConfig.companySize.push('101-500');
-            if (document.getElementById('size500plus').checked) state.jobConfig.companySize.push('500+');
-            
-            // Save industry preferences
-            state.jobConfig.industry = [];
-            if (document.getElementById('industry-tech').checked) state.jobConfig.industry.push('Technology');
-            if (document.getElementById('industry-finance').checked) state.jobConfig.industry.push('Finance');
-            if (document.getElementById('industry-healthcare').checked) state.jobConfig.industry.push('Healthcare');
-            if (document.getElementById('industry-other').checked) state.jobConfig.industry.push('Other');
-            
-            const customIndustry = document.getElementById('customIndustry').value.trim();
-            if (customIndustry) state.jobConfig.industry.push(customIndustry);
-            
-            // Save experience range
-            state.jobConfig.experienceRange = {
-                min: parseInt(document.getElementById('minExperience').value) || 0,
-                max: parseInt(document.getElementById('maxExperience').value) || 50
-            };
-            
-            // Save excellence badges
-            state.jobConfig.excellenceBadges = [];
-            if (document.getElementById('badge-faang').checked) state.jobConfig.excellenceBadges.push('FAANG');
-            if (document.getElementById('badge-unicorn').checked) state.jobConfig.excellenceBadges.push('Unicorn');
-            if (document.getElementById('badge-startup').checked) state.jobConfig.excellenceBadges.push('Startup');
-            if (document.getElementById('badge-enterprise').checked) state.jobConfig.excellenceBadges.push('Enterprise');
-            
-            const customBadge = document.getElementById('customBadge').value.trim();
-            if (customBadge) state.jobConfig.excellenceBadges.push(customBadge);
-            
-            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
-        }
-
-        async function performRanking() {
-            const totalProfiles = state.stats.toBeSentToGPT;
+        async function performRanking(profilesToRank) {
+            const totalProfiles = profilesToRank.length;
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const progressCount = document.getElementById('progressCount');
 
             // Create profile summaries
-            const profilesWithSummaries = state.profiles.map(profile => ({
+            const profilesWithSummaries = profilesToRank.map(profile => ({
                 ...profile,
                 summary: createProfileSummary(profile)
             }));
@@ -1488,6 +1764,52 @@
             
             // Switch to results view
             setTimeout(() => switchView('results'), 1000);
+        }
+
+        function saveJobConfiguration() {
+            state.jobConfig.description = document.getElementById('jobDescription').value;
+            state.jobConfig.idealProfiles = document.getElementById('idealProfiles').value.split('\n\n').filter(p => p.trim());
+            state.jobConfig.hotSignals = document.getElementById('hotSignals').value.split('\n').filter(s => s.trim());
+            
+            // Save company size preferences
+            state.jobConfig.companySize = [];
+            if (document.getElementById('size1-20').checked) state.jobConfig.companySize.push('1-20');
+            if (document.getElementById('size21-100').checked) state.jobConfig.companySize.push('21-100');
+            if (document.getElementById('size101-500').checked) state.jobConfig.companySize.push('101-500');
+            if (document.getElementById('size500plus').checked) state.jobConfig.companySize.push('500+');
+            
+            // Save industry preferences
+            state.jobConfig.industry = [];
+            if (document.getElementById('industry-tech').checked) state.jobConfig.industry.push('Technology');
+            if (document.getElementById('industry-finance').checked) state.jobConfig.industry.push('Finance');
+            if (document.getElementById('industry-healthcare').checked) state.jobConfig.industry.push('Healthcare');
+            if (document.getElementById('industry-fintech').checked) state.jobConfig.industry.push('Fintech');
+            if (document.getElementById('industry-ai').checked) state.jobConfig.industry.push('AI');
+            if (document.getElementById('industry-saas').checked) state.jobConfig.industry.push('SAAS');
+            if (document.getElementById('industry-data').checked) state.jobConfig.industry.push('Data');
+            if (document.getElementById('industry-security').checked) state.jobConfig.industry.push('Security');
+            if (document.getElementById('industry-other').checked) state.jobConfig.industry.push('Other');
+            
+            const customIndustry = document.getElementById('customIndustry').value.trim();
+            if (customIndustry) state.jobConfig.industry.push(customIndustry);
+            
+            // Save experience range
+            state.jobConfig.experienceRange = {
+                min: parseInt(document.getElementById('minExperience').value) || 0,
+                max: parseInt(document.getElementById('maxExperience').value) || 50
+            };
+            
+            // Save excellence badges
+            state.jobConfig.excellenceBadges = [];
+            if (document.getElementById('badge-faang').checked) state.jobConfig.excellenceBadges.push('FAANG');
+            if (document.getElementById('badge-unicorn').checked) state.jobConfig.excellenceBadges.push('Unicorn');
+            if (document.getElementById('badge-startup').checked) state.jobConfig.excellenceBadges.push('Startup');
+            if (document.getElementById('badge-enterprise').checked) state.jobConfig.excellenceBadges.push('Enterprise');
+            
+            const customBadge = document.getElementById('customBadge').value.trim();
+            if (customBadge) state.jobConfig.excellenceBadges.push(customBadge);
+            
+            localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
         }
 
         function createProfileSummary(profile) {
@@ -1929,6 +2251,25 @@
                 localStorage.clear();
                 location.reload();
             }
+        }
+
+        function addCustomTrait() {
+            const input = document.getElementById('newCustomTrait');
+            const trait = input.value.trim();
+            
+            if (trait && !state.jobConfig.customTraits.includes(trait)) {
+                state.jobConfig.customTraits.push(trait);
+                localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
+                renderRankingView(); // Refresh to show new trait
+            }
+            
+            input.value = '';
+        }
+
+        function removeCustomTrait(trait) {
+            state.jobConfig.customTraits = state.jobConfig.customTraits.filter(t => t !== trait);
+            localStorage.setItem('scorely_custom_traits', JSON.stringify(state.jobConfig.customTraits));
+            renderRankingView(); // Refresh to remove trait
         }
 
         // Make functions globally available for onclick handlers
