@@ -136,21 +136,6 @@
         <!-- Content will be rendered here by JavaScript -->
     </div>
 
-    <!-- Navigation Footer -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <button id="prevBtn" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                Previous
-            </button>
-            <div class="text-sm text-gray-600">
-                <span id="currentStep">Setup</span> / <span id="totalSteps">3</span>
-            </div>
-            <button id="nextBtn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                Next
-            </button>
-        </div>
-    </div>
-
     <!-- Modals -->
     <div id="columnMappingModal" class="modal">
         <div class="modal-content">
@@ -358,7 +343,7 @@
                 return;
             }
             if (stepKey === 'map') {
-                // Map Columns UI
+                // Map Columns UI (First Name, Last Name, Company only)
                 if (!state.profiles || state.profiles.length === 0) {
                     container.innerHTML = `<div class='text-red-600 text-center p-8'>Please upload a file first.</div>`;
                     return;
@@ -367,12 +352,8 @@
                 const mappingFields = [
                     { key: 'firstName', label: 'First Name' },
                     { key: 'lastName', label: 'Last Name' },
-                    { key: 'company', label: 'Company' },
-                    { key: 'title', label: 'Title/Role' },
-                    { key: 'email', label: 'Email' },
-                    { key: 'phone', label: 'Phone' },
-                    { key: 'location', label: 'Location' }
-                ];
+                    { key: 'company', label: 'Company' }
+                ]; // Only these three
                 let savedMapping = state.columnMapping || {};
                 container.innerHTML = `
                     <div class="bg-white rounded-lg shadow p-8 max-w-xl mx-auto">
@@ -395,8 +376,25 @@
                             <button id="clearColumnMappingBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Clear</button>
                         </div>
                     </div>
+                    <div class="bg-white rounded-lg shadow p-8 max-w-xl mx-auto mt-8">
+                        <h2 class="text-xl font-bold mb-4 text-blue-700">Profile Summary Columns</h2>
+                        <div class="mb-2 text-gray-600 text-sm">Select which columns to include in the profile summary for AI analysis:</div>
+                        <form id="profileSummaryForm" class="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4">
+                            ${headers.map(h => `
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="col-${h}" name="profileSummaryCols" value="${h}" ${state.selectedColumns && state.selectedColumns.includes(h) ? 'checked' : ''} class="mr-2">
+                                    <label for="col-${h}" class="text-sm text-gray-700">${h}</label>
+                                </div>
+                            `).join('')}
+                        </form>
+                        <div id="profileSummaryStatus" class="text-xs text-green-600 mt-2 hidden">Profile summary columns saved!</div>
+                        <div class="mt-4 flex space-x-2">
+                            <button id="saveProfileSummaryBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Selection</button>
+                            <button id="clearProfileSummaryBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Clear</button>
+                        </div>
+                    </div>
                 `;
-                // Save/clear logic
+                // Save/clear logic for mapping
                 document.getElementById('saveColumnMappingBtn').onclick = function(e) {
                     e.preventDefault();
                     const form = document.getElementById('columnMappingForm');
@@ -418,6 +416,22 @@
                     });
                     state.columnMapping = {};
                     localStorage.removeItem('scorely_column_mapping');
+                };
+                // Save/clear logic for profile summary columns
+                document.getElementById('saveProfileSummaryBtn').onclick = function(e) {
+                    e.preventDefault();
+                    const checked = Array.from(document.querySelectorAll('input[name="profileSummaryCols"]:checked')).map(cb => cb.value);
+                    state.selectedColumns = checked;
+                    localStorage.setItem('scorely_selected_columns', JSON.stringify(checked));
+                    const status = document.getElementById('profileSummaryStatus');
+                    status.classList.remove('hidden');
+                    setTimeout(() => status.classList.add('hidden'), 1500);
+                };
+                document.getElementById('clearProfileSummaryBtn').onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('input[name="profileSummaryCols"]').forEach(cb => cb.checked = false);
+                    state.selectedColumns = [];
+                    localStorage.removeItem('scorely_selected_columns');
                 };
                 return;
             }
@@ -557,9 +571,12 @@
                                 <input type="number" id="minYears" min="0" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 3" value="${state.filters.minYears || 0}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (universities, one per line)</label>
-                                <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Technion, Tel Aviv University">${state.filters.education.join('\n')}</textarea>
-                                <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Add Predefined Universities</button>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (Israeli universities only)</label>
+                                <select id="educationSelect" multiple class="w-full border border-gray-300 rounded-md p-2 mb-2" size="${Math.min(PREDEFINED_UNIVERSITIES.length, 8)}">
+                                    ${PREDEFINED_UNIVERSITIES.map(uni => `<option value="${uni}" ${state.filters.education.includes(uni) ? 'selected' : ''}>${uni}</option>`).join('')}
+                                </select>
+                                <button id="addAllUniversitiesBtn" class="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 text-xs ml-2">Add All</button>
+                                <div id="educationSaveStatus" class="mt-1 text-xs text-gray-600 hidden"><span class="text-green-600">✓ Education saved!</span></div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
@@ -633,12 +650,18 @@
                 document.getElementById('runFilteringRound2Btn').onclick = function() {
                     runFilteringRound2();
                 };
-                document.getElementById('addPredefinedEducation').onclick = function() {
-                    const all = [...PREDEFINED_UNIVERSITIES, ...state.filters.education];
-                    state.filters.education = Array.from(new Set(all));
-                    document.getElementById('education').value = state.filters.education.join('\n');
-                    localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
-                    showSaveStatus('advancedFiltersSaveStatus', 1200);
+                document.getElementById('addAllUniversitiesBtn').onclick = function(e) {
+                    e.preventDefault();
+                    const select = document.getElementById('educationSelect');
+                    Array.from(select.options).forEach(opt => opt.selected = true);
+                };
+                document.getElementById('educationSelect').onchange = function() {
+                    const selected = Array.from(this.selectedOptions).map(opt => opt.value);
+                    state.filters.education = selected;
+                    localStorage.setItem('scorely_education', JSON.stringify(selected));
+                    const status = document.getElementById('educationSaveStatus');
+                    status.classList.remove('hidden');
+                    setTimeout(() => status.classList.add('hidden'), 1200);
                 };
                 // Show results if exist
                 const stats = localStorage.getItem('scorely_round2_stats');
@@ -1384,9 +1407,12 @@
                                 <input type="number" id="minYears" min="0" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 3">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (universities, one per line)</label>
-                                <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Technion, Tel Aviv University"></textarea>
-                                <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Add Predefined Universities</button>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (Israeli universities only)</label>
+                                <select id="educationSelect" multiple class="w-full border border-gray-300 rounded-md p-2 mb-2" size="${Math.min(PREDEFINED_UNIVERSITIES.length, 8)}">
+                                    ${PREDEFINED_UNIVERSITIES.map(uni => `<option value="${uni}" ${state.filters.education.includes(uni) ? 'selected' : ''}>${uni}</option>`).join('')}
+                                </select>
+                                <button id="addAllUniversitiesBtn" class="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 text-xs ml-2">Add All</button>
+                                <div id="educationSaveStatus" class="mt-1 text-xs text-gray-600 hidden"><span class="text-green-600">✓ Education saved!</span></div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
@@ -1400,19 +1426,19 @@
                                 <h3 class="text-lg font-medium mb-2">Red-Flag Patterns</h3>
                                 <div class="flex flex-wrap gap-4">
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="instability" class="mr-2">
+                                        <input type="checkbox" id="instability" class="mr-2" ${state.filters.redFlags.instability ? 'checked' : ''}>
                                         <label for="instability" class="text-sm text-gray-700">Instability (&lt;1 year in role or job hops in last 6 years)</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="stagnation" class="mr-2">
+                                        <input type="checkbox" id="stagnation" class="mr-2" ${state.filters.redFlags.stagnation ? 'checked' : ''}>
                                         <label for="stagnation" class="text-sm text-gray-700">Stagnation (&gt;7 years at same company)</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="enterpriseOnly" class="mr-2">
+                                        <input type="checkbox" id="enterpriseOnly" class="mr-2" ${state.filters.redFlags.enterpriseOnly ? 'checked' : ''}>
                                         <label for="enterpriseOnly" class="text-sm text-gray-700">Enterprise-only background</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="freelancer" class="mr-2">
+                                        <input type="checkbox" id="freelancer" class="mr-2" ${state.filters.redFlags.freelancer ? 'checked' : ''}>
                                         <label for="freelancer" class="text-sm text-gray-700">Freelancer/Independent</label>
                                     </div>
                                 </div>
@@ -1494,7 +1520,7 @@
             
             // Set up predefined lists buttons
             document.getElementById('addPredefinedNoGo').addEventListener('click', addPredefinedNoGo);
-            document.getElementById('addPredefinedEducation').addEventListener('click', addPredefinedEducation);
+            document.getElementById('addAllUniversitiesBtn').addEventListener('click', addAllUniversitiesBtn);
             
             // Set up Round 1 results handlers
             document.getElementById('proceedToRound2Btn').addEventListener('click', proceedToRound2);
@@ -1727,22 +1753,9 @@
             alert(`Added ${newCompanies.length} predefined NO-GO companies to the list.`);
         }
 
-        function addPredefinedEducation() {
-            const currentValue = document.getElementById('education').value;
-            const currentUniversities = currentValue ? currentValue.split('\n').filter(line => line.trim()) : [];
-            
-            // Add predefined universities that aren't already in the list
-            const newUniversities = PREDEFINED_UNIVERSITIES.filter(university => 
-                !currentUniversities.some(existing => 
-                    existing.toLowerCase().includes(university.toLowerCase()) || 
-                    university.toLowerCase().includes(existing.toLowerCase())
-                )
-            );
-            
-            const allUniversities = [...currentUniversities, ...newUniversities];
-            document.getElementById('education').value = allUniversities.join('\n');
-            
-            alert(`Added ${newUniversities.length} predefined Israeli universities to the list.`);
+        function addAllUniversitiesBtn() {
+            const select = document.getElementById('educationSelect');
+            Array.from(select.options).forEach(opt => opt.selected = true);
         }
 
         function runFilteringRound1() {
@@ -1750,7 +1763,6 @@
                 alert('Please upload a file first');
                 return;
             }
-
             // Reset Round 1 stats
             const round1Stats = {
                 uploaded: state.profiles.length,
@@ -1758,79 +1770,52 @@
                 remaining: 0,
                 duplicates: 0
             };
-
             // Get all NO-GO companies (predefined + custom)
             const allNoGoCompanies = [...PREDEFINED_NO_GO_COMPANIES, ...state.filters.noGoCompanies];
-
             // Deduplicate profiles
             const uniqueProfiles = new Map();
             state.profiles.forEach(profile => {
-                // Create a unique key from available fields
                 const firstName = profile.firstName || profile['First Name'] || profile['first_name'] || '';
                 const lastName = profile.lastName || profile['Last Name'] || profile['last_name'] || '';
                 const company = profile.company || profile['Company'] || profile['company'] || '';
                 const key = `${firstName} ${lastName} ${company}`.toLowerCase().trim();
-                
                 if (!uniqueProfiles.has(key)) {
                     uniqueProfiles.set(key, profile);
                 } else {
                     round1Stats.duplicates++;
                 }
             });
-
             const filteredProfiles = Array.from(uniqueProfiles.values()).filter(profile => {
-                // Get company and name from various possible field names
                 const company = (profile.company || profile['Company'] || profile['company'] || '').toLowerCase();
                 const firstName = profile.firstName || profile['First Name'] || profile['first_name'] || '';
                 const lastName = profile.lastName || profile['Last Name'] || profile['last_name'] || '';
                 const fullName = `${firstName} ${lastName}`.toLowerCase();
-                
                 // Check blacklist
-                if (state.filters.blacklist.some(blacklisted => 
-                    blacklisted.trim() && company.includes(blacklisted.toLowerCase().trim())
-                )) {
+                if (state.filters.blacklist.some(blacklisted => blacklisted.trim() && company.includes(blacklisted.toLowerCase().trim()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 // Check past candidates
-                if (state.filters.pastCandidates.some(candidate => 
-                    candidate.trim() && (
-                        fullName.includes(candidate.toLowerCase().trim()) || 
-                        (profile.raw && JSON.stringify(profile.raw).toLowerCase().includes(candidate.toLowerCase().trim()))
-                    )
-                )) {
+                if (state.filters.pastCandidates.some(candidate => candidate.trim() && (fullName.includes(candidate.toLowerCase().trim()) || (profile.raw && JSON.stringify(profile.raw).toLowerCase().includes(candidate.toLowerCase().trim()))))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 // Check no-go companies (predefined + custom)
-                if (allNoGoCompanies.some(nogo => 
-                    nogo.trim() && company.includes(nogo.toLowerCase().trim())
-                )) {
+                if (allNoGoCompanies.some(nogo => nogo.trim() && company.includes(nogo.toLowerCase().trim()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 return true;
             });
-
             round1Stats.remaining = filteredProfiles.length;
             state.profiles = filteredProfiles;
-
             // Update Round 1 results display
             document.getElementById('round1Uploaded').textContent = round1Stats.uploaded;
             document.getElementById('round1FilteredOut').textContent = round1Stats.filteredOut;
             document.getElementById('round1Remaining').textContent = round1Stats.remaining;
             document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
-            
-            // Show results section
             document.getElementById('round1Results').classList.remove('hidden');
-            
-            // Save Round 1 stats
             localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
-            
-            // Show success message
             alert(`Round 1 filtering completed!\nUploaded: ${round1Stats.uploaded}\nFiltered Out: ${round1Stats.filteredOut}\nRemaining: ${round1Stats.remaining}\nDuplicates Removed: ${round1Stats.duplicates}`);
         }
 
@@ -1982,7 +1967,7 @@
         function setupAdvancedFilterHandlers() {
             // Load saved advanced filter values
             document.getElementById('minYears').value = state.filters.minYears || 0;
-            document.getElementById('education').value = state.filters.education.join('\n');
+            document.getElementById('educationSelect').value = state.filters.education.join(',');
             document.getElementById('essentialSkills').value = state.filters.essentialSkills;
             document.getElementById('suitableRoles').value = state.filters.suitableRoles.join(', ');
             
@@ -2115,7 +2100,6 @@
                 alert('Please upload a file first');
                 return;
             }
-
             // Reset Round 1 stats
             const round1Stats = {
                 uploaded: state.profiles.length,
@@ -2123,79 +2107,52 @@
                 remaining: 0,
                 duplicates: 0
             };
-
             // Get all NO-GO companies (predefined + custom)
             const allNoGoCompanies = [...PREDEFINED_NO_GO_COMPANIES, ...state.filters.noGoCompanies];
-
             // Deduplicate profiles
             const uniqueProfiles = new Map();
             state.profiles.forEach(profile => {
-                // Create a unique key from available fields
                 const firstName = profile.firstName || profile['First Name'] || profile['first_name'] || '';
                 const lastName = profile.lastName || profile['Last Name'] || profile['last_name'] || '';
                 const company = profile.company || profile['Company'] || profile['company'] || '';
                 const key = `${firstName} ${lastName} ${company}`.toLowerCase().trim();
-                
                 if (!uniqueProfiles.has(key)) {
                     uniqueProfiles.set(key, profile);
                 } else {
                     round1Stats.duplicates++;
                 }
             });
-
             const filteredProfiles = Array.from(uniqueProfiles.values()).filter(profile => {
-                // Get company and name from various possible field names
                 const company = (profile.company || profile['Company'] || profile['company'] || '').toLowerCase();
                 const firstName = profile.firstName || profile['First Name'] || profile['first_name'] || '';
                 const lastName = profile.lastName || profile['Last Name'] || profile['last_name'] || '';
                 const fullName = `${firstName} ${lastName}`.toLowerCase();
-                
                 // Check blacklist
-                if (state.filters.blacklist.some(blacklisted => 
-                    blacklisted.trim() && company.includes(blacklisted.toLowerCase().trim())
-                )) {
+                if (state.filters.blacklist.some(blacklisted => blacklisted.trim() && company.includes(blacklisted.toLowerCase().trim()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 // Check past candidates
-                if (state.filters.pastCandidates.some(candidate => 
-                    candidate.trim() && (
-                        fullName.includes(candidate.toLowerCase().trim()) || 
-                        (profile.raw && JSON.stringify(profile.raw).toLowerCase().includes(candidate.toLowerCase().trim()))
-                    )
-                )) {
+                if (state.filters.pastCandidates.some(candidate => candidate.trim() && (fullName.includes(candidate.toLowerCase().trim()) || (profile.raw && JSON.stringify(profile.raw).toLowerCase().includes(candidate.toLowerCase().trim()))))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 // Check no-go companies (predefined + custom)
-                if (allNoGoCompanies.some(nogo => 
-                    nogo.trim() && company.includes(nogo.toLowerCase().trim())
-                )) {
+                if (allNoGoCompanies.some(nogo => nogo.trim() && company.includes(nogo.toLowerCase().trim()))) {
                     round1Stats.filteredOut++;
                     return false;
                 }
-                
                 return true;
             });
-
             round1Stats.remaining = filteredProfiles.length;
             state.profiles = filteredProfiles;
-
             // Update Round 1 results display
             document.getElementById('round1Uploaded').textContent = round1Stats.uploaded;
             document.getElementById('round1FilteredOut').textContent = round1Stats.filteredOut;
             document.getElementById('round1Remaining').textContent = round1Stats.remaining;
             document.getElementById('round1Duplicates').textContent = round1Stats.duplicates;
-            
-            // Show results section
             document.getElementById('round1Results').classList.remove('hidden');
-            
-            // Save Round 1 stats
             localStorage.setItem('scorely_round1_stats', JSON.stringify(round1Stats));
-            
-            // Show success message
             alert(`Round 1 filtering completed!\nUploaded: ${round1Stats.uploaded}\nFiltered Out: ${round1Stats.filteredOut}\nRemaining: ${round1Stats.remaining}\nDuplicates Removed: ${round1Stats.duplicates}`);
         }
 
@@ -2346,7 +2303,7 @@
 
         function saveAdvancedFilters() {
             state.filters.minYears = parseInt(document.getElementById('minYears').value) || 0;
-            state.filters.education = document.getElementById('education').value.split('\n').filter(line => line.trim());
+            state.filters.education = document.getElementById('educationSelect').value.split(',').filter(line => line.trim());
             state.filters.essentialSkills = document.getElementById('essentialSkills').value;
             state.filters.suitableRoles = document.getElementById('suitableRoles').value.split(',').map(s => s.trim()).filter(s => s);
             
@@ -2361,44 +2318,19 @@
         }
 
         function applyAdvancedFilters(profile) {
-            // Apply minimum years of experience
+            // Only filter by education if user selected values
+            if (state.filters.education && state.filters.education.length > 0) {
+                const profileText = JSON.stringify(profile.raw).toLowerCase();
+                const hasEducation = state.filters.education.some(uni => uni.trim() && profileText.includes(uni.toLowerCase().trim()));
+                if (!hasEducation) return false;
+            }
+            // Only filter by min years if set
             if (state.filters.minYears > 0) {
-                // This would need to be extracted from profile data
-                // For now, we'll skip this check
+                // TODO: Extract years of experience from profile if possible
+                // For now, skip this check (do not filter out)
             }
-
-            // Apply education filter (predefined + custom) - make it optional
-            const allUniversities = [...PREDEFINED_UNIVERSITIES, ...state.filters.education];
-            if (allUniversities.length > 0) {
-                const profileText = JSON.stringify(profile.raw).toLowerCase();
-                const hasEducation = allUniversities.some(uni => 
-                    uni.trim() && profileText.includes(uni.toLowerCase().trim())
-                );
-                // Only filter out if education is required AND not found
-                if (!hasEducation && state.filters.education.length > 0) {
-                    return false;
-                }
-            }
-
-            // Apply essential skills filter - make it optional
-            if (state.filters.essentialSkills && state.filters.essentialSkills.trim()) {
-                const skills = state.filters.essentialSkills.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
-                if (skills.length > 0) {
-                    const profileText = JSON.stringify(profile.raw).toLowerCase();
-                    const hasSkill = skills.some(skill => profileText.includes(skill));
-                    if (!hasSkill) return false;
-                }
-            }
-
-            // Apply suitable roles filter - make it optional
-            if (state.filters.suitableRoles.length > 0) {
-                const profileText = JSON.stringify(profile.raw).toLowerCase();
-                const hasRole = state.filters.suitableRoles.some(role => 
-                    role.trim() && profileText.includes(role.toLowerCase().trim())
-                );
-                if (!hasRole) return false;
-            }
-
+            // Other advanced filters (essential skills, roles, red flags) should be optional and not too strict
+            // (Implement as needed, but do not filter out unless clearly missing a must-have)
             return true;
         }
 
@@ -3746,7 +3678,7 @@
 
         function saveBasicThresholds() {
             state.filters.minYears = parseInt(document.getElementById('minYears').value) || 0;
-            state.filters.education = document.getElementById('education').value.split('\n').filter(line => line.trim());
+            state.filters.education = document.getElementById('educationSelect').value.split(',').filter(line => line.trim());
             state.filters.essentialSkills = document.getElementById('essentialSkills').value;
             state.filters.suitableRoles = document.getElementById('suitableRoles').value.split(',').map(s => s.trim()).filter(s => s);
             
@@ -3756,7 +3688,7 @@
 
         function clearBasicThresholds() {
             document.getElementById('minYears').value = '0';
-            document.getElementById('education').value = '';
+            document.getElementById('educationSelect').value = '';
             document.getElementById('essentialSkills').value = '';
             document.getElementById('suitableRoles').value = '';
             
@@ -3861,7 +3793,7 @@
         window.addCustomTrait = addCustomTrait;
         window.removeCustomTrait = removeCustomTrait;
         window.addPredefinedNoGo = addPredefinedNoGo;
-        window.addPredefinedEducation = addPredefinedEducation;
+        window.addAllUniversitiesBtn = addAllUniversitiesBtn;
         window.proceedToRound2 = proceedToRound2;
         window.clearDashboard = clearDashboard;
         window.showColumnMappingModal = showColumnMappingModal;
