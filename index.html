@@ -421,6 +421,738 @@
                 };
                 return;
             }
+            if (stepKey === 'prefilter') {
+                // Pre-Filter (Round 1) UI
+                if (!state.profiles || state.profiles.length === 0) {
+                    container.innerHTML = `<div class='text-red-600 text-center p-8'>Please upload a file first.</div>`;
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-8 max-w-2xl mx-auto">
+                        <h2 class="text-2xl font-bold mb-4 text-blue-700">Pre-Filter Configuration (Round 1)</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div>
+                                <h3 class="text-lg font-medium mb-2">Blacklist Companies</h3>
+                                <textarea id="blacklist" rows="4" class="w-full border border-gray-300 rounded-md p-2" placeholder="Enter company names, one per line">${state.filters.blacklist.join('\n')}</textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveBlacklist" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">Save Blacklist</button>
+                                    <button id="clearBlacklist" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">Clear</button>
+                                </div>
+                                <div id="blacklistSaveStatus" class="mt-1 text-xs text-gray-600 hidden"><span class="text-green-600">✓ Blacklist saved!</span></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium mb-2">Past Candidates</h3>
+                                <textarea id="pastCandidates" rows="4" class="w-full border border-gray-300 rounded-md p-2" placeholder="Enter names, one per line">${state.filters.pastCandidates.join('\n')}</textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="savePastCandidates" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">Save</button>
+                                    <button id="clearPastCandidates" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">Clear</button>
+                                </div>
+                                <div id="pastCandidatesSaveStatus" class="mt-1 text-xs text-gray-600 hidden"><span class="text-green-600">✓ Past candidates saved!</span></div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium mb-2">No-Go Companies</h3>
+                                <textarea id="noGoCompanies" rows="4" class="w-full border border-gray-300 rounded-md p-2" placeholder="Enter company names, one per line">${state.filters.noGoCompanies.join('\n')}</textarea>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveNoGoCompanies" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">Save</button>
+                                    <button id="clearNoGoCompanies" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">Clear</button>
+                                    <button id="addPredefinedNoGo" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Add Predefined</button>
+                                </div>
+                                <div id="noGoCompaniesSaveStatus" class="mt-1 text-xs text-gray-600 hidden"><span class="text-green-600">✓ No-go companies saved!</span></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-4">
+                            <button id="runFilteringRound1Btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Run Round 1 Filtering</button>
+                        </div>
+                        <div id="round1Results" class="hidden bg-white rounded-lg shadow p-6 mt-6">
+                            <h2 class="text-xl font-semibold mb-4">Round 1 Filter Results</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600" id="round1Uploaded">0</div>
+                                    <div class="text-sm text-gray-600">Uploaded</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-red-600" id="round1FilteredOut">0</div>
+                                    <div class="text-sm text-gray-600">Filtered Out</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600" id="round1Remaining">0</div>
+                                    <div class="text-sm text-gray-600">Remaining</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-yellow-600" id="round1Duplicates">0</div>
+                                    <div class="text-sm text-gray-600">Duplicates Removed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Handlers
+                document.getElementById('saveBlacklist').onclick = function() {
+                    state.filters.blacklist = document.getElementById('blacklist').value.split('\n').filter(x=>x.trim());
+                    localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
+                    showSaveStatus('blacklistSaveStatus', 1200);
+                };
+                document.getElementById('clearBlacklist').onclick = function() {
+                    document.getElementById('blacklist').value = '';
+                    state.filters.blacklist = [];
+                    localStorage.setItem('scorely_blacklist', JSON.stringify(state.filters.blacklist));
+                    showSaveStatus('blacklistSaveStatus', 1200);
+                };
+                document.getElementById('savePastCandidates').onclick = function() {
+                    state.filters.pastCandidates = document.getElementById('pastCandidates').value.split('\n').filter(x=>x.trim());
+                    localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
+                    showSaveStatus('pastCandidatesSaveStatus', 1200);
+                };
+                document.getElementById('clearPastCandidates').onclick = function() {
+                    document.getElementById('pastCandidates').value = '';
+                    state.filters.pastCandidates = [];
+                    localStorage.setItem('scorely_past_candidates', JSON.stringify(state.filters.pastCandidates));
+                    showSaveStatus('pastCandidatesSaveStatus', 1200);
+                };
+                document.getElementById('saveNoGoCompanies').onclick = function() {
+                    state.filters.noGoCompanies = document.getElementById('noGoCompanies').value.split('\n').filter(x=>x.trim());
+                    localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+                    showSaveStatus('noGoCompaniesSaveStatus', 1200);
+                };
+                document.getElementById('clearNoGoCompanies').onclick = function() {
+                    document.getElementById('noGoCompanies').value = '';
+                    state.filters.noGoCompanies = [];
+                    localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+                    showSaveStatus('noGoCompaniesSaveStatus', 1200);
+                };
+                document.getElementById('addPredefinedNoGo').onclick = function() {
+                    const all = [...PREDEFINED_NO_GO_COMPANIES, ...state.filters.noGoCompanies];
+                    state.filters.noGoCompanies = Array.from(new Set(all));
+                    document.getElementById('noGoCompanies').value = state.filters.noGoCompanies.join('\n');
+                    localStorage.setItem('scorely_nogo_companies', JSON.stringify(state.filters.noGoCompanies));
+                    showSaveStatus('noGoCompaniesSaveStatus', 1200);
+                };
+                document.getElementById('runFilteringRound1Btn').onclick = function() {
+                    runFilteringRound1();
+                };
+                // Show results if exist
+                const stats = localStorage.getItem('scorely_round1_stats');
+                if (stats) {
+                    const s = JSON.parse(stats);
+                    document.getElementById('round1Uploaded').textContent = s.uploaded;
+                    document.getElementById('round1FilteredOut').textContent = s.filteredOut;
+                    document.getElementById('round1Remaining').textContent = s.remaining;
+                    document.getElementById('round1Duplicates').textContent = s.duplicates;
+                    document.getElementById('round1Results').classList.remove('hidden');
+                }
+                return;
+            }
+            if (stepKey === 'advanced') {
+                // Advanced Filter (Round 2) UI
+                if (!state.profiles || state.profiles.length === 0) {
+                    container.innerHTML = `<div class='text-red-600 text-center p-8'>Please complete previous steps first.</div>`;
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
+                        <h2 class="text-xl font-semibold mb-4">Advanced Filters (Round 2)</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Years of Experience</label>
+                                <input type="number" id="minYears" min="0" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 3" value="${state.filters.minYears || 0}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Education (universities, one per line)</label>
+                                <textarea id="education" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. Technion, Tel Aviv University">${state.filters.education.join('\n')}</textarea>
+                                <button id="addPredefinedEducation" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Add Predefined Universities</button>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Essential Skills</label>
+                                <input type="text" id="essentialSkills" class="w-full border border-gray-300 rounded-md p-2" placeholder="JavaScript, React, Python (comma-separated)" value="${state.filters.essentialSkills}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Suitable Roles</label>
+                                <input type="text" id="suitableRoles" class="w-full border border-gray-300 rounded-md p-2" placeholder="Software Engineer, Developer, Programmer" value="${state.filters.suitableRoles.join(', ')}">
+                            </div>
+                            <div class="col-span-2 mt-4">
+                                <h3 class="text-lg font-medium mb-2">Red-Flag Patterns</h3>
+                                <div class="flex flex-wrap gap-4">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="instability" class="mr-2" ${state.filters.redFlags.instability ? 'checked' : ''}>
+                                        <label for="instability" class="text-sm text-gray-700">Instability (&lt;1 year in role or job hops in last 6 years)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="stagnation" class="mr-2" ${state.filters.redFlags.stagnation ? 'checked' : ''}>
+                                        <label for="stagnation" class="text-sm text-gray-700">Stagnation (&gt;7 years at same company)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="enterpriseOnly" class="mr-2" ${state.filters.redFlags.enterpriseOnly ? 'checked' : ''}>
+                                        <label for="enterpriseOnly" class="text-sm text-gray-700">Enterprise-only background</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="freelancer" class="mr-2" ${state.filters.redFlags.freelancer ? 'checked' : ''}>
+                                        <label for="freelancer" class="text-sm text-gray-700">Freelancer/Independent</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex space-x-2">
+                            <button id="saveAdvancedFiltersBtn" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">Save Advanced Filters</button>
+                            <button id="runFilteringRound2Btn" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">Run Round 2 Filtering</button>
+                        </div>
+                        <div id="advancedFiltersSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                            <span class="text-green-600">✓ Advanced filters saved!</span>
+                        </div>
+                        <div id="round2Results" class="hidden bg-white rounded-lg shadow p-6 mt-6">
+                            <h2 class="text-xl font-semibold mb-4">Round 2 Filter Results</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600" id="round2Screening">0</div>
+                                    <div class="text-sm text-gray-600">Screening</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-yellow-600" id="round2SkippedEmbedding">0</div>
+                                    <div class="text-sm text-gray-600">Skipped by Embedding</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600" id="round2ToRank">0</div>
+                                    <div class="text-sm text-gray-600">To Rank</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-red-600" id="round2FilteredOut">0</div>
+                                    <div class="text-sm text-gray-600">Filtered Out</div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-lg">
+                                <h4 class="font-medium text-green-900 mb-2">Ready for Ranking!</h4>
+                                <p class="text-sm text-green-800">Your profiles have been filtered and are ready for AI-powered ranking.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Handlers
+                document.getElementById('saveAdvancedFiltersBtn').onclick = function() {
+                    saveAdvancedFilters();
+                    showSaveStatus('advancedFiltersSaveStatus', 1200);
+                };
+                document.getElementById('runFilteringRound2Btn').onclick = function() {
+                    runFilteringRound2();
+                };
+                document.getElementById('addPredefinedEducation').onclick = function() {
+                    const all = [...PREDEFINED_UNIVERSITIES, ...state.filters.education];
+                    state.filters.education = Array.from(new Set(all));
+                    document.getElementById('education').value = state.filters.education.join('\n');
+                    localStorage.setItem('scorely_advanced_filters', JSON.stringify(state.filters));
+                    showSaveStatus('advancedFiltersSaveStatus', 1200);
+                };
+                // Show results if exist
+                const stats = localStorage.getItem('scorely_round2_stats');
+                if (stats) {
+                    const s = JSON.parse(stats);
+                    document.getElementById('round2Screening').textContent = s.screening;
+                    document.getElementById('round2FilteredOut').textContent = s.filteredOut;
+                    document.getElementById('round2ToRank').textContent = s.toRank;
+                    document.getElementById('round2SkippedEmbedding').textContent = s.skippedEmbedding;
+                    document.getElementById('round2Results').classList.remove('hidden');
+                }
+                return;
+            }
+            if (stepKey === 'job') {
+                // Job Config UI
+                if (!state.profiles || state.profiles.length === 0) {
+                    container.innerHTML = `<div class='text-red-600 text-center p-8'>Please complete previous steps first.</div>`;
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="space-y-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Job Configuration</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Job Description</label>
+                                    <textarea id="jobDescription" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
+                                              placeholder="Paste the job description here...">${state.jobConfig.description}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ideal Profile Examples (Optional)</label>
+                                    <textarea id="idealProfiles" rows="3" class="w-full border border-gray-300 rounded-md p-2" 
+                                              placeholder="Paste ideal candidate profiles...">${state.jobConfig.idealProfiles.join('\n\n')}</textarea>
+                                    <div class="mt-2 flex space-x-2">
+                                        <button id="saveIdealProfiles" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                            Save Ideal Profiles
+                                        </button>
+                                        <button id="clearIdealProfiles" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="idealProfilesSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Ideal profiles saved!</span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button id="saveJobConfig" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Job Config
+                                    </button>
+                                    <button id="clearJobConfig" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="jobConfigSaveStatus" class="text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Job configuration saved successfully!</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Hot Signals & Additional Filters</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-medium mb-3">Hot Signals</h3>
+                                    <p class="text-sm text-gray-600 mb-2">Companies experiencing layoffs, closures, etc.</p>
+                                    <textarea id="hotSignals" rows="4" class="w-full border border-gray-300 rounded-md p-2" 
+                                              placeholder="Enter company names, one per line">${state.jobConfig.hotSignals.join('\n')}</textarea>
+                                    <div class="mt-2 flex space-x-2">
+                                        <button id="saveHotSignals" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                            Save Hot Signals
+                                        </button>
+                                        <button id="clearHotSignals" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="hotSignalsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Hot signals saved successfully!</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium mb-3">Company Size</h3>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="size1-20" class="mr-2" ${state.jobConfig.companySize.includes('1-20') ? 'checked' : ''}>
+                                            <label for="size1-20" class="text-sm text-gray-700">1-20 employees</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="size21-100" class="mr-2" ${state.jobConfig.companySize.includes('21-100') ? 'checked' : ''}>
+                                            <label for="size21-100" class="text-sm text-gray-700">21-100 employees</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="size101-500" class="mr-2" ${state.jobConfig.companySize.includes('101-500') ? 'checked' : ''}>
+                                            <label for="size101-500" class="text-sm text-gray-700">101-500 employees</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="size500plus" class="mr-2" ${state.jobConfig.companySize.includes('500+') ? 'checked' : ''}>
+                                            <label for="size500plus" class="text-sm text-gray-700">500+ employees</label>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 flex space-x-2">
+                                        <button id="saveCompanySize" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
+                                            Save Company Size
+                                        </button>
+                                        <button id="clearCompanySize" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="companySizeSaveStatus" class="mt-1 text-xs text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Company size saved!</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-medium mb-3">Industry</h3>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-tech" class="mr-2" ${state.jobConfig.industry.includes('Technology') ? 'checked' : ''}>
+                                            <label for="industry-tech" class="text-sm text-gray-700">Technology</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-finance" class="mr-2" ${state.jobConfig.industry.includes('Finance') ? 'checked' : ''}>
+                                            <label for="industry-finance" class="text-sm text-gray-700">Finance</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-healthcare" class="mr-2" ${state.jobConfig.industry.includes('Healthcare') ? 'checked' : ''}>
+                                            <label for="industry-healthcare" class="text-sm text-gray-700">Healthcare</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-fintech" class="mr-2" ${state.jobConfig.industry.includes('Fintech') ? 'checked' : ''}>
+                                            <label for="industry-fintech" class="text-sm text-gray-700">Fintech</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-ai" class="mr-2" ${state.jobConfig.industry.includes('AI') ? 'checked' : ''}>
+                                            <label for="industry-ai" class="text-sm text-gray-700">AI</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-saas" class="mr-2" ${state.jobConfig.industry.includes('SAAS') ? 'checked' : ''}>
+                                            <label for="industry-saas" class="text-sm text-gray-700">SAAS</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-data" class="mr-2" ${state.jobConfig.industry.includes('Data') ? 'checked' : ''}>
+                                            <label for="industry-data" class="text-sm text-gray-700">Data</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-security" class="mr-2" ${state.jobConfig.industry.includes('Security') ? 'checked' : ''}>
+                                            <label for="industry-security" class="text-sm text-gray-700">Security</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="industry-other" class="mr-2" ${state.jobConfig.industry.includes('Other') ? 'checked' : ''}>
+                                            <label for="industry-other" class="text-sm text-gray-700">Other</label>
+                                        </div>
+                                    </div>
+                                    <input type="text" id="customIndustry" class="mt-2 w-full border border-gray-300 rounded-md p-2" 
+                                           placeholder="Custom industry" value="${state.jobConfig.industry.find(i => !['Technology','Finance','Healthcare','Fintech','AI','SAAS','Data','Security','Other'].includes(i)) || ''}">
+                                    <div class="mt-2 flex space-x-2">
+                                        <button id="saveIndustry" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                            Save Industry
+                                        </button>
+                                        <button id="clearIndustry" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="industrySaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Industry settings saved successfully!</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium mb-3">Experience Range</h3>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="number" id="minExperience" min="0" max="50" class="w-20 border border-gray-300 rounded-md p-2" 
+                                               placeholder="Min" value="${state.jobConfig.experienceRange.min}">
+                                        <span class="text-gray-600">to</span>
+                                        <input type="number" id="maxExperience" min="0" max="50" class="w-20 border border-gray-300 rounded-md p-2" 
+                                               placeholder="Max" value="${state.jobConfig.experienceRange.max}">
+                                        <span class="text-gray-600">years</span>
+                                    </div>
+                                    <div class="mt-2 flex space-x-2">
+                                        <button id="saveExperienceRange" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                            Save Experience Range
+                                        </button>
+                                        <button id="clearExperienceRange" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="experienceRangeSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Experience range saved successfully!</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h3 class="text-lg font-medium mb-3">Custom Traits</h3>
+                                <div class="mb-3 p-3 bg-blue-50 rounded-lg">
+                                    <p class="text-sm text-blue-800 mb-2"><strong>What are Custom Traits?</strong></p>
+                                    <p class="text-sm text-blue-700 mb-2">Custom traits are specific characteristics or qualities you're looking for in candidates. These can include:</p>
+                                    <ul class="text-sm text-blue-700 space-y-1 ml-4">
+                                        <li>• "Has experience with remote teams"</li>
+                                        <li>• "Speaks multiple languages"</li>
+                                        <li>• "Has worked in early-stage startups"</li>
+                                        <li>• "Has international experience"</li>
+                                        <li>• "Has led teams of 10+ people"</li>
+                                        <li>• "Has experience with agile methodologies"</li>
+                                    </ul>
+                                </div>
+                                <div id="customTraitsList" class="space-y-2 mb-3">
+                                    ${state.jobConfig.customTraits.map(trait => `
+                                        <div class="flex items-center space-x-2">
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">${trait}</span>
+                                            <button class="text-red-600 hover:text-red-800" onclick="removeCustomTrait('${trait}')">×</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="newCustomTrait" class="flex-1 border border-gray-300 rounded-md p-2" 
+                                           placeholder="Enter a custom trait (e.g., 'Has experience with remote teams')">
+                                    <button id="addCustomTrait" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                        Add Trait
+                                    </button>
+                                </div>
+                                <div class="mt-2 flex space-x-2">
+                                    <button id="saveCustomTraits" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                        Save Traits
+                                    </button>
+                                    <button id="clearCustomTraits" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div id="customTraitsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                    <span class="text-green-600">✓ Custom traits saved successfully!</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Ranking Configuration</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-medium mb-2">Weights</h3>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Tech Fit</label>
+                                            <input type="range" id="techFitWeight" min="0" max="100" value="${state.jobConfig.weights.techFit}" 
+                                                   class="w-full">
+                                            <span id="techFitValue" class="text-sm text-gray-600">${state.jobConfig.weights.techFit}%</span>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Experience</label>
+                                            <input type="range" id="experienceWeight" min="0" max="100" value="${state.jobConfig.weights.experience}" 
+                                                   class="w-full">
+                                            <span id="experienceValue" class="text-sm text-gray-600">${state.jobConfig.weights.experience}%</span>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Signals</label>
+                                            <input type="range" id="signalsWeight" min="0" max="100" value="${state.jobConfig.weights.signals}" 
+                                                   class="w-full">
+                                            <span id="signalsValue" class="text-sm text-gray-600">${state.jobConfig.weights.signals}%</span>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Startup Fit</label>
+                                            <input type="range" id="startupFitWeight" min="0" max="100" value="${state.jobConfig.weights.startupFit}" 
+                                                   class="w-full">
+                                            <span id="startupFitValue" class="text-sm text-gray-600">${state.jobConfig.weights.startupFit}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex space-x-2">
+                                        <button id="saveWeights" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                            Save Weights
+                                        </button>
+                                        <button id="clearWeights" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                            Reset to Default
+                                        </button>
+                                    </div>
+                                    <div id="weightsSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                        <span class="text-green-600">✓ Weights saved successfully!</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium mb-2">API Configuration</h3>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm text-gray-700">OpenAI API Key</label>
+                                            <input type="password" id="apiKey" value="${state.apiKey}" 
+                                                   class="w-full border border-gray-300 rounded-md p-2" 
+                                                   placeholder="sk-...">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Embedding Model</label>
+                                            <select id="embeddingModelSelect" class="w-full border border-gray-300 rounded-md p-2">
+                                                <option value="text-embedding-3-small" ${state.embeddingModel === 'text-embedding-3-small' ? 'selected' : ''}>Embedding Small 3 (Cheapest)</option>
+                                                <option value="text-embedding-3-large" ${state.embeddingModel === 'text-embedding-3-large' ? 'selected' : ''}>Embedding Large 3 (More Accurate)</option>
+                                                <option value="text-embedding-ada-002" ${state.embeddingModel === 'text-embedding-ada-002' ? 'selected' : ''}>Embedding Ada 002 (Legacy)</option>
+                                            </select>
+                                            <p class="text-xs text-gray-500 mt-1">Small 3 is 5x cheaper than Large 3</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">GPT Model</label>
+                                            <select id="gptModelSelect" class="w-full border border-gray-300 rounded-md p-2">
+                                                <option value="gpt-3.5-turbo" ${state.gptModel === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo (Cheapest)</option>
+                                                <option value="gpt-4o-mini" ${state.gptModel === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini (Balanced)</option>
+                                                <option value="gpt-4o-mini-turbo" ${state.gptModel === 'gpt-4o-mini-turbo' ? 'selected' : ''}>GPT-4o Mini Turbo (Fastest)</option>
+                                            </select>
+                                            <p class="text-xs text-gray-500 mt-1">GPT-3.5 Turbo is 10x cheaper than GPT-4o</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700">Hybrid Mode</label>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="hybridMode" ${state.hybridMode ? 'checked' : ''} class="mr-2">
+                                                <span class="text-sm text-gray-600">Use embeddings + GPT for optimal results</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">Uncheck to save costs (embeddings only)</p>
+                                        </div>
+                                        <div class="p-3 bg-yellow-50 rounded-lg">
+                                            <h4 class="text-sm font-medium text-yellow-800 mb-2">💰 Cost Optimization Tips:</h4>
+                                            <ul class="text-xs text-yellow-700 space-y-1">
+                                                <li>• Use Embedding Small 3 + GPT-3.5 Turbo for maximum savings</li>
+                                                <li>• Disable Hybrid Mode to use embeddings only</li>
+                                                <li>• Process profiles in smaller batches (10-20)</li>
+                                                <li>• Use pre-filtering to reduce profiles sent to AI</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex space-x-2">
+                                        <button id="saveApiConfig" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                                            Save API Config
+                                        </button>
+                                        <button id="clearApiConfig" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="apiConfigSaveStatus" class="mt-2 text-sm text-gray-600 hidden">
+                                        <span class="text-green-600">✓ API configuration saved successfully!</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Handlers
+                document.getElementById('saveJobConfig').onclick = function() { saveJobConfiguration(); };
+                document.getElementById('clearJobConfig').onclick = function() { clearJobConfiguration(); };
+                document.getElementById('saveHotSignals').onclick = function() { saveHotSignals(); };
+                document.getElementById('clearHotSignals').onclick = function() { clearHotSignals(); };
+                document.getElementById('saveIndustry').onclick = function() { saveIndustry(); };
+                document.getElementById('clearIndustry').onclick = function() { clearIndustry(); };
+                document.getElementById('saveExperienceRange').onclick = function() { saveExperienceRange(); };
+                document.getElementById('clearExperienceRange').onclick = function() { clearExperienceRange(); };
+                document.getElementById('saveWeights').onclick = function() { saveWeights(); };
+                document.getElementById('clearWeights').onclick = function() { clearWeights(); };
+                document.getElementById('saveApiConfig').onclick = function() { saveApiConfig(); };
+                document.getElementById('clearApiConfig').onclick = function() { clearApiConfig(); };
+                document.getElementById('saveCustomTraits').onclick = function() { saveCustomTraits(); };
+                document.getElementById('clearCustomTraits').onclick = function() { clearCustomTraits(); };
+                document.getElementById('saveCompanySize').onclick = function() { saveCompanySize(); };
+                document.getElementById('clearCompanySize').onclick = function() { clearCompanySize(); };
+                document.getElementById('saveIdealProfiles').onclick = function() {
+                    state.jobConfig.idealProfiles = document.getElementById('idealProfiles').value.split('\n\n').filter(p => p.trim());
+                    localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+                    showSaveStatus('idealProfilesSaveStatus', 1500);
+                };
+                document.getElementById('clearIdealProfiles').onclick = function() {
+                    document.getElementById('idealProfiles').value = '';
+                    state.jobConfig.idealProfiles = [];
+                    localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+                    showSaveStatus('idealProfilesSaveStatus', 1500);
+                };
+                return;
+            }
+            if (stepKey === 'ranking') {
+                // Ranking UI
+                if (!state.profiles || state.profiles.length === 0) {
+                    container.innerHTML = `<div class='text-red-600 text-center p-8'>Please complete previous steps first.</div>`;
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="space-y-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Ranking Configuration</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ranking Range</label>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Start from profile</label>
+                                            <input type="number" id="rankingStart" min="2" value="${state.rankingRange ? state.rankingRange.start : 2}" class="w-full border border-gray-300 rounded-md p-2">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">End at profile</label>
+                                            <input type="number" id="rankingEnd" min="1" value="${state.rankingRange ? state.rankingRange.end : state.stats.toBeSentToGPT}" class="w-full border border-gray-300 rounded-md p-2">
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            <span id="rankingRangeInfo">Profiles to rank: ${state.rankingRange ? state.rankingRange.count : state.stats.toBeSentToGPT}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ranking Status</label>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between">
+                                            <span class="text-sm text-gray-600">Profiles to rank:</span>
+                                            <span class="text-sm font-medium" id="profilesToRank">${state.rankingRange ? state.rankingRange.count : state.stats.toBeSentToGPT}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-sm text-gray-600">Current progress:</span>
+                                            <span class="text-sm font-medium" id="rankingProgress">0 / 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Ready to start AI-powered ranking</p>
+                                </div>
+                                <button id="startRankingBtn" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium">
+                                    Start Ranking Process
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="rankingProgress" class="hidden bg-white rounded-lg shadow p-6">
+                            <h2 class="text-xl font-semibold mb-4">Ranking Progress</h2>
+                            <div class="space-y-4">
+                                <div class="progress-bar">
+                                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600">
+                                    <span id="progressText">Processing...</span>
+                                    <span id="progressCount">0 / ${state.stats.toBeSentToGPT}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Handlers
+                const rankingStart = document.getElementById('rankingStart');
+                const rankingEnd = document.getElementById('rankingEnd');
+                const rankingRangeInfo = document.getElementById('rankingRangeInfo');
+                const profilesToRank = document.getElementById('profilesToRank');
+                // Set default end value
+                rankingEnd.value = state.stats.toBeSentToGPT;
+                function updateRankingRange() {
+                    const start = parseInt(rankingStart.value) || 1;
+                    const end = parseInt(rankingEnd.value) || state.stats.toBeSentToGPT;
+                    const count = Math.max(0, end - start + 1);
+                    rankingRangeInfo.textContent = `Profiles to rank: ${count}`;
+                    profilesToRank.textContent = count;
+                    state.rankingRange = { start, end, count };
+                }
+                rankingStart.addEventListener('input', updateRankingRange);
+                rankingEnd.addEventListener('input', updateRankingRange);
+                updateRankingRange();
+                document.getElementById('startRankingBtn').onclick = function() {
+                    startRankingProcess();
+                };
+                return;
+            }
+            if (stepKey === 'results') {
+                // Results UI
+                if (!state.results || (!state.results.top.length && !state.results.good.length && !state.results.hidden.length && !state.results.hotSignals.length)) {
+                    container.innerHTML = `<div class='text-gray-500 text-center p-8'>No results to display. Please complete the ranking step.</div>`;
+                    return;
+                }
+                // --- Download CSV Button ---
+                let downloadBtn = document.createElement('button');
+                downloadBtn.id = 'downloadResultsBtn';
+                downloadBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 mb-4';
+                downloadBtn.textContent = 'Download Results as CSV';
+                downloadBtn.onclick = downloadResultsAsCSV;
+                // --- Search Box ---
+                let searchValue = window.resultsSearchValue || '';
+                let searchHtml = `<div class='mb-4 flex items-center'><input id='resultsSearchBox' type='text' value='${searchValue.replace(/'/g,"&#39;")}' placeholder='Search by name, company, or skill...' class='border border-gray-300 rounded-md px-3 py-2 w-full max-w-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-400' />`;
+                if (searchValue) {
+                    searchHtml += `<button id='clearResultsSearch' class='ml-2 text-gray-400 hover:text-gray-700 text-xl'>&times;</button>`;
+                }
+                searchHtml += `</div>`;
+                // --- Results Tabs ---
+                const categories = [
+                    { key: 'top', label: 'Top', color: 'bg-green-600', count: state.results.top.length },
+                    { key: 'good', label: 'Good', color: 'bg-yellow-500', count: state.results.good.length },
+                    { key: 'hidden', label: 'Hidden', color: 'bg-purple-600', count: state.results.hidden.length },
+                    { key: 'hotSignals', label: 'Hot Signals', color: 'bg-red-600', count: state.results.hotSignals.length }
+                ];
+                let selectedTab = window.selectedResultsTab || 'top';
+                window.selectedResultsTab = selectedTab;
+                // Tabs UI
+                let tabsHtml = `<div class=\"flex space-x-2 mb-6\">`;
+                categories.forEach(cat => {
+                    tabsHtml += `<button class=\"px-4 py-2 rounded-md font-medium focus:outline-none ${cat.color} ${selectedTab===cat.key?'text-white shadow':'text-white/70'}\" onclick=\"switchResultsTab('${cat.key}')\">${cat.label} <span class='ml-1 text-xs bg-white/20 rounded px-2 py-0.5'>${cat.count}</span></button>`;
+                });
+                tabsHtml += `</div>`;
+                // Results container
+                let resultsHtml = `<div id=\"resultsList\"></div>`;
+                container.innerHTML = downloadBtn.outerHTML + searchHtml + tabsHtml + resultsHtml;
+                // Search logic
+                setTimeout(() => {
+                    const searchBox = document.getElementById('resultsSearchBox');
+                    if (searchBox) {
+                        searchBox.addEventListener('input', e => {
+                            window.resultsSearchValue = e.target.value;
+                            renderResultsList(selectedTab);
+                        });
+                    }
+                    const clearBtn = document.getElementById('clearResultsSearch');
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', () => {
+                            window.resultsSearchValue = '';
+                            renderResultsList(selectedTab);
+                        });
+                    }
+                }, 0);
+                renderResultsList(selectedTab);
+                return;
+            }
             // Placeholder for other steps
             container.innerHTML = `<div class='p-8 text-center text-xl text-blue-700 font-bold'>${wizardSteps[wizardIndex].label} (Step ${wizardIndex+1} of ${wizardSteps.length})</div>`;
         }
@@ -1736,19 +2468,19 @@
                                 <h3 class="text-lg font-medium mb-3">Company Size</h3>
                                 <div class="space-y-2">
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="size1-20" class="mr-2">
+                                        <input type="checkbox" id="size1-20" class="mr-2" ${state.jobConfig.companySize.includes('1-20') ? 'checked' : ''}>
                                         <label for="size1-20" class="text-sm text-gray-700">1-20 employees</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="size21-100" class="mr-2">
+                                        <input type="checkbox" id="size21-100" class="mr-2" ${state.jobConfig.companySize.includes('21-100') ? 'checked' : ''}>
                                         <label for="size21-100" class="text-sm text-gray-700">21-100 employees</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="size101-500" class="mr-2">
+                                        <input type="checkbox" id="size101-500" class="mr-2" ${state.jobConfig.companySize.includes('101-500') ? 'checked' : ''}>
                                         <label for="size101-500" class="text-sm text-gray-700">101-500 employees</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="size500plus" class="mr-2">
+                                        <input type="checkbox" id="size500plus" class="mr-2" ${state.jobConfig.companySize.includes('500+') ? 'checked' : ''}>
                                         <label for="size500plus" class="text-sm text-gray-700">500+ employees</label>
                                     </div>
                                 </div>
@@ -1771,44 +2503,44 @@
                                 <h3 class="text-lg font-medium mb-3">Industry</h3>
                                 <div class="space-y-2">
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-tech" class="mr-2">
+                                        <input type="checkbox" id="industry-tech" class="mr-2" ${state.jobConfig.industry.includes('Technology') ? 'checked' : ''}>
                                         <label for="industry-tech" class="text-sm text-gray-700">Technology</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-finance" class="mr-2">
+                                        <input type="checkbox" id="industry-finance" class="mr-2" ${state.jobConfig.industry.includes('Finance') ? 'checked' : ''}>
                                         <label for="industry-finance" class="text-sm text-gray-700">Finance</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-healthcare" class="mr-2">
+                                        <input type="checkbox" id="industry-healthcare" class="mr-2" ${state.jobConfig.industry.includes('Healthcare') ? 'checked' : ''}>
                                         <label for="industry-healthcare" class="text-sm text-gray-700">Healthcare</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-fintech" class="mr-2">
+                                        <input type="checkbox" id="industry-fintech" class="mr-2" ${state.jobConfig.industry.includes('Fintech') ? 'checked' : ''}>
                                         <label for="industry-fintech" class="text-sm text-gray-700">Fintech</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-ai" class="mr-2">
+                                        <input type="checkbox" id="industry-ai" class="mr-2" ${state.jobConfig.industry.includes('AI') ? 'checked' : ''}>
                                         <label for="industry-ai" class="text-sm text-gray-700">AI</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-saas" class="mr-2">
+                                        <input type="checkbox" id="industry-saas" class="mr-2" ${state.jobConfig.industry.includes('SAAS') ? 'checked' : ''}>
                                         <label for="industry-saas" class="text-sm text-gray-700">SAAS</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-data" class="mr-2">
+                                        <input type="checkbox" id="industry-data" class="mr-2" ${state.jobConfig.industry.includes('Data') ? 'checked' : ''}>
                                         <label for="industry-data" class="text-sm text-gray-700">Data</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-security" class="mr-2">
+                                        <input type="checkbox" id="industry-security" class="mr-2" ${state.jobConfig.industry.includes('Security') ? 'checked' : ''}>
                                         <label for="industry-security" class="text-sm text-gray-700">Security</label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" id="industry-other" class="mr-2">
+                                        <input type="checkbox" id="industry-other" class="mr-2" ${state.jobConfig.industry.includes('Other') ? 'checked' : ''}>
                                         <label for="industry-other" class="text-sm text-gray-700">Other</label>
                                     </div>
                                 </div>
                                 <input type="text" id="customIndustry" class="mt-2 w-full border border-gray-300 rounded-md p-2" 
-                                       placeholder="Custom industry">
+                                       placeholder="Custom industry" value="${state.jobConfig.industry.find(i => !['Technology','Finance','Healthcare','Fintech','AI','SAAS','Data','Security','Other'].includes(i)) || ''}">
                                 <div class="mt-2 flex space-x-2">
                                     <button id="saveIndustry" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
                                         Save Industry
@@ -1990,66 +2722,37 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">Start Ranking</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h3 class="text-lg font-medium mb-3">Ranking Range</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Start from profile</label>
-                                        <input type="number" id="rankingStart" min="2" value="2" class="w-full border border-gray-300 rounded-md p-2">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">End at profile</label>
-                                        <input type="number" id="rankingEnd" min="1" class="w-full border border-gray-300 rounded-md p-2">
-                                    </div>
-                                    <div class="text-sm text-gray-600">
-                                        <span id="rankingRangeInfo">Profiles to rank: 0</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium mb-3">Ranking Status</h3>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600">Profiles to rank:</span>
-                                        <span class="text-sm font-medium" id="profilesToRank">0</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm text-gray-600">Current progress:</span>
-                                        <span class="text-sm font-medium" id="rankingProgress">0 / 0</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-6 flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Ready to start AI-powered ranking</p>
-                            </div>
-                            <button id="startRankingBtn" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium">
-                                Start Ranking Process
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="rankingProgress" class="hidden bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold mb-4">Ranking Progress</h2>
-                        <div class="space-y-4">
-                            <div class="progress-bar">
-                                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
-                            </div>
-                            <div class="flex justify-between text-sm text-gray-600">
-                                <span id="progressText">Processing...</span>
-                                <span id="progressCount">0 / ${state.stats.toBeSentToGPT}</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             `;
-
-            setupRankingHandlers();
+            // Handlers
+            document.getElementById('saveJobConfig').onclick = function() { saveJobConfiguration(); };
+            document.getElementById('clearJobConfig').onclick = function() { clearJobConfiguration(); };
+            document.getElementById('saveHotSignals').onclick = function() { saveHotSignals(); };
+            document.getElementById('clearHotSignals').onclick = function() { clearHotSignals(); };
+            document.getElementById('saveIndustry').onclick = function() { saveIndustry(); };
+            document.getElementById('clearIndustry').onclick = function() { clearIndustry(); };
+            document.getElementById('saveExperienceRange').onclick = function() { saveExperienceRange(); };
+            document.getElementById('clearExperienceRange').onclick = function() { clearExperienceRange(); };
+            document.getElementById('saveWeights').onclick = function() { saveWeights(); };
+            document.getElementById('clearWeights').onclick = function() { clearWeights(); };
+            document.getElementById('saveApiConfig').onclick = function() { saveApiConfig(); };
+            document.getElementById('clearApiConfig').onclick = function() { clearApiConfig(); };
+            document.getElementById('saveCustomTraits').onclick = function() { saveCustomTraits(); };
+            document.getElementById('clearCustomTraits').onclick = function() { clearCustomTraits(); };
+            document.getElementById('saveCompanySize').onclick = function() { saveCompanySize(); };
+            document.getElementById('clearCompanySize').onclick = function() { clearCompanySize(); };
+            document.getElementById('saveIdealProfiles').onclick = function() {
+                state.jobConfig.idealProfiles = document.getElementById('idealProfiles').value.split('\n\n').filter(p => p.trim());
+                localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+                showSaveStatus('idealProfilesSaveStatus', 1500);
+            };
+            document.getElementById('clearIdealProfiles').onclick = function() {
+                document.getElementById('idealProfiles').value = '';
+                state.jobConfig.idealProfiles = [];
+                localStorage.setItem('scorely_job_config', JSON.stringify(state.jobConfig));
+                showSaveStatus('idealProfilesSaveStatus', 1500);
+            };
+            return;
         }
 
         function setupRankingHandlers() {
