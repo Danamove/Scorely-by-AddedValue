@@ -393,6 +393,7 @@
                             <button id="clearProfileSummaryBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Clear</button>
                         </div>
                     </div>
+                    <div id='profileSummaryExample' class='mt-4 text-sm text-gray-700'></div>
                 `;
                 // Save/clear logic for mapping
                 document.getElementById('saveColumnMappingBtn').onclick = function(e) {
@@ -426,12 +427,14 @@
                     const status = document.getElementById('profileSummaryStatus');
                     status.classList.remove('hidden');
                     setTimeout(() => status.classList.add('hidden'), 1500);
+                    updateProfileSummaryExample();
                 };
                 document.getElementById('clearProfileSummaryBtn').onclick = function(e) {
                     e.preventDefault();
                     document.querySelectorAll('input[name="profileSummaryCols"]').forEach(cb => cb.checked = false);
                     state.selectedColumns = [];
                     localStorage.removeItem('scorely_selected_columns');
+                    updateProfileSummaryExample();
                 };
                 return;
             }
@@ -1962,6 +1965,11 @@
                     if (round2Btn) round2Btn.disabled = false;
                 }, 1000);
             })();
+
+            // After filtering in runFilteringRound2, add:
+            if (round2Stats.filteredOut > 0 && round2Stats.filteredOut / round2Stats.screening > 0.9) {
+                alert('Warning: More than 90% of profiles were filtered out in Round 2. Please review your advanced filters.');
+            }
         }
 
         function setupAdvancedFilterHandlers() {
@@ -2299,6 +2307,11 @@
                     if (round2Btn) round2Btn.disabled = false;
                 }, 1000);
             })();
+
+            // After filtering in runFilteringRound2, add:
+            if (round2Stats.filteredOut > 0 && round2Stats.filteredOut / round2Stats.screening > 0.9) {
+                alert('Warning: More than 90% of profiles were filtered out in Round 2. Please review your advanced filters.');
+            }
         }
 
         function saveAdvancedFilters() {
@@ -2324,13 +2337,12 @@
                 const hasEducation = state.filters.education.some(uni => uni.trim() && profileText.includes(uni.toLowerCase().trim()));
                 if (!hasEducation) return false;
             }
-            // Only filter by min years if set
-            if (state.filters.minYears > 0) {
+            // Only filter by min years if set and > 0
+            if (state.filters.minYears && state.filters.minYears > 0) {
                 // TODO: Extract years of experience from profile if possible
                 // For now, skip this check (do not filter out)
             }
-            // Other advanced filters (essential skills, roles, red flags) should be optional and not too strict
-            // (Implement as needed, but do not filter out unless clearly missing a must-have)
+            // Essential skills, suitable roles, red flags: do not filter unless clearly required (optional)
             return true;
         }
 
@@ -2788,9 +2800,8 @@
                 alert('Please enter your OpenAI API key');
                 return;
             }
-
-            if (state.stats.toBeSentToGPT === 0) {
-                alert('No profiles to rank. Please complete the setup process first.');
+            if (state.stats.toBeSentToGPT === 0 || !state.profiles || state.profiles.length === 0) {
+                alert('No profiles to rank. Please complete the filtering steps first.');
                 return;
             }
 
@@ -3608,6 +3619,60 @@
         function resetSession() {
             if (confirm('Are you sure you want to reset the session? This will clear all data.')) {
                 localStorage.clear();
+                // Reset in-memory state
+                Object.assign(state, {
+                    currentView: 'setup',
+                    apiKey: '',
+                    embeddingModel: 'text-embedding-3-small',
+                    gptModel: 'gpt-3.5-turbo',
+                    hybridMode: true,
+                    profiles: [],
+                    columnMapping: {},
+                    filters: {
+                        blacklist: [],
+                        pastCandidates: [],
+                        noGoCompanies: [],
+                        minYears: 0,
+                        education: [],
+                        essentialSkills: '',
+                        suitableRoles: [],
+                        redFlags: {
+                            instability: false,
+                            stagnation: false,
+                            enterpriseOnly: false,
+                            freelancer: false
+                        }
+                    },
+                    jobConfig: {
+                        description: '',
+                        idealProfiles: [],
+                        hotSignals: [],
+                        companySize: [],
+                        industry: [],
+                        experienceRange: { min: 0, max: 50 },
+                        excellenceBadges: [],
+                        customTraits: [],
+                        weights: {
+                            techFit: 25,
+                            experience: 25,
+                            signals: 25,
+                            startupFit: 25
+                        }
+                    },
+                    results: {
+                        top: [],
+                        good: [],
+                        hidden: [],
+                        hotSignals: []
+                    },
+                    stats: {
+                        uploaded: 0,
+                        filteredOut: 0,
+                        skippedEmbedding: 0,
+                        toBeSentToGPT: 0
+                    }
+                });
+                wizardIndex = 0;
                 location.reload();
             }
         }
@@ -3947,6 +4012,47 @@
                 URL.revokeObjectURL(url);
             }, 100);
         }
+
+        // Add this function inside the map step after rendering the checkboxes and example div:
+        function updateProfileSummaryExample() {
+            const exampleDiv = document.getElementById('profileSummaryExample');
+            if (!state.profiles || state.profiles.length === 0) {
+                exampleDiv.textContent = 'No profiles loaded.';
+                return;
+            }
+            const checked = Array.from(document.querySelectorAll('input[name="profileSummaryCols"]:checked')).map(cb => cb.value);
+            if (checked.length === 0) {
+                exampleDiv.textContent = 'Select columns to see a profile summary example.';
+                return;
+            }
+            const firstProfile = state.profiles[0].raw || state.profiles[0];
+            const summary = checked.map(col => firstProfile[col] || '').join(' ');
+            exampleDiv.innerHTML = `<strong>Example summary:</strong> ${summary}`;
+        }
+        // Call updateProfileSummaryExample after rendering, and on change/save/clear of checkboxes:
+        setTimeout(() => {
+            document.querySelectorAll('input[name="profileSummaryCols"]').forEach(cb => {
+                cb.addEventListener('change', updateProfileSummaryExample);
+            });
+            updateProfileSummaryExample();
+        }, 0);
+        document.getElementById('saveProfileSummaryBtn').onclick = function(e) {
+            e.preventDefault();
+            const checked = Array.from(document.querySelectorAll('input[name="profileSummaryCols"]:checked')).map(cb => cb.value);
+            state.selectedColumns = checked;
+            localStorage.setItem('scorely_selected_columns', JSON.stringify(checked));
+            const status = document.getElementById('profileSummaryStatus');
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 1500);
+            updateProfileSummaryExample();
+        };
+        document.getElementById('clearProfileSummaryBtn').onclick = function(e) {
+            e.preventDefault();
+            document.querySelectorAll('input[name="profileSummaryCols"]').forEach(cb => cb.checked = false);
+            state.selectedColumns = [];
+            localStorage.removeItem('scorely_selected_columns');
+            updateProfileSummaryExample();
+        };
     </script>
 </body>
 </html> 
