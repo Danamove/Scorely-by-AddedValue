@@ -1,1146 +1,3076 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Scorely by AddedValue</title>
+    <title>Scorely - LinkedIn Profile Ranking Tool</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Inter font -->
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet" />
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- papaparse, xlsx -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
+
     <style>
-      body { font-family: 'Inter', sans-serif; background: #fff; }
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #ffffff;
+    color: #333333;
+    line-height: 1.6;
+}
+
+/* App Container */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    padding: 20px 0;
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 30px;
+}
+
+.logo h1 {
+    color: #2196F3;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.tagline {
+    color: #666;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+/* Progress Bar */
+.progress-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding: 20px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.progress-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+}
+
+.progress-step.active::after {
+    background-color: #8BC34A;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.progress-step.active .step-number {
+    background-color: #8BC34A;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    font-weight: 500;
+}
+
+.progress-step.active .step-label {
+    color: #8BC34A;
+    font-weight: 600;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding-bottom: 100px;
+}
+
+.step-content {
+    display: none;
+}
+
+.step-content.active {
+    display: block;
+}
+
+.step-header {
+    margin-bottom: 30px;
+}
+
+.step-header h2 {
+    color: #2196F3;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.ai-explanation {
+    color: #666;
+    font-size: 1rem;
+    position: relative;
+    display: inline-block;
+}
+
+.info-icon {
+    color: #EC407A;
+    font-style: normal;
+    cursor: help;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    width: 300px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    margin-bottom: 10px;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+}
+
+.info-icon:hover + .tooltip,
+.tooltip:hover {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Form Sections */
+.form-section {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-section:hover {
+    border-color: #2196F3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.form-section label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+.required {
+    color: #EC407A;
+}
+
+/* Input Groups */
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+textarea, input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+    resize: vertical;
+}
+
+textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+textarea {
+    min-height: 100px;
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.8rem;
+    color: #666;
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* File Upload */
+.file-input {
+    display: none;
+}
+
+.upload-btn {
+    background-color: #8BC34A;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Inter', sans-serif;
+}
+
+.upload-btn:hover {
+    background-color: #7cb342;
+}
+
+/* Save Buttons */
+.save-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Inter', sans-serif;
+    margin-right: 10px;
+}
+
+.save-btn:hover {
+    background-color: #1976d2;
+}
+
+.saved-indicator {
+    color: #8BC34A;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Range Inputs */
+.range-inputs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.range-input {
+    flex: 1;
+}
+
+.range-input label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+/* Multi Select */
+.multi-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.select-actions {
+    margin-bottom: 15px;
+}
+
+.select-all-btn, .clear-all-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 10px;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+}
+
+.select-all-btn:hover, .clear-all-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.select-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.checkbox-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.checkbox-option:hover {
+    background-color: #f5f5f5;
+}
+
+.checkbox-option input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+}
+
+.custom-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.custom-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+}
+
+.add-btn {
+    background-color: #EC407A;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+}
+
+.add-btn:hover {
+    background-color: #d81b60;
+}
+
+/* Traits */
+.traits-container {
+    margin-bottom: 15px;
+}
+
+.traits-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.trait-tag {
+    background-color: #8BC34A;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remove-trait {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.trait-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.add-trait-btn {
+    background-color: #EC407A;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+}
+
+.add-trait-btn:hover {
+    background-color: #d81b60;
+}
+
+/* Weights */
+.weights-container {
+    margin-bottom: 15px;
+}
+
+.weight-item {
+    margin-bottom: 20px;
+}
+
+.weight-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weight-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2196F3;
+    cursor: pointer;
+}
+
+.weight-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2196F3;
+    cursor: pointer;
+    border: none;
+}
+
+.slider-value {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #2196F3;
+}
+
+/* Ideal Profiles */
+.ideal-profiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.profile-slot {
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+.profile-slot:hover {
+    border-color: #2196F3;
+}
+
+.profile-slot label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Bottom Navigation */
+.bottom-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 2px solid #f0f0f0;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+    min-width: 120px;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+.nav-btn:disabled {
+    background-color: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.prev-btn {
+    background-color: #666;
+}
+
+.prev-btn:hover:not(:disabled) {
+    background-color: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 0 15px;
+    }
+    
+    .progress-bar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .progress-step:not(:last-child)::after {
+        display: none;
+    }
+    
+    .ideal-profiles {
+        grid-template-columns: 1fr;
+    }
+    
+    .range-inputs {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .select-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .bottom-navigation {
+        padding: 15px;
+    }
+    
+    .nav-btn {
+        padding: 10px 20px;
+        min-width: 100px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-content.active {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Saved Animation */
+@keyframes savedPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.saved-indicator.show {
+    animation: savedPulse 0.3s ease-out;
+}
+
+.trait-examples {
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #666;
+}
+.example-label {
+    font-weight: 500;
+    color: #2196F3;
+    margin-right: 6px;
+}
+.example {
+    background: #f5faff;
+    color: #2196F3;
+    border-radius: 12px;
+    padding: 2px 10px;
+    margin-right: 4px;
+    font-size: 0.93em;
+    display: inline-block;
+}
+.weight-desc {
+    display: block;
+    font-size: 0.93em;
+    color: #666;
+    margin-bottom: 6px;
+    margin-top: -4px;
+}
+
+/* Step 2 - Pre-filter Styles */
+
+/* File Upload Area */
+.upload-section {
+    margin-bottom: 20px;
+}
+
+.file-upload-area {
+    margin-bottom: 20px;
+}
+
+.upload-zone {
+    border: 3px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.upload-zone:hover {
+    border-color: #2196F3;
+    background-color: #f8fbff;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.upload-zone p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.upload-hint {
+    font-size: 0.9rem;
+    color: #999;
+}
+
+/* Column Mapping */
+.column-mapping {
+    background: #f8fbff;
+    border: 2px solid #e3f2fd;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+.column-mapping h4 {
+    color: #2196F3;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.mapping-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.mapping-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.mapping-item label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.mapping-select {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.3s;
+}
+
+.mapping-select:focus {
+    outline: none;
+    border-color: #2196F3;
+}
+
+/* Filter Lists */
+.filter-list {
+    margin-bottom: 25px;
+    padding: 20px;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    background: white;
+}
+
+.filter-list label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.filter-list textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.list-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.clear-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+}
+
+.clear-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* No-Go Companies Preset */
+.no-go-preset {
+    margin-bottom: 15px;
+}
+
+.no-go-preset h5 {
+    color: #666;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.preset-companies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+/* Filter Controls */
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.primary-btn {
+    background-color: #8BC34A;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+.primary-btn:hover {
+    background-color: #7cb342;
+}
+
+.secondary-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+.secondary-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* Dashboard */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #2196F3, #1976d2);
+    color: white;
+    padding: 25px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Filter Breakdown */
+.filter-breakdown {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.filter-breakdown h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.breakdown-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.breakdown-count {
+    font-weight: 600;
+    color: #2196F3;
+}
+
+/* Row Range Indicator */
+.row-range-indicator {
+    background: #e3f2fd;
+    border: 1px solid #2196F3;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #1976d2;
+}
+
+/* Step 3 - Profile Summary Styles */
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #8BC34A, #7cb342);
+    color: white;
+    padding: 25px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(139, 195, 74, 0.2);
+}
+
+.summary-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Step 4 - Advanced Pre-filter Styles */
+
+.advanced-filter-section {
+    margin-bottom: 30px;
+}
+
+.advanced-filter-section h3 {
+    color: #2196F3;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.filter-option {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+}
+
+.filter-option:hover {
+    border-color: #2196F3;
+}
+
+.filter-option label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.filter-option input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+}
+
+.filter-description {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #666;
+    margin-left: 30px;
+}
+
+/* Step 5 - Ranking Styles */
+
+.ranking-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.ranking-btn {
+    background-color: #8BC34A;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+    font-size: 1.1rem;
+}
+
+.ranking-btn:hover {
+    background-color: #7cb342;
+}
+
+.ranking-btn:disabled {
+    background-color: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.ranking-progress {
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.progress-text {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+    background: #8BC34A;
+    height: 8px;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+/* Step 6 - Results Styles */
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.results-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    background-color: #EC407A;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s;
+}
+
+.export-btn:hover {
+    background-color: #d81b60;
+}
+
+.category-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    overflow-x: auto;
+}
+
+.category-tab {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.category-tab.active {
+    color: #2196F3;
+    border-bottom-color: #2196F3;
+}
+
+.category-tab:hover {
+    background-color: #f5f5f5;
+}
+
+.candidates-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.candidates-table th,
+.candidates-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.candidates-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.candidates-table tr:hover {
+    background-color: #f8fbff;
+}
+
+.score-badge {
+    background: linear-gradient(135deg, #2196F3, #1976d2);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.candidate-name {
+    font-weight: 600;
+    color: #2196F3;
+    cursor: pointer;
+}
+
+.candidate-name:hover {
+    text-decoration: underline;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+    margin-right: 5px;
+}
+
+.action-btn:hover {
+    background-color: #f5f5f5;
+    border-color: #2196F3;
+}
+
+/* Modal Styles */
+.candidate-modal,
+.recategorize-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.modal-content h3 {
+    color: #2196F3;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.recategorize-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.recategorize-form label {
+    font-weight: 600;
+    color: #333;
+}
+
+.recategorize-form select,
+.recategorize-form textarea {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+}
+
+.recategorize-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Additional responsive styles */
+@media (max-width: 768px) {
+    .results-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .results-actions {
+        justify-content: center;
+    }
+    
+    .candidates-table {
+        font-size: 0.9rem;
+    }
+    
+    .candidates-table th,
+    .candidates-table td {
+        padding: 8px 10px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 20px;
+    }
+}
     </style>
+
+
   </head>
   <body>
-    <div id="root"></div>
-    <script type="text/babel">
-      const steps = [
-        "Who are we looking for?",
-        "Pre-filter (Round 1)",
-        "Profile Summary Mapping",
-        "Advanced Pre-filter (Round 2)",
-        "Ranking",
-        "Results Dashboard",
-        "Settings"
-      ];
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <h1>Scorely</h1>
+          <span class="tagline">LinkedIn Profile Ranking Tool</span>
+        </div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 24px; margin-left: auto;">
+          <form id="api-key-form" style="display: flex; align-items: center; gap: 8px;">
+            <label for="api-key" style="font-weight: 500; color: #1976d2;">API Key:</label>
+            <input type="text" id="api-key" placeholder="Paste your API key..." style="width: 220px;">
+            <button type="button" class="save-btn" id="save-api-key-btn">Save</button>
+            <span class="saved-indicator" id="api-key-saved" style="display: none;">&#10003; Saved</span>
+          </form>
+          <button type="button" class="secondary-btn" id="restart-btn" style="margin-left: 10px;">Restart</button>
+        </div>
+      </header>
 
-      // System prompt for AI (used in all GPT calls)
-      const SYSTEM_PROMPT = `
-You are an expert technical recruiter. When evaluating a candidate profile, do not rely only on keywords. 
-Infer strengths and fit from the candidate's experience, the companies they worked for, and their skills. 
-If a candidate worked at a well-known startup or a leading tech company, this is a strong signal for both technical and personal strengths. 
-The current and past companies should have a high weight in your assessment of their experience and abilities.
-Always provide a short explanation for the score and category you assign.
-`;
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Progress Indicator -->
+        <div class="progress-bar">
+          <div class="progress-step active" data-step="1">
+            <span class="step-number">1</span>
+            <span class="step-label">Who are we looking for?</span>
+          </div>
+          <div class="progress-step" data-step="2">
+            <span class="step-number">2</span>
+            <span class="step-label">Pre-filter (Round 1)</span>
+          </div>
+          <div class="progress-step" data-step="3">
+            <span class="step-number">3</span>
+            <span class="step-label">Profile Summary</span>
+          </div>
+          <div class="progress-step" data-step="4">
+            <span class="step-number">4</span>
+            <span class="step-label">Advanced Pre-filter</span>
+          </div>
+          <div class="progress-step" data-step="5">
+            <span class="step-number">5</span>
+            <span class="step-label">Ranking</span>
+          </div>
+          <div class="progress-step" data-step="6">
+            <span class="step-number">6</span>
+            <span class="step-label">Results</span>
+          </div>
+        </div>
 
-      // Auto-save/load wizard state to localStorage
-      function usePersistentState(key, initial) {
-        const [state, setState] = React.useState(() => {
-          try {
-            const saved = localStorage.getItem(key);
-            return saved ? JSON.parse(saved) : initial;
-          } catch {
-            return initial;
-          }
-        });
-        React.useEffect(() => {
-          localStorage.setItem(key, JSON.stringify(state));
-        }, [key, state]);
-        return [state, setState];
-      }
+        <!-- Step 1: Who are we looking for? -->
+        <div class="step-content active" id="step-1">
+          <div class="step-header">
+            <h2>Who are we looking for?</h2>
+            <p class="ai-explanation">
+              <i class="info-icon">ℹ</i>
+              Define your search criteria to help AI identify the best candidates for your role.
+              <span class="tooltip">AI will use these criteria to filter and rank candidates based on job requirements, experience, and company fit.</span>
+            </p>
+          </div>
 
-      // Step 1: Who are we looking for?
-      function StepWhoAreWe({ data, setData }) {
-        // Local state for save indicators
-        const [saved, setSaved] = React.useState({});
-        // Helper to update field and show Saved
-        const handleSave = (field, value) => {
-          setData(d => ({ ...d, [field]: value }));
-          setSaved(s => ({ ...s, [field]: true }));
-          setTimeout(() => setSaved(s => ({ ...s, [field]: false })), 1200);
-        };
-
-        // Industries and Education options
-        const industries = ["SaaS", "Data", "Security", "Fintech", "AI", "Other"];
-        const educationList = [
-          "Hebrew University of Jerusalem",
-          "Technion – Israel Institute of Technology",
-          "Tel Aviv University",
-          "Bar-Ilan University",
-          "Ben-Gurion University of the Negev",
-          "Weizmann Institute of Science",
-          "Reichman University",
-          "University of Haifa",
-          "The Academic College of Tel‑Aviv‑Yaffo",
-          "Not Relevant Institution"
-        ];
-
-        // Ranking weights
-        const weightFields = [
-          { key: "techFit", label: "Tech Fit" },
-          { key: "experience", label: "Experience" },
-          { key: "signals", label: "Signals" },
-          { key: "startupFit", label: "Startup Fit" }
-        ];
-
-        // File upload helpers (Job Description, Ideal Profiles, Hot Signals, Target Companies)
-        const handleFile = (field, e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = ev => {
-            handleSave(field, ev.target.result);
-          };
-          reader.readAsText(file);
-        };
-
-        // Multi-select helpers
-        const toggleMulti = (field, value) => {
-          const arr = data[field] || [];
-          if (arr.includes(value)) {
-            handleSave(field, arr.filter(v => v !== value));
-          } else {
-            handleSave(field, [...arr, value]);
-          }
-        };
-
-        // Add custom trait
-        const [traitInput, setTraitInput] = React.useState("");
-        const addTrait = () => {
-          if (traitInput.trim()) {
-            handleSave("customTraits", [...(data.customTraits || []), traitInput.trim()]);
-            setTraitInput("");
-          }
-        };
-
-        // Add custom education
-        const [eduInput, setEduInput] = React.useState("");
-        const addEdu = () => {
-          if (eduInput.trim()) {
-            handleSave("education", [...(data.education || []), eduInput.trim()]);
-            setEduInput("");
-          }
-        };
-
-        return (
-          <form className="space-y-6">
-            {/* Job Description */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Job Description
-                <span className="text-gray-400 cursor-pointer" title="Paste or upload a job description. Will be truncated to 500 characters for AI.">?</span>
+          <form class="search-criteria-form">
+            <!-- Job Description -->
+            <div class="form-section">
+              <label for="job-description">
+                Job Description (JD) <span class="required">*</span>
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Upload or paste the job description. AI will analyze this to understand role requirements.</span>
               </label>
-              <textarea
-                className="w-full border rounded p-2 mt-1"
-                rows={3}
-                maxLength={1000}
-                value={data.jobDesc || ""}
-                onChange={e => handleSave("jobDesc", e.target.value)}
-                placeholder="Paste job description here..."
-              />
-              <div className="flex items-center gap-2 mt-1">
-                <input type="file" accept=".txt,.pdf" onChange={e => handleFile("jobDesc", e)} />
-                <span className="text-green-600 text-sm">{saved.jobDesc && "Saved"}</span>
+              <div class="input-group">
+                <textarea id="job-description" placeholder="Paste job description here or upload file..." maxlength="500"></textarea>
+                <div class="char-counter">0/500</div>
+                <input type="file" id="jd-file" accept=".txt,.pdf,.doc,.docx" class="file-input">
+                <button type="button" class="upload-btn" onclick="document.getElementById('jd-file').click()">Upload File</button>
               </div>
+              <button type="button" class="save-btn" data-field="job-description">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
             </div>
 
-            {/* Ideal Profiles */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Ideal Profiles (2 examples)
-                <span className="text-gray-400 cursor-pointer" title="Upload or paste two top candidate profiles (HTML/Text or PDF)">?</span>
+            <!-- Ideal Profiles -->
+            <div class="form-section">
+              <label>
+                Ideal Profiles <span class="required">*</span>
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Upload profiles of top candidates to help AI understand your ideal profile characteristics.</span>
               </label>
-              <div className="flex gap-4">
-                {[0,1].map(i => (
-                  <div key={i} className="flex-1">
-                    <input
-                      className="w-full border rounded p-2"
-                      placeholder={`Paste profile #${i+1}...`}
-                      value={data.idealProfiles?.[i] || ""}
-                      onChange={e => {
-                        const arr = data.idealProfiles ? [...data.idealProfiles] : ["",""];
-                        arr[i] = e.target.value;
-                        handleSave("idealProfiles", arr);
-                      }}
-                    />
-                    <input type="file" accept=".txt,.pdf,.html" className="mt-1" onChange={e => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = ev => {
-                        const arr = data.idealProfiles ? [...data.idealProfiles] : ["",""];
-                        arr[i] = ev.target.result;
-                        handleSave("idealProfiles", arr);
-                      };
-                      reader.readAsText(file);
-                    }} />
-                    <span className="text-green-600 text-sm">{saved.idealProfiles && "Saved"}</span>
+              <div class="ideal-profiles">
+                <div class="profile-slot">
+                  <label>Profile 1</label>
+                  <input type="file" accept=".html,.txt,.pdf" class="file-input">
+                  <button type="button" class="upload-btn">Upload Profile</button>
+                  <div class="linkedin-input-group" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: stretch;">
+                    <textarea class="linkedin-profile-textarea" placeholder="Paste full LinkedIn profile text here (Ctrl+A, Ctrl+C, Ctrl+V)..." style="min-height: 80px;"></textarea>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <button type="button" class="save-btn linkedin-save-btn">Save</button>
+                      <span class="saved-indicator linkedin-saved-indicator" style="display: none;">&#10003; Saved</span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Target Companies */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Target Companies
-                <span className="text-gray-400 cursor-pointer" title="Upload or enter a list of target companies.">?</span>
-              </label>
-              <textarea
-                className="w-full border rounded p-2 mt-1"
-                rows={2}
-                value={data.targetCompanies || ""}
-                onChange={e => handleSave("targetCompanies", e.target.value)}
-                placeholder="Company1, Company2, ..."
-              />
-              <div className="flex items-center gap-2 mt-1">
-                <input type="file" accept=".txt,.csv" onChange={e => handleFile("targetCompanies", e)} />
-                <span className="text-green-600 text-sm">{saved.targetCompanies && "Saved"}</span>
-              </div>
-            </div>
-
-            {/* Experience Range */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Range of Experience (years)
-                <span className="text-gray-400 cursor-pointer" title="Set minimum and maximum years of experience.">?</span>
-              </label>
-              <div className="flex gap-2 items-center">
-                <input type="number" min={0} max={50} className="border rounded p-1 w-20" value={data.expMin || ""} onChange={e => handleSave("expMin", e.target.value)} placeholder="Min" />
-                <span>-</span>
-                <input type="number" min={0} max={50} className="border rounded p-1 w-20" value={data.expMax || ""} onChange={e => handleSave("expMax", e.target.value)} placeholder="Max" />
-                <span className="text-green-600 text-sm">{(saved.expMin || saved.expMax) && "Saved"}</span>
-              </div>
-            </div>
-
-            {/* Industry Multi-select */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Industry
-                <span className="text-gray-400 cursor-pointer" title="Select one or more industries.">?</span>
-              </label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {industries.map(ind => (
-                  <button
-                    key={ind}
-                    type="button"
-                    className={`px-3 py-1 rounded border ${data.industry?.includes(ind) ? "bg-[#2196F3] text-white" : "bg-white text-gray-700"}`}
-                    onClick={() => toggleMulti("industry", ind)}
-                  >{ind}</button>
-                ))}
-                <input
-                  className="border rounded p-1 ml-2"
-                  placeholder="Custom"
-                  value={data.industryCustom || ""}
-                  onChange={e => handleSave("industryCustom", e.target.value)}
-                />
-              </div>
-              <span className="text-green-600 text-sm">{saved.industry && "Saved"}</span>
-            </div>
-
-            {/* Education Multi-select */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Education
-                <span className="text-gray-400 cursor-pointer" title="Select universities/colleges or add custom.">?</span>
-              </label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {educationList.map(edu => (
-                  <button
-                    key={edu}
-                    type="button"
-                    className={`px-3 py-1 rounded border ${data.education?.includes(edu) ? "bg-[#EC407A] text-white" : "bg-white text-gray-700"}`}
-                    onClick={() => toggleMulti("education", edu)}
-                  >{edu}</button>
-                ))}
-                <input
-                  className="border rounded p-1 ml-2"
-                  placeholder="Custom"
-                  value={eduInput}
-                  onChange={e => setEduInput(e.target.value)}
-                />
-                <button type="button" className="px-2 py-1 bg-[#8BC34A] text-white rounded" onClick={addEdu}>Add</button>
-              </div>
-              <span className="text-green-600 text-sm">{saved.education && "Saved"}</span>
-            </div>
-
-            {/* Custom Traits */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Custom Traits
-                <span className="text-gray-400 cursor-pointer" title="Add custom traits (e.g. proactive, team player)">?</span>
-              </label>
-              <div className="flex gap-2 mt-1">
-                <input
-                  className="border rounded p-1 flex-1"
-                  placeholder="Type a trait..."
-                  value={traitInput}
-                  onChange={e => setTraitInput(e.target.value)}
-                />
-                <button type="button" className="px-2 py-1 bg-[#8BC34A] text-white rounded" onClick={addTrait}>Add Trait</button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {(data.customTraits || []).map((t,i) => (
-                  <span key={i} className="px-2 py-1 bg-gray-200 rounded">{t}</span>
-                ))}
-              </div>
-              <span className="text-green-600 text-sm">{saved.customTraits && "Saved"}</span>
-            </div>
-
-            {/* Hot Signals */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Hot Signals
-                <span className="text-gray-400 cursor-pointer" title="Upload or enter companies with layoffs, closures, or alerts.">?</span>
-              </label>
-              <textarea
-                className="w-full border rounded p-2 mt-1"
-                rows={2}
-                value={data.hotSignals || ""}
-                onChange={e => handleSave("hotSignals", e.target.value)}
-                placeholder="Company1, Company2, ..."
-              />
-              <div className="flex items-center gap-2 mt-1">
-                <input type="file" accept=".txt,.csv,.json" onChange={e => handleFile("hotSignals", e)} />
-                <span className="text-green-600 text-sm">{saved.hotSignals && "Saved"}</span>
-              </div>
-            </div>
-
-            {/* Ranking Weights */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Ranking Weights
-                <span className="text-gray-400 cursor-pointer" title="Adjust the importance of each criterion.">?</span>
-              </label>
-              <div className="space-y-2 mt-2">
-                {weightFields.map(w => (
-                  <div key={w.key} className="flex items-center gap-2">
-                    <span className="w-32">{w.label}</span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={data[w.key] || 0}
-                      onChange={e => handleSave(w.key, Number(e.target.value))}
-                      className="flex-1"
-                    />
-                    <span className="w-10 text-right">{data[w.key] || 0}%</span>
+                </div>
+                <div class="profile-slot">
+                  <label>Profile 2</label>
+                  <input type="file" accept=".html,.txt,.pdf" class="file-input">
+                  <button type="button" class="upload-btn">Upload Profile</button>
+                  <div class="linkedin-input-group" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: stretch;">
+                    <textarea class="linkedin-profile-textarea" placeholder="Paste full LinkedIn profile text here (Ctrl+A, Ctrl+C, Ctrl+V)..." style="min-height: 80px;"></textarea>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <button type="button" class="save-btn linkedin-save-btn">Save</button>
+                      <span class="saved-indicator linkedin-saved-indicator" style="display: none;">&#10003; Saved</span>
+                    </div>
                   </div>
-                ))}
-                <button type="button" className="mt-2 px-4 py-1 bg-[#2196F3] text-white rounded" onClick={() => setSaved(s => ({ ...s, weights: true }))}>Save</button>
-                <span className="text-green-600 text-sm ml-2">{saved.weights && "Saved"}</span>
+                </div>
               </div>
+              <button type="button" class="save-btn" data-field="ideal-profiles">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Target Companies -->
+            <div class="form-section">
+              <label for="target-companies">
+                Target Companies
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Companies you want to source candidates from. Upload CSV or enter manually.</span>
+              </label>
+              <div class="input-group">
+                <textarea id="target-companies" placeholder="Enter company names, one per line..."></textarea>
+                <input type="file" id="companies-file" accept=".csv" class="file-input">
+                <button type="button" class="upload-btn" onclick="document.getElementById('companies-file').click()">Upload CSV</button>
+              </div>
+              <button type="button" class="save-btn" data-field="target-companies">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Experience Range -->
+            <div class="form-section">
+              <label>
+                Range of Experience (Years)
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Define the minimum and maximum years of experience required for the role.</span>
+              </label>
+              <div class="range-inputs">
+                <div class="range-input">
+                  <label for="min-experience">Min</label>
+                  <input type="number" id="min-experience" min="0" max="50" placeholder="0">
+                </div>
+                <div class="range-input">
+                  <label for="max-experience">Max</label>
+                  <input type="number" id="max-experience" min="0" max="50" placeholder="10">
+                </div>
+              </div>
+              <button type="button" class="save-btn" data-field="experience-range">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Industry -->
+            <div class="form-section">
+              <label>
+                Industry
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Select relevant industries. AI will prioritize candidates from these sectors.</span>
+              </label>
+              <div class="multi-select" id="industry-select">
+                <div class="select-options">
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="saas">
+                    <span>SaaS</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="data">
+                    <span>Data</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="security">
+                    <span>Security</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="fintech">
+                    <span>Fintech</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="ai">
+                    <span>AI</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="other">
+                    <span>Other</span>
+                  </label>
+                </div>
+                <div class="custom-input">
+                  <input type="text" placeholder="Add custom industry..." id="custom-industry">
+                  <button type="button" class="add-btn">Add</button>
+                </div>
+              </div>
+              <button type="button" class="save-btn" data-field="industry">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Education -->
+            <div class="form-section">
+              <label>
+                Education
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Select preferred educational institutions. AI will consider this in ranking.</span>
+              </label>
+              <div class="multi-select" id="education-select">
+                <div class="select-actions">
+                  <button type="button" class="select-all-btn">Select All</button>
+                  <button type="button" class="clear-all-btn">Clear All</button>
+                </div>
+                <div class="select-options">
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="hebrew-university">
+                    <span>Hebrew University of Jerusalem</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="technion">
+                    <span>Technion – Israel Institute of Technology</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="tel-aviv-university">
+                    <span>Tel Aviv University</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="bar-ilan">
+                    <span>Bar-Ilan University</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="ben-gurion">
+                    <span>Ben-Gurion University of the Negev</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="weizmann">
+                    <span>Weizmann Institute of Science</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="reichman">
+                    <span>Reichman University</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="haifa">
+                    <span>University of Haifa</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="academic-college">
+                    <span>The Academic College of Tel‑Aviv‑Yaffo</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="not-relevant">
+                    <span>Not Relevant Institution</span>
+                  </label>
+                </div>
+                <div class="custom-input">
+                  <input type="text" placeholder="Add custom institution..." id="custom-education">
+                  <button type="button" class="add-btn">Add</button>
+                </div>
+              </div>
+              <button type="button" class="save-btn" data-field="education">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Custom Traits -->
+            <div class="form-section">
+              <label>
+                Custom Traits
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Add specific traits or characteristics you're looking for in candidates.</span>
+              </label>
+              <div class="traits-container">
+                <div class="traits-list" id="traits-list">
+                  <!-- Traits will be added here dynamically -->
+                </div>
+                <div class="trait-examples">
+                  <span class="example-label">Examples:</span>
+                  <span class="example">"Strong leadership skills"</span>,
+                  <span class="example">"Experience in fast-paced startups"</span>,
+                  <span class="example">"Excellent communication"</span>,
+                  <span class="example">"Hands-on with AI/ML"</span>
+                </div>
+                <div class="trait-input">
+                  <input type="text" placeholder="Add a trait..." id="trait-input">
+                  <button type="button" class="add-trait-btn">Add Trait</button>
+                </div>
+              </div>
+              <button type="button" class="save-btn" data-field="custom-traits">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Hot Signals -->
+            <div class="form-section">
+              <label for="hot-signals">
+                Hot Signals
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Companies with layoffs, closures, or other alerts that might indicate available talent.</span>
+              </label>
+              <div class="input-group">
+                <textarea id="hot-signals" placeholder="Enter company names with alerts, one per line..."></textarea>
+                <input type="file" id="signals-file" accept=".csv,.json" class="file-input">
+                <button type="button" class="upload-btn" onclick="document.getElementById('signals-file').click()">Upload File</button>
+              </div>
+              <button type="button" class="save-btn" data-field="hot-signals">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
+            </div>
+
+            <!-- Ranking Weights -->
+            <div class="form-section">
+              <label>
+                Ranking Weights
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Adjust the importance of different factors in the AI ranking algorithm.</span>
+              </label>
+              <div class="weights-container">
+                <div class="weight-item">
+                  <label for="tech-fit">Tech Fit</label>
+                  <span class="weight-desc">How well the candidate's technical skills match the job requirements.</span>
+                  <div class="slider-container">
+                    <input type="range" id="tech-fit" min="0" max="100" value="30" class="weight-slider">
+                    <span class="slider-value">30%</span>
+                  </div>
+                </div>
+                <div class="weight-item">
+                  <label for="experience">Experience</label>
+                  <span class="weight-desc">Years and relevance of professional experience.</span>
+                  <div class="slider-container">
+                    <input type="range" id="experience" min="0" max="100" value="25" class="weight-slider">
+                    <span class="slider-value">25%</span>
+                  </div>
+                </div>
+                <div class="weight-item">
+                  <label for="custom-traits-weight">Custom Traits</label>
+                  <span class="weight-desc">How well the candidate matches your defined custom traits.</span>
+                  <div class="slider-container">
+                    <input type="range" id="custom-traits-weight" min="0" max="100" value="20" class="weight-slider">
+                    <span class="slider-value">20%</span>
+                  </div>
+                </div>
+                <div class="weight-item">
+                  <label for="startup-fit">Startup Fit</label>
+                  <span class="weight-desc">Suitability for dynamic, startup-like environments.</span>
+                  <div class="slider-container">
+                    <input type="range" id="startup-fit" min="0" max="100" value="15" class="weight-slider">
+                    <span class="slider-value">15%</span>
+                  </div>
+                </div>
+                <div class="weight-item">
+                  <label for="education-weight">Education</label>
+                  <span class="weight-desc">Alignment with preferred educational background.</span>
+                  <div class="slider-container">
+                    <input type="range" id="education-weight" min="0" max="100" value="10" class="weight-slider">
+                    <span class="slider-value">10%</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="save-btn" data-field="ranking-weights">Save</button>
+              <span class="saved-indicator" style="display: none;">✓ Saved</span>
             </div>
           </form>
-        );
-      }
+        </div>
 
-      // Step 2: Pre-filter (Round 1)
-      function MappingModal({ headers, mapping, onSave, onClose }) {
-        // ... existing code ...
-      }
 
-      function StepPreFilter({ data, setData }) {
-        // ... existing code ...
-        return (
-          <div className="space-y-8">
-            {/* File upload */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Upload Profiles File
-                <span className="text-gray-400 cursor-pointer" title="Upload a CSV or XLSX file with candidate profiles. AI will detect headers for mapping.">?</span>
-              </label>
-              <input type="file" accept=".csv,.xlsx" className="mt-2" onChange={handleFile} />
-              {fileName && <span className="ml-2 text-gray-600">{fileName}</span>}
-              {showMapping && <MappingModal headers={headers} mapping={mapping} onSave={saveMapping} onClose={() => setShowMapping(false)} />}
-              {headers.length > 0 && !showMapping && (
-                <button className="ml-4 px-3 py-1 bg-[#2196F3] text-white rounded" title="Remap columns if the AI did not detect correctly" onClick={() => setShowMapping(true)}>Remap Columns</button>
-              )}
-              {headers.length > 0 && (
-                <button className="ml-2 px-3 py-1 bg-[#8BC34A] text-white rounded" title="Run initial filtering on uploaded profiles" onClick={runFiltering}>Run Filtering</button>
-              )}
-              {(!rows.length && !filtered.length) && (
-                <div className="text-gray-400 mt-4">No profiles uploaded yet. Please upload a CSV or XLSX file to begin.</div>
-              )}
-            </div>
-            {/* ... existing code ... */}
+        <!-- Step 2: Pre-filter (Round 1) -->
+        <div class="step-content" id="step-2">
+          <div class="step-header">
+            <h2>Pre-filter (Round 1)</h2>
+            <p class="ai-explanation">
+              <i class="info-icon">ℹ</i>
+              AI performs deduplication and initial filtering based on Blacklist, Past Candidates, and No-Go Companies.
+              <span class="tooltip">This step removes duplicate profiles and filters out candidates from companies you don't want to source from, or candidates you've already considered.</span>
+            </p>
           </div>
-        );
-      }
 
-      // Step 3: Profile Summary Mapping
-      function StepProfileSummary({ data, setData }) {
-        // ... existing code ...
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="font-semibold flex items-center gap-2">Select columns for Profile Summary
-                <span className="text-gray-400 cursor-pointer" title="Choose which columns to concatenate into the Profile Summary for AI analysis.">?</span>
-              </label>
-              {headers.length === 0 && (
-                <div className="text-gray-400 mt-2">No profiles available. Please complete the previous step.</div>
-              )}
-              {/* ... existing code ... */}
-            </div>
-            <div className="bg-gray-50 border rounded p-4 mt-4">
-              <div className="font-semibold mb-2">Sample Profile Summary</div>
-              <div className="text-gray-700 min-h-[32px]">{sample || "No sample available. Please upload profiles and select columns."}</div>
-            </div>
-          </div>
-        );
-      }
-
-      // Step 4: Advanced Pre-filter (Round 2)
-      function StepAdvancedPreFilter({ data, setData }) {
-        // State for required skills, titles, red flags, and status
-        const [skills, setSkills] = React.useState(data.essentialSkills || []);
-        const [skillInput, setSkillInput] = React.useState("");
-        const [titles, setTitles] = React.useState(data.requiredTitles || []);
-        const [titleInput, setTitleInput] = React.useState("");
-        const [redFlags, setRedFlags] = React.useState(data.redFlags || []);
-        const [status, setStatus] = React.useState({ passed: 0, skipped: 0, forwarded: 0 });
-        const [saved, setSaved] = React.useState(false);
-        const [filteredProfiles, setFilteredProfiles] = React.useState([]);
-
-        const redFlagOptions = [
-          "Instability",
-          "Stagnation",
-          "Enterprise-only",
-          "Freelancer"
-        ];
-
-        // Add skill/title
-        const addSkill = () => {
-          if (skillInput.trim()) {
-            setSkills(s => [...s, skillInput.trim()]);
-            setSkillInput("");
-          }
-        };
-        const addTitle = () => {
-          if (titleInput.trim()) {
-            setTitles(t => [...t, titleInput.trim()]);
-            setTitleInput("");
-          }
-        };
-        // Toggle red flag
-        const toggleRedFlag = flag => {
-          setRedFlags(rf => rf.includes(flag) ? rf.filter(f => f !== flag) : [...rf, flag]);
-        };
-
-        // Save selections
-        const handleSave = () => {
-          setData(d => ({ ...d, essentialSkills: skills, requiredTitles: titles, redFlags }));
-          setSaved(true);
-          setTimeout(() => setSaved(false), 1200);
-        };
-
-        // Simulate embedding-based filtering (placeholder for real AI logic)
-        const runAdvancedFilter = () => {
-          // For demo: randomly assign passed/skipped/forwarded
-          const total = (data.profiles || []).length;
-          const passed = Math.floor(total * 0.6);
-          const skipped = Math.floor(total * 0.2);
-          const forwarded = total - passed - skipped;
-          setStatus({ passed, skipped, forwarded });
-          setFilteredProfiles((data.profiles || []).slice(0, passed + forwarded));
-          setData(d => ({ ...d, advancedFiltered: (data.profiles || []).slice(0, passed + forwarded) }));
-        };
-
-        return (
-          <div className="space-y-8">
-            {/* Title Matching */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Required Titles (synonyms)
-                <span className="text-gray-400 cursor-pointer" title="Add job titles or synonyms to match using embeddings.">?</span>
-              </label>
-              <div className="flex gap-2 mt-1">
-                <input
-                  className="border rounded p-1 flex-1"
-                  placeholder="Type a title..."
-                  value={titleInput}
-                  onChange={e => setTitleInput(e.target.value)}
-                />
-                <button type="button" className="px-2 py-1 bg-[#8BC34A] text-white rounded" onClick={addTitle}>Add Title</button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {titles.map((t,i) => (
-                  <span key={i} className="px-2 py-1 bg-gray-200 rounded">{t}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Essential Skills */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Essential Skills
-                <span className="text-gray-400 cursor-pointer" title="Add required skills to match using embeddings.">?</span>
-              </label>
-              <div className="flex gap-2 mt-1">
-                <input
-                  className="border rounded p-1 flex-1"
-                  placeholder="Type a skill..."
-                  value={skillInput}
-                  onChange={e => setSkillInput(e.target.value)}
-                />
-                <button type="button" className="px-2 py-1 bg-[#8BC34A] text-white rounded" onClick={addSkill}>Add Skill</button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {skills.map((s,i) => (
-                  <span key={i} className="px-2 py-1 bg-gray-200 rounded">{s}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Red Flags */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Red Flags
-                <span className="text-gray-400 cursor-pointer" title="Select red flags that will disqualify profiles.">?</span>
-              </label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {redFlagOptions.map(flag => (
-                  <button
-                    key={flag}
-                    type="button"
-                    className={`px-3 py-1 rounded border ${redFlags.includes(flag) ? "bg-[#EC407A] text-white" : "bg-white text-gray-700"}`}
-                    onClick={() => toggleRedFlag(flag)}
-                  >{flag}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Save and Run */}
-            <div className="flex gap-2 mt-4">
-              <button className="px-4 py-1 bg-[#2196F3] text-white rounded" onClick={handleSave}>Save</button>
-              <span className="text-green-600 text-sm">{saved && "Saved"}</span>
-              <button className="px-4 py-1 bg-[#8BC34A] text-white rounded" onClick={runAdvancedFilter}>Run Advanced Filter</button>
-            </div>
-
-            {/* Status Dashboard */}
-            <div className="bg-white border rounded p-6 mt-4 flex flex-col gap-2">
-              <div className="font-semibold mb-2">Status Dashboard</div>
-              <div className="flex gap-8">
-                <div>Passed: <span className="font-bold">{status.passed}</span></div>
-                <div>Skipped: <span className="font-bold">{status.skipped}</span></div>
-                <div>Forwarded to Ranking: <span className="font-bold">{status.forwarded}</span></div>
-              </div>
-              {(status.passed + status.skipped + status.forwarded === 0) && (
-                <div className="text-gray-400 mt-2">No advanced filtering has been run yet. Please set criteria and click 'Run Advanced Filter'.</div>
-              )}
-            </div>
-          </div>
-        );
-      }
-
-      // Cost Tracking Utility
-      async function trackCost(meta) {
-        try {
-          await fetch("https://script.google.com/a/macros/added-value.co.il/s/AKfycbzf3seMAhiM7N90ep_wvFSl04el-W6aVznRFwhcKbyHzYp4Y5-k8Qa1uU4pmlMO7mzx/exec", {
-            method: "POST",
-            body: JSON.stringify(meta),
-            headers: { "Content-Type": "application/json" }
-          });
-        } catch (e) {
-          // Silently ignore errors
-        }
-      }
-
-      // Embedding and AI utilities
-      // In-memory cache for embeddings
-      const embeddingCache = {};
-
-      // IndexedDB cache for embeddings
-      function getDb() {
-        return new Promise((resolve, reject) => {
-          const req = window.indexedDB.open("scorely-embeddings", 1);
-          req.onupgradeneeded = () => {
-            req.result.createObjectStore("embeddings");
-          };
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = reject;
-        });
-      }
-      async function getEmbeddingFromDb(key) {
-        const db = await getDb();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction("embeddings", "readonly");
-          const store = tx.objectStore("embeddings");
-          const req = store.get(key);
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = reject;
-        });
-      }
-      async function setEmbeddingInDb(key, value) {
-        const db = await getDb();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction("embeddings", "readwrite");
-          const store = tx.objectStore("embeddings");
-          const req = store.put(value, key);
-          req.onsuccess = () => resolve();
-          req.onerror = reject;
-        });
-      }
-
-      // Fetch embedding from OpenAI, with cache
-      async function fetchEmbedding(text, apiKey) {
-        const key = btoa(unescape(encodeURIComponent(text))).slice(0, 100);
-        if (embeddingCache[key]) return embeddingCache[key];
-        let cached = await getEmbeddingFromDb(key);
-        if (cached) {
-          embeddingCache[key] = cached;
-          return cached;
-        }
-        const res = await fetch("https://api.openai.com/v1/embeddings", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ input: text, model: "text-embedding-ada-002" })
-        });
-        const data = await res.json();
-        if (!data.data || !data.data[0] || !data.data[0].embedding) throw new Error("Embedding error");
-        const embedding = data.data[0].embedding;
-        embeddingCache[key] = embedding;
-        setEmbeddingInDb(key, embedding);
-        return embedding;
-      }
-
-      // Cosine similarity
-      function cosineSim(a, b) {
-        let dot = 0, normA = 0, normB = 0;
-        for (let i = 0; i < a.length; i++) {
-          dot += a[i] * b[i];
-          normA += a[i] * a[i];
-          normB += b[i] * b[i];
-        }
-        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-      }
-
-      // Step 5: Ranking
-      function StepRanking({ data, setData }) {
-        const modelOptions = [
-          { key: "hybrid", label: "Hybrid (default)" },
-          { key: "embed3", label: "Embedding Small 3" },
-          { key: "gpt4", label: "GPT-4 mini-turbo" },
-          { key: "gpt35", label: "GPT-3.5 turbo" }
-        ];
-        const [model, setModel] = React.useState(data.rankingModel || "hybrid");
-        const [startRow, setStartRow] = React.useState(2);
-        const [endRow, setEndRow] = React.useState(data.advancedFiltered ? (data.advancedFiltered.length + 1) : 10);
-        const [running, setRunning] = React.useState(false);
-        const [progress, setProgress] = React.useState(0);
-        const [showFeedback, setShowFeedback] = React.useState(false);
-        const [feedback, setFeedback] = React.useState("");
-        const [criteria, setCriteria] = React.useState([]);
-        const [error, setError] = React.useState("");
-        const [aiStatus, setAiStatus] = React.useState("");
-        const criteriaOptions = ["Tech Fit", "Experience", "Signals", "Startup Fit"];
-
-        // Save model/rows
-        const handleSave = () => {
-          setData(d => ({ ...d, rankingModel: model, startRow, endRow }));
-        };
-
-        // Real AI ranking logic
-        const startRanking = async () => {
-          setRunning(true);
-          setProgress(0);
-          setError("");
-          setAiStatus("Computing embeddings...");
-          try {
-            const apiKey = localStorage.getItem("openai_api_key");
-            if (!apiKey) throw new Error("Missing API key");
-            const profiles = (data.advancedFiltered || []).slice(startRow-2, endRow-1);
-            if (!profiles.length) throw new Error("No profiles to rank");
-            // 1. Compute embeddings for JD and ideal profiles
-            const jobText = (data.jobDesc || "").slice(0, 500);
-            const idealTexts = (data.idealProfiles || []).map(t => (t || "").slice(0, 1000));
-            const [jdEmbedding, ...idealEmbeddings] = await Promise.all([
-              fetchEmbedding(jobText, apiKey),
-              ...idealTexts.map(t => fetchEmbedding(t, apiKey))
-            ]);
-            // 2. Compute embedding for each profile summary
-            let done = 0;
-            const profileEmbeddings = [];
-            for (const p of profiles) {
-              const summary = (data.profileSummaryFields || []).map(f => p.raw[f]).filter(Boolean).join(" | ");
-              p.profileSummary = summary;
-              p.embedding = await fetchEmbedding(summary, apiKey);
-              done++;
-              setProgress(Math.round((done / (profiles.length * 2)) * 100));
-            }
-            // 3. Calculate similarity
-            for (const p of profiles) {
-              const simJD = cosineSim(p.embedding, jdEmbedding);
-              const simIdeal = Math.max(...idealEmbeddings.map(e => cosineSim(p.embedding, e)));
-              p.similarity = Math.max(simJD, simIdeal);
-            }
-            // 4. Filter by threshold (e.g., 0.7)
-            const threshold = 0.7;
-            const toRank = profiles.filter(p => p.similarity >= threshold);
-            const skipped = profiles.filter(p => p.similarity < threshold);
-            setAiStatus(`Sending ${toRank.length} profiles to GPT-4...`);
-            // 5. Batch to GPT-4 (20 per batch)
-            const results = [];
-            for (let i = 0; i < toRank.length; i += 20) {
-              const batch = toRank.slice(i, i+20);
-              let tries = 0, success = false, gptRes = null;
-              while (!success && tries < 3) {
-                try {
-                  const messages = [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: batch.map((p, idx) => `Profile #${i+idx+1}:\n${p.profileSummary}`).join("\n\n") }
-                  ];
-                  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      model: model === "gpt4" ? "gpt-4" : model === "gpt35" ? "gpt-3.5-turbo" : "gpt-4", // fallback
-                      messages,
-                      temperature: 0.2
-                    })
-                  });
-                  const data = await res.json();
-                  // Parse response (expecting JSON per profile)
-                  // For demo, assign random scores
-                  batch.forEach(p => {
-                    p.score = Math.floor(70 + Math.random()*30);
-                    p.aiExplanation = "Ranked by GPT-4";
-                  });
-                  success = true;
-                  gptRes = data;
-                } catch (e) {
-                  tries++;
-                  await new Promise(r => setTimeout(r, 1000 * tries));
-                }
-              }
-              if (!success) {
-                batch.forEach(p => {
-                  p.score = 0;
-                  p.aiExplanation = "AI error, manual review needed";
-                });
-              }
-              results.push(...batch);
-              setProgress(Math.round(50 + ((results.length / toRank.length) * 50)));
-            }
-            // 6. Add skipped profiles with score 0
-            skipped.forEach(p => {
-              p.score = 0;
-              p.aiExplanation = "Low similarity, skipped";
-            });
-            // 7. Update state
-            setData(d => ({ ...d, rankedResults: [...results, ...skipped] }));
-            setRunning(false);
-            setProgress(100);
-            setAiStatus("");
-            setShowFeedback(true);
-            // Track cost
-            trackCost({
-              event: "ranking",
-              model,
-              numProfiles: profiles.length,
-              timestamp: new Date().toISOString()
-            });
-          } catch (e) {
-            setError(e.message || "AI error");
-            setRunning(false);
-            setAiStatus("");
-          }
-        };
-
-        const stopRanking = () => {
-          setRunning(false);
-          setProgress(0);
-          setAiStatus("");
-        };
-
-        // Feedback modal
-        const handleFeedbackSubmit = () => {
-          setShowFeedback(false);
-          // Simulate updating weights/criteria
-          setData(d => ({ ...d, feedback, feedbackCriteria: criteria }));
-        };
-
-        const toggleCriteria = c => {
-          setCriteria(arr => arr.includes(c) ? arr.filter(x => x !== c) : [...arr, c]);
-        };
-
-        return (
-          <div className="space-y-8">
-            {/* Model selection */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Model Selection
-                <span className="text-gray-400 cursor-pointer" title="Choose the AI model for ranking.">?</span>
-              </label>
-              <div className="flex gap-4 mt-2">
-                {modelOptions.map(opt => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    className={`px-3 py-1 rounded border ${model === opt.key ? "bg-[#2196F3] text-white" : "bg-white text-gray-700"}`}
-                    onClick={() => setModel(opt.key)}
-                  >{opt.label}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Row range */}
-            <div>
-              <label className="font-semibold flex items-center gap-2">Row Range
-                <span className="text-gray-400 cursor-pointer" title="Set the start and end row for ranking.">?</span>
-              </label>
-              <div className="flex gap-2 items-center mt-2">
-                <input type="number" min={2} className="border rounded p-1 w-20" value={startRow} onChange={e => setStartRow(Number(e.target.value))} />
-                <span>-</span>
-                <input type="number" min={startRow} className="border rounded p-1 w-20" value={endRow} onChange={e => setEndRow(Number(e.target.value))} />
-                <button className="ml-4 px-3 py-1 bg-[#8BC34A] text-white rounded" onClick={handleSave}>Save</button>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex gap-4 mt-4">
-              <button className="px-4 py-1 bg-[#2196F3] text-white rounded" onClick={startRanking} disabled={running}>Start Ranking</button>
-              <button className="px-4 py-1 bg-[#EC407A] text-white rounded" onClick={stopRanking} disabled={!running}>Stop Ranking</button>
-            </div>
-
-            {/* Progress & AI status */}
-            {running && (
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded h-4">
-                  <div className="bg-[#2196F3] h-4 rounded" style={{ width: progress + "%" }}></div>
+          <!-- File Upload & Column Mapping -->
+          <div class="form-section">
+            <h3>File Upload & Column Mapping</h3>
+            <div class="upload-section">
+              <div class="file-upload-area">
+                <input type="file" id="profiles-file" accept=".csv,.xlsx" class="file-input">
+                <div class="upload-zone" onclick="document.getElementById('profiles-file').click()">
+                  <div class="upload-icon">📁</div>
+                  <p>Click to upload CSV or XLSX file</p>
+                  <p class="upload-hint">File should contain columns for First Name, Last Name, and Company</p>
                 </div>
-                <div className="text-sm text-gray-600 mt-1">Ranking in progress... {progress}%</div>
-                {aiStatus && <div className="text-xs text-gray-500 mt-1">{aiStatus}</div>}
               </div>
-            )}
-            {error && <div className="text-red-600 font-semibold mt-2">{error}</div>}
-
-            {/* Feedback modal */}
-            {showFeedback && (
-              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                <div className="bg-white rounded shadow-lg p-6 w-full max-w-md">
-                  <h2 className="text-xl font-bold mb-4">Post-Ranking Feedback</h2>
-                  <label className="block font-semibold mb-2">General Feedback</label>
-                  <textarea
-                    className="w-full border rounded p-2 mb-3"
-                    rows={3}
-                    value={feedback}
-                    onChange={e => setFeedback(e.target.value)}
-                    placeholder="Describe your feedback..."
-                  />
-                  <label className="block font-semibold mb-2">Criteria Selection</label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {criteriaOptions.map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`px-3 py-1 rounded border ${criteria.includes(c) ? "bg-[#8BC34A] text-white" : "bg-white text-gray-700"}`}
-                        onClick={() => toggleCriteria(c)}
-                      >{c}</button>
-                    ))}
+              
+              <div class="column-mapping" id="column-mapping" style="display: none;">
+                <h4>Map Your Columns</h4>
+                <p>Please map your file columns to the required fields:</p>
+                <div class="mapping-grid">
+                  <div class="mapping-item">
+                    <label>First Name</label>
+                    <select id="map-first-name" class="mapping-select">
+                      <option value="">Select column...</option>
+                    </select>
                   </div>
-                  <button className="px-4 py-2 bg-[#2196F3] text-white rounded" onClick={handleFeedbackSubmit}>Submit Feedback</button>
+                  <div class="mapping-item">
+                    <label>Last Name</label>
+                    <select id="map-last-name" class="mapping-select">
+                      <option value="">Select column...</option>
+                    </select>
+                  </div>
+                  <div class="mapping-item">
+                    <label>Company</label>
+                    <select id="map-company" class="mapping-select">
+                      <option value="">Select column...</option>
+                    </select>
+                  </div>
+                  <div class="mapping-item">
+                    <label>Title</label>
+                    <select id="map-title" class="mapping-select">
+                      <option value="">Select column...</option>
+                    </select>
+                  </div>
+                  <div class="mapping-item">
+                    <label>LinkedIn</label>
+                    <select id="map-linkedin" class="mapping-select">
+                      <option value="">Select column...</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="button" class="save-btn" data-field="column-mapping" onclick="app.saveColumnMapping()">Save Mapping</button>
+                <span class="saved-indicator" style="display: none;">✓ Mapping Saved</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtering Lists -->
+          <div class="form-section">
+            <h3>Filtering Lists</h3>
+            
+            <!-- Blacklist -->
+            <div class="filter-list">
+              <label for="blacklist">
+                Blacklist
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Companies you never want to source candidates from. Profiles are filtered if they currently work at these companies.</span>
+              </label>
+              <textarea id="blacklist" placeholder="Enter company names, one per line..."></textarea>
+              <div class="list-actions">
+                <button type="button" class="save-btn" onclick="app.saveFilterList('blacklist')">Save</button>
+                <button type="button" class="clear-btn" onclick="app.clearFilterList('blacklist')">Clear</button>
+                <span class="saved-indicator" style="display: none;">✓ Saved</span>
+              </div>
+            </div>
+
+            <!-- Past Candidates -->
+            <div class="filter-list">
+              <label for="past-candidates">
+                Past Candidates
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Names or LinkedIn URLs of candidates you've already considered.</span>
+              </label>
+              <textarea id="past-candidates" placeholder="Enter names or LinkedIn URLs, one per line..."></textarea>
+              <div class="list-actions">
+                <button type="button" class="save-btn" onclick="app.saveFilterList('pastCandidates')">Save</button>
+                <button type="button" class="clear-btn" onclick="app.clearFilterList('pastCandidates')">Clear</button>
+                <span class="saved-indicator" style="display: none;">✓ Saved</span>
+              </div>
+            </div>
+
+            <!-- No-Go Companies -->
+            <div class="filter-list">
+              <label for="no-go-companies">
+                No-Go Companies
+                <i class="info-icon">ℹ</i>
+                <span class="tooltip">Companies to avoid - profiles are filtered if they currently work OR have worked in the past at these companies.</span>
+              </label>
+              <div class="no-go-explanation" style="margin-bottom: 10px; color: #1976d2; font-size: 1rem;">
+                <strong>Explanation:</strong> Candidates will be filtered out if they currently work <u>or</u> have worked in the past at any of the companies in this list. Use this to exclude candidates with any history at these organizations.
+              </div>
+              <div class="no-go-preset">
+                <h5>Preset Companies:</h5>
+                <div class="preset-companies">
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="isracard" checked>
+                    <span>Isracard</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="matrix" checked>
+                    <span>Matrix</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="harel" checked>
+                    <span>Harel Insurance & Finance</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="ness" checked>
+                    <span>Ness Technologies</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="bank-leumi" checked>
+                    <span>Bank Leumi</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="gav-systems" checked>
+                    <span>GAV Systems</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="amdocs" checked>
+                    <span>Amdocs</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="log-on" checked>
+                    <span>Log-On Software</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="sapiens" checked>
+                    <span>Sapiens</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="aman-group" checked>
+                    <span>Aman Group</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="nice" checked>
+                    <span>NICE</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="maccabi-healthcare" checked>
+                    <span>Maccabi Healthcare Services</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="zap-group" checked>
+                    <span>Zap Group</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="clalit" checked>
+                    <span>Clalit Health Services</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="bank-hapoalim" checked>
+                    <span>Bank Hapoalim</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="tax-authority" checked>
+                    <span>Israel Tax Authority</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="discount-bank" checked>
+                    <span>Discount Bank</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="infanity-labs" checked>
+                    <span>Infanity Labs</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="experis-israel" checked>
+                    <span>Experis Israel</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="sapiens-international" checked>
+                    <span>Sapiens International</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="magic-software" checked>
+                    <span>Magic Software Enterprises</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="ethernity" checked>
+                    <span>Ethernity Networks</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="elad-software" checked>
+                    <span>Elad Software Systems</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="mizrahi-tefahot" checked>
+                    <span>Mizrahi-Tefahot Bank</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="migdal" checked>
+                    <span>Migdal Insurance</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="menora" checked>
+                    <span>Menora Mivtachim</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="clal-insurance" checked>
+                    <span>Clal Insurance</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="taldor" checked>
+                    <span>Taldor</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="bynet" checked>
+                    <span>Bynet Data Communications</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="hachshara" checked>
+                    <span>Hachshara Insurance</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="psagot" checked>
+                    <span>Psagot Investment House</span>
+                  </label>
+                  <label class="checkbox-option">
+                    <input type="checkbox" value="max-it-finance" checked>
+                    <span>Max (It Finance)</span>
+                  </label>
                 </div>
               </div>
-            )}
+              <div class="custom-no-go">
+                <label for="custom-no-go-input">Add Custom No-Go Company:</label>
+                <div class="custom-input">
+                  <input type="text" id="custom-no-go-input" placeholder="Enter company name...">
+                  <button type="button" class="add-btn" onclick="app.addCustomNoGo()">Add</button>
+                </div>
+              </div>
+              <textarea id="no-go-companies" placeholder="Custom no-go companies (one per line)..."></textarea>
+              <div class="list-actions">
+                <button type="button" class="save-btn" onclick="app.saveFilterList('noGoCompanies')">Save</button>
+                <button type="button" class="clear-btn" onclick="app.clearFilterList('noGoCompanies')">Clear</button>
+                <span class="saved-indicator" style="display: none;">✓ Saved</span>
+              </div>
+            </div>
           </div>
-        );
-      }
 
-      // Step 6: Results Dashboard
-      function StepResultsDashboard({ data, setData }) {
-        // Tabs and filtering
-        const tabOptions = [
-          { key: "top", label: "Top", color: "#8BC34A" },
-          { key: "good", label: "Good", color: "#FFEB3B" },
-          { key: "hidden", label: "Hidden Gems", color: "#9C27B0" },
-          { key: "hot", label: "Hot Signals", color: "#EC407A" }
-        ];
-        const [tab, setTab] = React.useState("top");
-        const [search, setSearch] = React.useState("");
+          <!-- First Filter Execution -->
+          <div class="form-section">
+            <h3>First Filter Execution</h3>
+            <div class="filter-controls">
+              <button type="button" class="primary-btn" onclick="app.runFiltering()">Run Filtering</button>
+              <button type="button" class="secondary-btn" onclick="app.clearDashboard()">Clear Dashboard</button>
+            </div>
+          </div>
 
-        // Hidden candidates (persist in localStorage)
-        const [hidden, setHidden] = React.useState(() => {
-          try {
-            return JSON.parse(localStorage.getItem("scorely_hiddenCandidates") || "[]");
-          } catch { return []; }
-        });
-        React.useEffect(() => {
-          localStorage.setItem("scorely_hiddenCandidates", JSON.stringify(hidden));
-        }, [hidden]);
+          <!-- Dashboard -->
+          <div class="form-section">
+            <h3>Filtering Dashboard</h3>
+            <div class="dashboard-stats">
+              <div class="stat-card">
+                <div class="stat-number" id="uploaded-count">0</div>
+                <div class="stat-label">Profiles Uploaded</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="filtered-out-count">0</div>
+                <div class="stat-label">Filtered Out</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="remaining-count">0</div>
+                <div class="stat-label">Remaining</div>
+              </div>
+            </div>
+            
+            <div class="filter-breakdown">
+              <h4>Filter Breakdown</h4>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Duplicates:</span>
+                <span class="breakdown-count" id="duplicates-count">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Blacklist:</span>
+                <span class="breakdown-count" id="blacklist-count">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Past Candidates:</span>
+                <span class="breakdown-count" id="past-candidates-count">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">No-Go Companies:</span>
+                <span class="breakdown-count" id="no-go-count">0</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 32px; text-align: right;">
+            <button type="button" class="secondary-btn" id="skip-to-ranking-btn">Skip to Ranking</button>
+          </div>
+        </div>
 
-        // Hide candidate
-        const hideCandidate = c => {
-          setHidden(h => [...h, c.fullName + '|' + c.company]);
-        };
-
-        // Simulate categories (in real app, AI would assign these)
-        const results = (data.rankedResults || []).map((c, i) => ({
-          ...c,
-          category: i % 4 === 0 ? "top" : i % 4 === 1 ? "good" : i % 4 === 2 ? "hidden" : "hot",
-          strengths: ["Team player", "Proactive"],
-          concerns: ["Lacks startup experience"],
-          aiExplanation: "Strong fit for the role.",
-          embeddingScore: Math.random().toFixed(2),
-          linkedin: "https://linkedin.com/in/example"
-        }));
-
-        // Filter by tab, search, and hidden
-        const filtered = results.filter(c =>
-          (tab === "top" ? c.category === "top" :
-           tab === "good" ? c.category === "good" :
-           tab === "hidden" ? c.category === "hidden" :
-           tab === "hot" ? c.category === "hot" : true)
-          && (
-            !search ||
-            c.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-            c.company?.toLowerCase().includes(search.toLowerCase()) ||
-            c.strengths?.some(s => s.toLowerCase().includes(search.toLowerCase()))
-          )
-          && !hidden.includes(c.fullName + '|' + c.company)
-        );
-
-        // Statistics
-        const stats = {
-          top: results.filter(c => c.category === "top").length,
-          good: results.filter(c => c.category === "good").length,
-          hidden: results.filter(c => c.category === "hidden").length,
-          hot: results.filter(c => c.category === "hot").length,
-          avgScore: results.length ? Math.round(results.reduce((a,b) => a + (b.score||0), 0) / results.length) : 0
-        };
-
-        // Export CSV
-        const exportCSV = () => {
-          const csv = [
-            ["Full Name", "Company", "Score", "Category", "Profile Summary", "Strengths", "Concerns", "AI Explanation", "Embedding Score", "LinkedIn"],
-            ...results.map(c => [
-              c.fullName,
-              c.company,
-              c.score,
-              c.category,
-              c.profileSummary,
-              (c.strengths||[]).join("; "),
-              (c.concerns||[]).join("; "),
-              c.aiExplanation,
-              c.embeddingScore,
-              c.linkedin
-            ])
-          ];
-          const csvStr = csv.map(row => row.map(val => '"'+(val||"").replace(/"/g,'""')+'"').join(",")).join("\n");
-          const blob = new Blob([csvStr], { type: "text/csv" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "scorely_results.csv";
-          a.click();
-          URL.revokeObjectURL(url);
-        };
-
-        // Candidate details modal
-        const [showDetails, setShowDetails] = React.useState(null);
-
-        // PDF export (basic: print candidate card)
-        const exportPDF = c => {
-          const printWindow = window.open('', '', 'width=800,height=600');
-          printWindow.document.write(`
-            <html><head><title>Candidate PDF</title>
-            <style>
-              body { font-family: Inter, sans-serif; padding: 32px; }
-              .title { font-size: 1.5em; font-weight: bold; color: #2196F3; }
-              .section { margin-bottom: 12px; }
-              .label { font-weight: bold; }
-              .value { margin-left: 8px; }
-            </style>
-            </head><body>
-              <div class="title">${c.fullName}</div>
-              <div class="section"><span class="label">Company:</span><span class="value">${c.company}</span></div>
-              <div class="section"><span class="label">Score:</span><span class="value">${c.score}</span></div>
-              <div class="section"><span class="label">Category:</span><span class="value">${c.category}</span></div>
-              <div class="section"><span class="label">Profile Summary:</span><span class="value">${c.profileSummary || "-"}</span></div>
-              <div class="section"><span class="label">Strengths:</span><span class="value">${(c.strengths||[]).join(", ")}</span></div>
-              <div class="section"><span class="label">Concerns:</span><span class="value">${(c.concerns||[]).join(", ")}</span></div>
-              <div class="section"><span class="label">AI Explanation:</span><span class="value">${c.aiExplanation}</span></div>
-              <div class="section"><span class="label">Embedding Score:</span><span class="value">${c.embeddingScore}</span></div>
-              <div class="section"><span class="label">LinkedIn:</span><span class="value"><a href="${c.linkedin}" target="_blank">${c.linkedin}</a></span></div>
-              <hr style="margin:24px 0;" />
-              <div class="section"><span class="label">Raw Data:</span><pre style="background:#f5f5f5;padding:8px;border-radius:4px;">${JSON.stringify(c.raw, null, 2)}</pre></div>
-              <script>window.onload = function() { window.print(); }</script>
-            </body></html>
-          `);
-          printWindow.document.close();
-        };
-
-        return (
-          <div className="space-y-8">
-            {/* Tabs and search */}
-            <div className="flex items-center gap-4">
-              {tabOptions.map(t => (
-                <button
-                  key={t.key}
-                  className={`px-4 py-2 rounded font-semibold border ${tab === t.key ? "text-white" : "text-gray-700"}`}
-                  style={{ background: tab === t.key ? t.color : "#fff", borderColor: t.color }}
-                  onClick={() => setTab(t.key)}
-                >{t.label}</button>
-              ))}
-              <input
-                className="ml-4 border rounded p-2 flex-1"
-                placeholder="Search by name, company, skill..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-              <button className="ml-2 px-3 py-1 bg-[#2196F3] text-white rounded" onClick={exportCSV}>Download CSV</button>
+        <!-- Step 3: Profile Summary Mapping -->
+        <div class="step-content" id="step-3" style="display: none;">
+            <div class="step-header">
+                <h2>Profile Summary Mapping</h2>
+                <p class="ai-explanation">
+                    <i class="info-icon">ℹ</i>
+                    AI concatenates the selected columns into a Profile Summary for advanced analysis.
+                    <span class="tooltip">Select which columns from your uploaded file should be combined into a single profile summary that will be used for AI analysis and ranking.</span>
+                </p>
             </div>
 
-            {/* Statistics */}
-            <div className="flex gap-8 items-center">
-              <div>Top: <span className="font-bold text-[#8BC34A]">{stats.top}</span></div>
-              <div>Good: <span className="font-bold text-yellow-500">{stats.good}</span></div>
-              <div>Hidden Gems: <span className="font-bold text-purple-600">{stats.hidden}</span></div>
-              <div>Hot Signals: <span className="font-bold text-[#EC407A]">{stats.hot}</span></div>
-              <div>Average Score: <span className="font-bold">{stats.avgScore}</span></div>
-            </div>
-
-            {/* Candidate cards */}
-            <div className="grid grid-cols-1 gap-4">
-              {filtered.length === 0 ? (
-                <div className="text-gray-400 text-center py-12">No candidates found in this category. Try changing your filters or running the ranking step again.</div>
-              ) : filtered.map((c, i) => (
-                <div key={i} className="border rounded p-4 flex flex-col md:flex-row gap-4" style={{ borderColor: tabOptions.find(t => t.key === c.category)?.color }}>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl font-bold">{c.fullName}</span>
-                      <a href={c.linkedin} target="_blank" rel="noopener noreferrer" className="ml-2 text-[#2196F3] underline">LinkedIn</a>
+            <!-- Column Selection -->
+            <div class="form-section">
+                <h3>Select Columns for Profile Summary</h3>
+                <div class="column-selection-info">
+                    <p>Choose which columns from your uploaded file should be included in the Profile Summary. This combined text will be used by AI for analysis and ranking.</p>
+                </div>
+                
+                <div class="column-selection" id="column-selection">
+                    <div class="selection-actions">
+                        <button type="button" class="select-all-btn" onclick="app.selectAllColumns()">Select All</button>
+                        <button type="button" class="clear-all-btn" onclick="app.clearAllColumns()">Clear All</button>
                     </div>
-                    <div className="text-gray-700 mb-1">{c.company}</div>
-                    <div className="mb-1">Score: <span className="font-bold">{c.score}</span></div>
-                    <div className="mb-1">Category: <span className="font-bold" style={{ color: tabOptions.find(t => t.key === c.category)?.color }}>{c.category.toUpperCase()}</span></div>
-                    <div className="mb-1">Profile Summary: <span className="text-gray-600">{c.profileSummary || "-"}</span></div>
-                    <div className="mb-1">Strengths: <span className="text-green-700">{(c.strengths||[]).join(", ")}</span></div>
-                    <div className="mb-1">Concerns: <span className="text-red-600">{(c.concerns||[]).join(", ")}</span></div>
-                    <div className="mb-1">AI Explanation: <span className="text-gray-600">{c.aiExplanation}</span></div>
-                    <div className="mb-1">Embedding Score: <span className="text-gray-600">{c.embeddingScore}</span></div>
-                  </div>
-                  <div className="flex flex-col gap-2 items-end">
-                    <button className="px-3 py-1 bg-[#2196F3] text-white rounded" onClick={() => setShowDetails(c)}>Details</button>
-                    <button className="px-3 py-1 bg-[#8BC34A] text-white rounded" onClick={() => exportPDF(c)}>Export as PDF</button>
-                    <button className="px-3 py-1 bg-[#EC407A] text-white rounded" onClick={() => hideCandidate(c)}>Hide</button>
-                  </div>
+                    
+                    <div class="columns-grid" id="columns-grid">
+                        <!-- Columns will be populated dynamically -->
+                    </div>
                 </div>
-              ))}
+                
+                <div class="summary-actions">
+                    <button type="button" class="save-btn" onclick="app.saveColumnSelection()">Save Selection</button>
+                    <button type="button" class="preview-btn" onclick="app.previewProfileSummary()">Preview Summary</button>
+                    <span class="saved-indicator" style="display: none;">✓ Selection Saved</span>
+                </div>
             </div>
 
-            {/* Details modal */}
-            {showDetails && (
-              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                <div className="bg-white rounded shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <h2 className="text-xl font-bold mb-4">Candidate Details</h2>
-                  <pre className="bg-gray-100 rounded p-4 text-xs overflow-x-auto">{JSON.stringify(showDetails, null, 2)}</pre>
-                  <button className="mt-4 px-4 py-2 bg-[#2196F3] text-white rounded" onClick={() => setShowDetails(null)}>Close</button>
+            <!-- Profile Summary Preview -->
+            <div class="form-section" id="preview-section" style="display: none;">
+                <h3>Profile Summary Preview</h3>
+                <div class="preview-container">
+                    <div class="preview-sample" id="preview-sample">
+                        <!-- Preview will be shown here -->
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      }
+            </div>
 
-      // API Key Management
-      function useApiKey() {
-        const [apiKey, setApiKeyState] = React.useState(() => localStorage.getItem("openai_api_key") || "");
-        const setApiKey = key => {
-          setApiKeyState(key);
-          if (key) localStorage.setItem("openai_api_key", key);
-          else localStorage.removeItem("openai_api_key");
+            <!-- Summary Statistics -->
+            <div class="form-section">
+                <h3>Summary Statistics</h3>
+                <div class="summary-stats">
+                    <div class="summary-card">
+                        <div class="summary-number" id="total-profiles">0</div>
+                        <div class="summary-label">Total Profiles</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-number" id="selected-columns">0</div>
+                        <div class="summary-label">Selected Columns</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-number" id="avg-summary-length">0</div>
+                        <div class="summary-label">Avg Summary Length</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Advanced Pre-filter -->
+        <div class="step-content" id="step-4" style="display: none;">
+            <div class="step-header">
+                <h2>Advanced Pre-filter</h2>
+                <p class="ai-explanation">
+                    <i class="info-icon">ℹ</i>
+                    Apply additional filters based on experience, location, and other criteria before ranking.
+                    <span class="tooltip">These filters help narrow down the candidate pool before the AI ranking process begins.</span>
+                </p>
+            </div>
+
+            <!-- Advanced Filter Options -->
+            <div class="advanced-filter-section">
+                <h3>Filter Options</h3>
+                
+                <div class="filter-option">
+                    <label>
+                        <input type="checkbox" id="filter-experience">
+                        Experience Range Filter
+                    </label>
+                    <div class="filter-description">
+                        Filter candidates based on years of experience (uses the range defined in Step 1).
+                    </div>
+                </div>
+
+                <div class="filter-option">
+                    <label>
+                        <input type="checkbox" id="filter-location">
+                        Location Filter
+                    </label>
+                    <div class="filter-description">
+                        Filter candidates based on geographic location preferences.
+                    </div>
+                </div>
+
+                <div class="filter-option">
+                    <label>
+                        <input type="checkbox" id="filter-industry">
+                        Industry Filter
+                    </label>
+                    <div class="filter-description">
+                        Filter candidates based on industry background (uses industries selected in Step 1).
+                    </div>
+                </div>
+
+                <div class="filter-option">
+                    <label>
+                        <input type="checkbox" id="filter-education">
+                        Education Filter
+                    </label>
+                    <div class="filter-description">
+                        Filter candidates based on educational background (uses institutions selected in Step 1).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Apply Filters -->
+            <div class="form-section">
+                <h3>Apply Advanced Filters</h3>
+                <div class="filter-controls">
+                    <button type="button" class="primary-btn" onclick="app.applyAdvancedFilters()">Apply Filters</button>
+                    <button type="button" class="secondary-btn" onclick="app.resetAdvancedFilters()">Reset Filters</button>
+                </div>
+            </div>
+
+            <!-- Advanced Filter Results -->
+            <div class="form-section">
+                <h3>Filter Results</h3>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="pre-filter-count">0</div>
+                        <div class="stat-label">Before Filtering</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="post-filter-count">0</div>
+                        <div class="stat-label">After Filtering</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="advanced-filtered-count">0</div>
+                        <div class="stat-label">Filtered Out</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Ranking -->
+        <div class="step-content" id="step-5" style="display: none;">
+            <div class="step-header">
+                <h2>AI Ranking</h2>
+                <p class="ai-explanation">
+                    <i class="info-icon">ℹ</i>
+                    AI ranks candidates based on your criteria using advanced language models.
+                    <span class="tooltip">The AI analyzes each candidate's profile against your job requirements and ideal candidate profiles to generate rankings.</span>
+                </p>
+            </div>
+
+            <!-- Ranking Mode Selection -->
+            <div class="form-section">
+                <h3>Ranking Mode</h3>
+                <div class="ranking-mode-selection">
+                    <label class="mode-option">
+                        <input type="radio" name="ranking-mode" value="embedding" checked>
+                        <span class="mode-title">Embedding Only</span>
+                        <span class="mode-description">Fast and cost-effective using semantic similarity</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="ranking-mode" value="gpt">
+                        <span class="mode-title">GPT-4o</span>
+                        <span class="mode-description">High accuracy using advanced language model</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="ranking-mode" value="hybrid">
+                        <span class="mode-title">Hybrid (Recommended)</span>
+                        <span class="mode-description">Balanced approach combining both methods</span>
+                    </label>
+                </div>
+                <div class="economy-mode" style="margin-top: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="economy-mode" style="width: 16px; height: 16px;">
+                        <span style="font-weight: 500;">Economy Mode</span>
+                    </label>
+                    <div class="economy-mode-explanation">
+                        In this mode, borderline candidates (embedding score 0.6–0.8) are analyzed using <b>GPT-3.5-turbo</b> (cost-effective), while top candidates (embedding ≥ 0.8) are analyzed using <b>GPT-4o</b> (high accuracy).
+                    </div>
+                </div>
+                <div class="hybrid-thresholds" style="margin: 12px 0 0 0; display: flex; gap: 18px; align-items: center;">
+                    <label for="top-threshold" style="font-weight:500; color:#2196F3;">Top Threshold
+                        <i class="info-icon">ℹ</i>
+                        <span class="tooltip">Profiles with embedding score ≥ this value are ranked as Top/Good by embedding only.</span>
+                    </label>
+                    <input type="number" id="top-threshold" min="0.7" max="1" step="0.01" value="0.85" style="width:70px;">
+                    <label for="borderline-threshold" style="font-weight:500; color:#2196F3;">Borderline Threshold
+                        <i class="info-icon">ℹ</i>
+                        <span class="tooltip">Profiles with embedding score between this value and the Top Threshold are ranked using Embedding+GPT-4.5. Below this value are rejected.</span>
+                    </label>
+                    <input type="number" id="borderline-threshold" min="0.5" max="0.85" step="0.01" value="0.60" style="width:70px;">
+                </div>
+                <div class="hybrid-explanation" style="color:#1976d2; font-size:0.97rem; margin-top:8px;">
+                    <b>How does Hybrid Ranking work?</b><br>
+                    <ul style="margin: 6px 0 0 18px; padding:0;">
+                        <li>Embedding only: score ≥ <span id="top-threshold-label">0.85</span></li>
+                        <li>Embedding + GPT-4.5: <span id="borderline-threshold-label">0.60</span> ≤ score &lt; <span id="top-threshold-label-2">0.85</span></li>
+                        <li>Below <span id="borderline-threshold-label-2">0.60</span>: profile is rejected</li>
+                    </ul>
+                    You can adjust these thresholds above to control the strictness of the ranking.
+                </div>
+            </div>
+
+            <!-- Row Range -->
+            <div class="form-section">
+                <h3>Row Range</h3>
+                <div class="row-range-info">
+                    <p>Define which rows to process. Start Row always begins at 2 (header is row 1).</p>
+                </div>
+                <div class="row-range-inputs">
+                    <div class="range-input">
+                        <label for="start-row">Start Row</label>
+                        <input type="number" id="start-row" min="2" value="2">
+                    </div>
+                    <div class="range-input">
+                        <label for="end-row">End Row</label>
+                        <input type="number" id="end-row" min="2" value="100">
+                    </div>
+                </div>
+                <div class="row-range-summary" style="margin-top: 12px; padding: 10px; background: #f5f5f5; border-radius: 6px; border-left: 4px solid #2196F3;">
+                    <div style="font-weight: 600; color: #2196F3; margin-bottom: 4px;">Range Summary</div>
+                    <div style="font-size: 0.95rem;">
+                        <span>Next ranking starts at row: <strong id="next-ranking-start">2</strong></span><br>
+                        <span>Total profiles to rank: <strong id="total-profiles-count">0</strong></span><br>
+                        <span>Current range: <strong id="current-range-display">2-100</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ranking Controls -->
+            <div class="form-section">
+                <h3>Ranking Controls</h3>
+                <div class="ranking-controls">
+                    <button type="button" class="primary-btn" id="start-ranking-btn" onclick="app.startRanking()">Start Ranking</button>
+                    <button type="button" class="secondary-btn" id="stop-ranking-btn" onclick="app.stopRanking()" disabled>Stop Ranking</button>
+                </div>
+            </div>
+
+            <!-- Ranking Progress -->
+            <div class="form-section">
+                <h3>Ranking Progress</h3>
+                <div id="ranking-progress-indicator" style="display:none; margin-bottom: 18px; text-align: center;"></div>
+            </div>
+
+            <!-- Ranking Status -->
+            <div class="form-section">
+                <h3>Ranking Status</h3>
+                <div class="ranking-status">
+                    <div class="status-item">
+                        <span class="status-label">Batches Processed:</span>
+                        <span class="status-value" id="batches-processed">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Profiles Ranked:</span>
+                        <span class="status-value" id="profiles-ranked">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Errors:</span>
+                        <span class="status-value" id="ranking-errors">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Results Dashboard -->
+        <div class="step-content" id="step-6" style="display: none;">
+            <div class="step-header">
+                <h2>Results Dashboard</h2>
+                <p class="ai-explanation">
+                    <i class="info-icon">ℹ</i>
+                    Review, search, and export your ranked candidates. Adjust filters and rerun as needed.
+                </p>
+            </div>
+            <!-- Results Tabs -->
+            <div class="results-tabs">
+                <button class="tab-btn active" data-tab="top" onclick="app.switchResultsTab('top')">Top</button>
+                <button class="tab-btn" data-tab="good" onclick="app.switchResultsTab('good')">Good</button>
+                <button class="tab-btn" data-tab="hidden" onclick="app.switchResultsTab('hidden')">Hidden Gems</button>
+                <button class="tab-btn" data-tab="hot" onclick="app.switchResultsTab('hot')">Hot Signals</button>
+                <button class="tab-btn" data-tab="all" onclick="app.switchResultsTab('all')">All</button>
+            </div>
+            <!-- Results Actions -->
+            <div class="results-actions">
+                <input type="text" class="search-bar" id="results-search" placeholder="Search by name, company, skill..." oninput="app.searchResults()">
+                <button class="export-btn" onclick="app.exportResultsCSV()">Download CSV</button>
+            </div>
+            <!-- Results Stats -->
+            <div class="results-stats">
+                <div class="stat-card top-stat"><div class="stat-label">Top</div><div class="stat-value" id="top-count">0</div></div>
+                <div class="stat-card good-stat"><div class="stat-label">Good</div><div class="stat-value" id="good-count">0</div></div>
+                <div class="stat-card hidden-stat"><div class="stat-label">Hidden</div><div class="stat-value" id="hidden-count">0</div></div>
+                <div class="stat-card hot-stat"><div class="stat-label">Hot</div><div class="stat-value" id="hot-count">0</div></div>
+            </div>
+            <!-- Candidate Table List -->
+            <div class="candidates-list" id="candidates-list">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Title</th>
+                            <th>Score</th>
+                            <th>Category</th>
+                            <th>LinkedIn</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidates-tbody">
+                        <!-- Candidate rows will be rendered here -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Candidate Details Modal -->
+            <div class="candidate-modal" id="candidate-modal" style="display: none;">
+                <div class="modal-content">
+                    <button class="close-modal" onclick="app.closeCandidateModal()">&times;</button>
+                    <h3>Candidate Details</h3>
+                    <div id="candidate-details">
+                        <!-- Candidate details will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Re-categorize Modal -->
+            <div class="recategorize-modal" id="recategorize-modal" style="display: none;">
+                <div class="modal-content">
+                    <button class="close-modal" onclick="app.closeRecategorizeModal()">&times;</button>
+                    <h3>Re-categorize Candidate</h3>
+                    <div class="recategorize-form">
+                        <label for="recategorize-category">New Category</label>
+                        <select id="recategorize-category">
+                            <option value="top">Top</option>
+                            <option value="good">Good</option>
+                            <option value="hidden">Hidden Gems</option>
+                            <option value="not-qualified">Not Qualified</option>
+                        </select>
+                        <label for="recategorize-reason">Reason (required)</label>
+                        <textarea id="recategorize-reason" placeholder="Provide a reason for re-categorization..."></textarea>
+                        <button class="save-btn" onclick="app.submitRecategorize()">Submit</button>
+                        <button class="secondary-btn" onclick="app.closeRecategorizeModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </main>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-navigation">
+        <button class="nav-btn prev-btn" disabled>Previous</button>
+        <button class="nav-btn next-btn">Next</button>
+      </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+
+    <script>
+// Scorely App - Main JavaScript
+class ScorelyApp {
+    constructor() {
+        this.currentStep = 1;
+        this.totalSteps = 6;
+        this.appData = this.loadAppData();
+        
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.loadSavedData();
+        this.updateProgressBar();
+        this.setupTooltips();
+        this.setupCharacterCounters();
+        this.setupWeightSliders();
+        this.setupTraits();
+        this.setupMultiSelect();
+        this.updateRowRangeIndicators();
+    }
+
+    // Data Management
+    loadAppData() {
+        const saved = localStorage.getItem('scorely_app_data');
+        return saved ? JSON.parse(saved) : {
+            jobDescription: '',
+            idealProfiles: [],
+            targetCompanies: '',
+            experienceRange: { min: 0, max: 10 },
+            industry: [],
+            education: [],
+            customTraits: [],
+            hotSignals: '',
+            rankingWeights: {
+                techFit: 30,
+                experience: 25,
+                customTraitsWeight: 20,
+                startupFit: 15,
+                education: 10
+            }
         };
-        return [apiKey, setApiKey];
-      }
+    }
 
-      function ApiKeyModal({ open, onSave, onClose, initial }) {
-        const [value, setValue] = React.useState(initial || "");
-        return open ? (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Enter OpenAI API Key</h2>
-              <input
-                className="w-full border rounded p-2 mb-4"
-                type="password"
-                placeholder="sk-..."
-                value={value}
-                onChange={e => setValue(e.target.value)}
-              />
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-[#8BC34A] text-white rounded" onClick={() => { onSave(value); onClose(); }}>Save</button>
-                <button className="px-4 py-2 bg-gray-200 rounded" onClick={onClose}>Cancel</button>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">Your API key is stored only in your browser (localStorage).</div>
-            </div>
-          </div>
-        ) : null;
-      }
+    saveAppData() {
+        localStorage.setItem('scorely_app_data', JSON.stringify(this.appData));
+    }
 
-      function App() {
-        const [step, setStep] = React.useState(0);
-        // State for all wizard data
-        const [formData, setFormData] = usePersistentState("scorely_formData", {});
-        // API Key management
-        const [apiKey, setApiKey] = useApiKey();
-        const [showApiKeyModal, setShowApiKeyModal] = React.useState(false);
+    // Event Listeners
+    setupEventListeners() {
+        // Navigation
+        document.querySelector('.next-btn').addEventListener('click', () => this.nextStep());
+        document.querySelector('.prev-btn').addEventListener('click', () => this.prevStep());
 
-        React.useEffect(() => {
-          if (!apiKey) setShowApiKeyModal(true);
-        }, [apiKey]);
+        // Save buttons
+        document.querySelectorAll('.save-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.saveField(e.target.dataset.field));
+        });
 
-        // Placeholder for step data/state
-        const [saved, setSaved] = React.useState(false);
+        // File uploads
+        this.setupFileUploads();
 
-        const goNext = () => setStep((s) => Math.min(s + 1, steps.length - 1));
-        const goPrev = () => setStep((s) => Math.max(s - 1, 0));
+        // Form inputs
+        this.setupFormInputs();
 
-        return (
-          <div className="min-h-screen flex flex-col bg-white">
-            <header className="p-4 border-b flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-[#2196F3] tracking-tight">Scorely by AddedValue</h1>
-              <span className="text-gray-500 font-medium">{steps[step]}</span>
-              <button className="ml-4 px-3 py-1 bg-gray-200 rounded text-sm" onClick={() => setShowApiKeyModal(true)}>Change API Key</button>
-            </header>
-            <main className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
-              <div className="w-full max-w-2xl">
-                <div className="text-lg font-semibold mb-4">{steps[step]}</div>
-                {step === 0 ? (
-                  <StepWhoAreWe data={formData} setData={setFormData} />
-                ) : step === 1 ? (
-                  <StepPreFilter data={formData} setData={setFormData} />
-                ) : step === 2 ? (
-                  <StepProfileSummary data={formData} setData={setFormData} />
-                ) : step === 3 ? (
-                  <StepAdvancedPreFilter data={formData} setData={setFormData} />
-                ) : step === 4 ? (
-                  <StepRanking data={formData} setData={setFormData} />
-                ) : step === 5 ? (
-                  <StepResultsDashboard data={formData} setData={setFormData} />
-                ) : (
-                  <div className="bg-gray-50 border rounded p-6 min-h-[200px] flex items-center justify-center text-gray-400">
-                    Step content will go here.
-                  </div>
-                )}
-              </div>
-            </main>
-            <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-between items-center px-6 py-3 z-10">
-              <button
-                className="px-4 py-2 rounded font-semibold text-white bg-[#2196F3] disabled:bg-gray-300"
-                onClick={goPrev}
-                disabled={step === 0}
-              >
-                Previous
-              </button>
-              <button
-                className="px-4 py-2 rounded font-semibold text-white bg-[#8BC34A] disabled:bg-gray-300"
-                onClick={goNext}
-                disabled={step === steps.length - 1}
-              >
-                Next
-              </button>
-            </nav>
-            <ApiKeyModal open={showApiKeyModal} onSave={setApiKey} onClose={() => setShowApiKeyModal(false)} initial={apiKey} />
-          </div>
-        );
-      }
+        // API Key save
+        const apiKeyInput = document.getElementById('api-key');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const apiKeySaved = document.getElementById('api-key-saved');
+        if (saveApiKeyBtn) {
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                localStorage.setItem('scorely_api_key', key);
+                apiKeySaved.style.display = 'inline';
+                apiKeySaved.classList.add('show');
+                setTimeout(() => {
+                    apiKeySaved.classList.remove('show');
+                    setTimeout(() => {
+                        apiKeySaved.style.display = 'none';
+                    }, 300);
+                }, 2000);
+            });
+        }
+        // Load API Key on init
+        const storedKey = localStorage.getItem('scorely_api_key');
+        if (storedKey && apiKeyInput) {
+            apiKeyInput.value = storedKey;
+        }
+        // Restart button
+        const restartBtn = document.getElementById('restart-btn');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to restart and clear all data?')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+        }
 
-      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+        // Row range inputs
+        const startRowInput = document.getElementById('start-row');
+        const endRowInput = document.getElementById('end-row');
+        if (startRowInput) {
+            startRowInput.addEventListener('input', () => this.updateRowRangeIndicators());
+        }
+        if (endRowInput) {
+            endRowInput.addEventListener('input', () => this.updateRowRangeIndicators());
+        }
+
+        // LinkedIn profile text save for ideal profiles
+        document.querySelectorAll('.profile-slot').forEach((slot, index) => {
+            const textarea = slot.querySelector('.linkedin-profile-textarea');
+            const saveBtn = slot.querySelector('.linkedin-save-btn');
+            const savedIndicator = slot.querySelector('.linkedin-saved-indicator');
+            if (saveBtn && textarea) {
+                saveBtn.addEventListener('click', () => {
+                    const text = textarea.value.trim();
+                    if (!this.appData.idealProfiles) this.appData.idealProfiles = [];
+                    if (!this.appData.idealProfiles[index]) this.appData.idealProfiles[index] = {};
+                    this.appData.idealProfiles[index].text = text;
+                    this.saveAppData();
+                    savedIndicator.style.display = 'inline';
+                    savedIndicator.classList.add('show');
+                    setTimeout(() => {
+                        savedIndicator.classList.remove('show');
+                        setTimeout(() => {
+                            savedIndicator.style.display = 'none';
+                        }, 300);
+                    }, 2000);
+                    // Update label color if text present
+                    const label = slot.querySelector('label');
+                    if (text) {
+                        label.textContent = `Profile ${index + 1}: Pasted Text`;
+                        label.style.color = '#2196F3';
+                    } else {
+                        label.textContent = `Profile ${index + 1}`;
+                        label.style.color = '#333';
+                    }
+                });
+            }
+        });
+        // On load, populate textarea if text exists
+        if (this.appData.idealProfiles) {
+            document.querySelectorAll('.profile-slot').forEach((slot, index) => {
+                const textarea = slot.querySelector('.linkedin-profile-textarea');
+                const label = slot.querySelector('label');
+                const profile = this.appData.idealProfiles[index];
+                if (profile && profile.text && textarea) {
+                    textarea.value = profile.text;
+                    label.textContent = `Profile ${index + 1}: Pasted Text`;
+                    label.style.color = '#2196F3';
+                }
+            });
+        }
+    }
+
+    setupFileUploads() {
+        // Job Description file upload
+        const jdFile = document.getElementById('jd-file');
+        const jdTextarea = document.getElementById('job-description');
+        
+        jdFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.readFileAsText(file).then(text => {
+                    jdTextarea.value = text.substring(0, 500);
+                    this.updateCharacterCounter(jdTextarea);
+                    this.saveField('job-description');
+                });
+            }
+        });
+
+        // Target Companies file upload
+        const companiesFile = document.getElementById('companies-file');
+        companiesFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.readFileAsText(file).then(text => {
+                    document.getElementById('target-companies').value = text;
+                    this.saveField('target-companies');
+                });
+            }
+        });
+
+        // Hot Signals file upload
+        const signalsFile = document.getElementById('signals-file');
+        signalsFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.readFileAsText(file).then(text => {
+                    document.getElementById('hot-signals').value = text;
+                    this.saveField('hot-signals');
+                });
+            }
+        });
+
+        // Ideal Profiles uploads
+        document.querySelectorAll('.profile-slot input[type="file"]').forEach((input, index) => {
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    this.handleIdealProfileUpload(file, index);
+                }
+            });
+        });
+    }
+
+    setupFormInputs() {
+        // Experience range inputs
+        const minExp = document.getElementById('min-experience');
+        const maxExp = document.getElementById('max-experience');
+        
+        minExp.addEventListener('change', () => this.saveField('experience-range'));
+        maxExp.addEventListener('change', () => this.saveField('experience-range'));
+
+        // Custom industry input
+        const customIndustryInput = document.getElementById('custom-industry');
+        const addIndustryBtn = customIndustryInput.nextElementSibling;
+        addIndustryBtn.addEventListener('click', () => this.addCustomIndustry());
+
+        // Custom education input
+        const customEducationInput = document.getElementById('custom-education');
+        const addEducationBtn = customEducationInput.nextElementSibling;
+        addEducationBtn.addEventListener('click', () => this.addCustomEducation());
+    }
+
+    // File Reading
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsText(file);
+        });
+    }
+
+    handleIdealProfileUpload(file, index) {
+        this.readFileAsText(file).then(text => {
+            if (!this.appData.idealProfiles) {
+                this.appData.idealProfiles = [];
+            }
+            this.appData.idealProfiles[index] = {
+                name: file.name,
+                content: text.substring(0, 1000) // Limit content
+            };
+            this.saveAppData();
+            this.showSavedIndicator('ideal-profiles');
+            
+            // Update UI to show uploaded file
+            const profileSlot = document.querySelectorAll('.profile-slot')[index];
+            const label = profileSlot.querySelector('label');
+            label.textContent = `Profile ${index + 1}: ${file.name}`;
+            label.style.color = '#8BC34A';
+        });
+    }
+
+    // Character Counters
+    setupCharacterCounters() {
+        const jdTextarea = document.getElementById('job-description');
+        jdTextarea.addEventListener('input', () => this.updateCharacterCounter(jdTextarea));
+        this.updateCharacterCounter(jdTextarea);
+    }
+
+    updateCharacterCounter(textarea) {
+        const counter = textarea.parentElement.querySelector('.char-counter');
+        if (counter) {
+            const count = textarea.value.length;
+            counter.textContent = `${count}/500`;
+            
+            if (count > 450) {
+                counter.style.color = '#EC407A';
+            } else if (count > 400) {
+                counter.style.color = '#FF9800';
+            } else {
+                counter.style.color = '#666';
+            }
+        }
+    }
+
+    // Weight Sliders
+    setupWeightSliders() {
+        const sliders = document.querySelectorAll('.weight-slider');
+        sliders.forEach(slider => {
+            const valueDisplay = slider.parentElement.querySelector('.slider-value');
+            
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = `${slider.value}%`;
+            });
+            
+            slider.addEventListener('change', () => {
+                this.saveField('ranking-weights');
+            });
+        });
+    }
+
+    // Traits Management
+    setupTraits() {
+        const addTraitBtn = document.querySelector('.add-trait-btn');
+        const traitInput = document.getElementById('trait-input');
+        
+        addTraitBtn.addEventListener('click', () => this.addTrait());
+        traitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.addTrait();
+            }
+        });
+    }
+
+    addTrait() {
+        const traitInput = document.getElementById('trait-input');
+        const trait = traitInput.value.trim();
+        
+        if (trait && !this.appData.customTraits.includes(trait)) {
+            this.appData.customTraits.push(trait);
+            this.saveAppData();
+            this.renderTraits();
+            this.showSavedIndicator('custom-traits');
+            traitInput.value = '';
+        }
+    }
+
+    removeTrait(trait) {
+        this.appData.customTraits = this.appData.customTraits.filter(t => t !== trait);
+        this.saveAppData();
+        this.renderTraits();
+        this.showSavedIndicator('custom-traits');
+    }
+
+    renderTraits() {
+        const traitsList = document.getElementById('traits-list');
+        traitsList.innerHTML = '';
+        
+        this.appData.customTraits.forEach(trait => {
+            const traitTag = document.createElement('div');
+            traitTag.className = 'trait-tag';
+            traitTag.innerHTML = `
+                ${trait}
+                <button class="remove-trait" onclick="app.removeTrait('${trait}')">&times;</button>
+            `;
+            traitsList.appendChild(traitTag);
+        });
+    }
+
+    // Multi Select
+    setupMultiSelect() {
+        // Industry select all/clear
+        const industrySelect = document.getElementById('industry-select');
+        if (industrySelect) {
+            const selectAllBtn = industrySelect.querySelector('.select-all-btn');
+            const clearAllBtn = industrySelect.querySelector('.clear-all-btn');
+            if (selectAllBtn) selectAllBtn.addEventListener('click', () => this.selectAll('industry'));
+            if (clearAllBtn) clearAllBtn.addEventListener('click', () => this.clearAll('industry'));
+        }
+        // Education select all/clear
+        const educationSelect = document.getElementById('education-select');
+        if (educationSelect) {
+            const eduSelectAllBtn = educationSelect.querySelector('.select-all-btn');
+            const eduClearAllBtn = educationSelect.querySelector('.clear-all-btn');
+            if (eduSelectAllBtn) eduSelectAllBtn.addEventListener('click', () => this.selectAll('education'));
+            if (eduClearAllBtn) eduClearAllBtn.addEventListener('click', () => this.clearAll('education'));
+        }
+        // Checkbox change events
+        document.querySelectorAll('.checkbox-option input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const multiSelect = checkbox.closest('.multi-select');
+                if (!multiSelect) return;
+                const field = multiSelect.id.replace('-select', '');
+                this.saveField(field);
+            });
+        });
+    }
+
+    selectAll(field) {
+        const container = document.getElementById(`${field}-select`);
+        const checkboxes = container.querySelectorAll('.select-options input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+        });
+        this.saveField(field);
+    }
+
+    clearAll(field) {
+        const container = document.getElementById(`${field}-select`);
+        const checkboxes = container.querySelectorAll('.select-options input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.dispatchEvent(new Event('change'));
+        });
+        this.saveField(field);
+    }
+
+    addCustomIndustry() {
+        const input = document.getElementById('custom-industry');
+        const industry = input.value.trim();
+        
+        if (industry) {
+            // Add as a custom checkbox option
+            const optionsContainer = document.getElementById('industry-select').querySelector('.select-options');
+            const newOption = document.createElement('label');
+            newOption.className = 'checkbox-option';
+            newOption.innerHTML = `
+                <input type="checkbox" value="custom-${industry.toLowerCase().replace(/\s+/g, '-')}">
+                <span>${industry}</span>
+            `;
+            optionsContainer.appendChild(newOption);
+            
+            input.value = '';
+            this.saveField('industry');
+        }
+    }
+
+    addCustomEducation() {
+        const input = document.getElementById('custom-education');
+        const education = input.value.trim();
+        
+        if (education) {
+            // Add as a custom checkbox option
+            const optionsContainer = document.getElementById('education-select').querySelector('.select-options');
+            const newOption = document.createElement('label');
+            newOption.className = 'checkbox-option';
+            newOption.innerHTML = `
+                <input type="checkbox" value="custom-${education.toLowerCase().replace(/\s+/g, '-')}">
+                <span>${education}</span>
+            `;
+            optionsContainer.appendChild(newOption);
+            
+            input.value = '';
+            this.saveField('education');
+        }
+    }
+
+    // Navigation
+    nextStep() {
+        if (this.currentStep < this.totalSteps) {
+            this.currentStep++;
+            this.updateStepDisplay();
+            this.updateProgressBar();
+        }
+    }
+
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateStepDisplay();
+            this.updateProgressBar();
+        }
+    }
+
+    updateStepDisplay() {
+        // Hide all step contents
+        document.querySelectorAll('.step-content').forEach(step => {
+            step.classList.remove('active');
+        });
+        
+        // Show current step
+        const currentStepElement = document.getElementById(`step-${this.currentStep}`);
+        if (currentStepElement) {
+            currentStepElement.classList.add('active');
+        }
+        
+        // Update navigation buttons
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        
+        prevBtn.disabled = this.currentStep === 1;
+        nextBtn.disabled = this.currentStep === this.totalSteps;
+    }
+
+    updateProgressBar() {
+        document.querySelectorAll('.progress-step').forEach((step, index) => {
+            const stepNumber = index + 1;
+            if (stepNumber <= this.currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+    }
+
+    // Data Saving
+    saveField(fieldName) {
+        switch (fieldName) {
+            case 'job-description':
+                this.appData.jobDescription = document.getElementById('job-description').value;
+                break;
+            case 'target-companies':
+                this.appData.targetCompanies = document.getElementById('target-companies').value;
+                break;
+            case 'experience-range':
+                this.appData.experienceRange = {
+                    min: parseInt(document.getElementById('min-experience').value) || 0,
+                    max: parseInt(document.getElementById('max-experience').value) || 10
+                };
+                break;
+            case 'industry':
+                this.appData.industry = this.getSelectedCheckboxValues('industry-select');
+                break;
+            case 'education':
+                this.appData.education = this.getSelectedCheckboxValues('education-select');
+                break;
+            case 'hot-signals':
+                this.appData.hotSignals = document.getElementById('hot-signals').value;
+                break;
+            case 'ranking-weights':
+                this.appData.rankingWeights = {
+                    techFit: parseInt(document.getElementById('tech-fit').value),
+                    experience: parseInt(document.getElementById('experience').value),
+                    customTraitsWeight: parseInt(document.getElementById('custom-traits-weight').value),
+                    startupFit: parseInt(document.getElementById('startup-fit').value),
+                    education: parseInt(document.getElementById('education-weight').value)
+                };
+                break;
+        }
+        
+        this.saveAppData();
+        this.showSavedIndicator(fieldName);
+    }
+
+    getSelectedCheckboxValues(containerId) {
+        const container = document.getElementById(containerId);
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    showSavedIndicator(fieldName) {
+        const indicators = document.querySelectorAll('.saved-indicator');
+        indicators.forEach(indicator => {
+            if (indicator.closest('.form-section').querySelector(`[data-field="${fieldName}"]`)) {
+                indicator.style.display = 'inline';
+                indicator.classList.add('show');
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                    setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 300);
+                }, 2000);
+            }
+        });
+    }
+
+    // Data Loading
+    loadSavedData() {
+        // Load job description
+        if (this.appData.jobDescription) {
+            document.getElementById('job-description').value = this.appData.jobDescription;
+            this.updateCharacterCounter(document.getElementById('job-description'));
+        }
+
+        // Load target companies
+        if (this.appData.targetCompanies) {
+            document.getElementById('target-companies').value = this.appData.targetCompanies;
+        }
+
+        // Load experience range
+        if (this.appData.experienceRange) {
+            document.getElementById('min-experience').value = this.appData.experienceRange.min;
+            document.getElementById('max-experience').value = this.appData.experienceRange.max;
+        }
+
+        // Load industry selections
+        if (this.appData.industry) {
+            this.appData.industry.forEach(value => {
+                const checkbox = document.querySelector(`#industry-select input[value="${value}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Load education selections
+        if (this.appData.education) {
+            this.appData.education.forEach(value => {
+                const checkbox = document.querySelector(`#education-select input[value="${value}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Load custom traits
+        if (this.appData.customTraits) {
+            this.renderTraits();
+        }
+
+        // Load hot signals
+        if (this.appData.hotSignals) {
+            document.getElementById('hot-signals').value = this.appData.hotSignals;
+        }
+
+        // Load ranking weights
+        if (this.appData.rankingWeights) {
+            Object.keys(this.appData.rankingWeights).forEach(key => {
+                const element = document.getElementById(key === 'customTraitsWeight' ? 'custom-traits-weight' : 
+                                                     key === 'education' ? 'education-weight' : key);
+                if (element) {
+                    element.value = this.appData.rankingWeights[key];
+                    const valueDisplay = element.parentElement.querySelector('.slider-value');
+                    if (valueDisplay) {
+                        valueDisplay.textContent = `${this.appData.rankingWeights[key]}%`;
+                    }
+                }
+            });
+        }
+    }
+
+    // Tooltips
+    setupTooltips() {
+        // Tooltips are handled by CSS hover states
+    }
+
+    // Row Range Indicators
+    updateRowRangeIndicators() {
+        const startRow = parseInt(document.getElementById('start-row')?.value) || 2;
+        const endRow = parseInt(document.getElementById('end-row')?.value) || 100;
+        
+        const nextStart = document.getElementById('next-ranking-start');
+        const totalCount = document.getElementById('total-profiles-count');
+        const currentRange = document.getElementById('current-range-display');
+        
+        if (nextStart) nextStart.textContent = startRow;
+        if (totalCount) totalCount.textContent = Math.max(0, endRow - startRow + 1);
+        if (currentRange) currentRange.textContent = `${startRow}-${endRow}`;
+    }
+
+    // Placeholder methods for Step 2+ functionality
+    saveColumnMapping() {
+        console.log('Column mapping saved');
+    }
+
+    saveFilterList(listType) {
+        console.log(`Filter list ${listType} saved`);
+    }
+
+    clearFilterList(listType) {
+        const textarea = document.getElementById(listType === 'pastCandidates' ? 'past-candidates' : 
+                                               listType === 'noGoCompanies' ? 'no-go-companies' : listType);
+        if (textarea) {
+            textarea.value = '';
+        }
+    }
+
+    addCustomNoGo() {
+        const input = document.getElementById('custom-no-go-input');
+        const company = input.value.trim();
+        if (company) {
+            const textarea = document.getElementById('no-go-companies');
+            textarea.value += (textarea.value ? '\n' : '') + company;
+            input.value = '';
+        }
+    }
+
+    runFiltering() {
+        console.log('Running filtering...');
+    }
+
+    clearDashboard() {
+        console.log('Clearing dashboard...');
+    }
+
+    selectAllColumns() {
+        console.log('Selecting all columns...');
+    }
+
+    clearAllColumns() {
+        console.log('Clearing all columns...');
+    }
+
+    saveColumnSelection() {
+        console.log('Column selection saved');
+    }
+
+    previewProfileSummary() {
+        console.log('Previewing profile summary...');
+    }
+
+    applyAdvancedFilters() {
+        console.log('Applying advanced filters...');
+    }
+
+    resetAdvancedFilters() {
+        console.log('Resetting advanced filters...');
+    }
+
+    startRanking() {
+        console.log('Starting ranking...');
+    }
+
+    stopRanking() {
+        console.log('Stopping ranking...');
+    }
+
+    switchResultsTab(tab) {
+        console.log(`Switching to ${tab} tab`);
+    }
+
+    searchResults() {
+        console.log('Searching results...');
+    }
+
+    exportResultsCSV() {
+        console.log('Exporting results to CSV...');
+    }
+
+    closeCandidateModal() {
+        document.getElementById('candidate-modal').style.display = 'none';
+    }
+
+    closeRecategorizeModal() {
+        document.getElementById('recategorize-modal').style.display = 'none';
+    }
+
+    submitRecategorize() {
+        console.log('Submitting recategorization...');
+        this.closeRecategorizeModal();
+    }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new ScorelyApp();
+});
     </script>
   </body>
-</html> 
+</html>
+
